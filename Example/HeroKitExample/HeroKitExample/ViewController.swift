@@ -1,6 +1,10 @@
+import Combine
+import HeroKit
 import UIKit
 
 class ViewController: UIViewController {
+
+    private var scrollCancellable: AnyCancellable?
 
     private lazy var collectionView: UICollectionView = {
         var config = UICollectionLayoutListConfiguration(appearance: .plain)
@@ -63,6 +67,7 @@ class ViewController: UIViewController {
         view.backgroundColor = .systemBackground
         setupCollectionView()
         applySnapshot()
+        scrollCancellable = subscribeToScrollOffset(of: collectionView)
     }
 
     private func setupCollectionView() {
