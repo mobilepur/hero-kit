@@ -64,7 +64,7 @@ class ViewController: UIViewController {
         view.backgroundColor = .systemBackground
         setupCollectionView()
         applySnapshot()
-        configureHeader(.color(.systemGreen))
+        try? configureHeader(.color(.systemGreen))
     }
 
     private func setupCollectionView() {
