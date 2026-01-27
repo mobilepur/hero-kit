@@ -1,0 +1,34 @@
+# Version & File Handling
+--swiftversion 6.0
+--exclude .build
+
+# File Header
+--header strip
+
+# Indentation & Width
+--indent 4
+--maxwidth 100
+--xcodeindentation enabled
+
+# Line Breaks & Spacing
+--linebreaks lf
+--elseposition same-line
+--guardelse next-line
+--typeblanklines preserve
+--trimwhitespace always
+
+# Wrapping
+--wraparguments preserve
+--wrapcollections preserve
+--closingparen balanced
+
+# Organization
+--importgrouping alphabetized
+
+# Code Style
+--self remove
+--semicolons never
+--emptybraces spaced
+
+# Explicitly disabled rules
+--disable redundantReturn, preferForLoop
