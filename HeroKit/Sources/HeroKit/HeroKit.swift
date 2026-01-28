@@ -6,11 +6,12 @@ import UIKit
 
 public enum HeroHeader {
     public enum Style {
-        case color(UIColor)
+        case color(backgroundColor: UIColor, foregroundColor: UIColor?)
     }
 
     public enum Error: Swift.Error {
         case scrollViewNotFound
+        case navigationControllerNotFound
     }
 }
 
@@ -23,104 +24,51 @@ public extension UIViewController {
             throw HeroHeader.Error.scrollViewNotFound
         }
 
+        try setupHeader(style: style, scrollView: targetScrollView)
         subscribeToScrollOffset(of: targetScrollView)
-        setupHeader(style: style, scrollView: targetScrollView)
         print("HeroKit: Configuring header with style: \(style)")
         print("HeroKit: Subscribed to scroll view: \(targetScrollView)")
     }
 
-    private func setupHeader(style: HeroHeader.Style, scrollView: UIScrollView) {
-        // 1. Farbe aus Style extrahieren
-        let headerColor: UIColor = switch style {
-        case let .color(color):
-            color
+    private func setupHeader(style: HeroHeader.Style, scrollView _: UIScrollView) throws {
+        switch style {
+        case let .color(backgroundColor, foregroundColor):
+            try styleHeader(backgroundColor: backgroundColor, foregroundColor: foregroundColor)
+        }
+    }
+
+    private func styleHeader(backgroundColor: UIColor, foregroundColor: UIColor?) throws {
+        guard let navigationController else { throw HeroHeader.Error.navigationControllerNotFound }
+        // for now large titles with colored backgrounds are not supported in iOS 26
+        if #available(iOS 26, *) {
+            navigationItem.largeTitleDisplayMode = .inline
         }
 
-        // 2. ScrollView Hintergrund verstecken (wie .scrollContentBackground(.hidden))
-        scrollView.backgroundColor = .clear
+        let appearance = UINavigationBarAppearance.withStyle(
+            backgroundColor: backgroundColor,
+            foregroundColor: foregroundColor
+        )
+        let scrollEdgeAppearance = UINavigationBarAppearance.withStyle(
+            backgroundColor: backgroundColor,
+            foregroundColor: foregroundColor
+        )
 
-        // 3. Header-View die nur den SafeArea-Bereich füllt
-        let headerView = UIView()
-        headerView.backgroundColor = headerColor
-        headerView.translatesAutoresizingMaskIntoConstraints = false
-        view.insertSubview(headerView, at: 0)
+        if #available(iOS 26, *) {
+            scrollEdgeAppearance.backgroundColor = backgroundColor.withAlphaComponent(0.2)
+        }
 
-        NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: view.topAnchor),
-            headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            headerView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-        ])
-
-        heroHeaderView = headerView
-
-        // 4. NavigationBar Appearance (wie .toolbarBackground(.visible))
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithDefaultBackground()
-        appearance.backgroundColor = headerColor
-
-        navigationController?.navigationBar.standardAppearance = appearance
-        navigationController?.navigationBar.compactAppearance = appearance
-        navigationController?.navigationBar.scrollEdgeAppearance = appearance
-        navigationController?.navigationBar.compactScrollEdgeAppearance = appearance
-        /*
-         navigationController?.navigationBar.traverseSubviews(apply: { subview in
-             print("New Subview ----------------------")
-             print(type(of: subview), "\n")
-             print(subview, "\n")
-             print(subview.frame, "\n")
-             print(subview.backgroundColor, "\n")
-             subview.backgroundColor = subview.backgroundColor?.withAlphaComponent(0.3)
-         })
-
-         */
-//        scrollView.backgroundColor = .red
-//        scrollView.
-        /*
-         let appearance = UINavigationBarAppearance()
-         appearance.configureWithOpaqueBackground()
-         appearance.backgroundColor = .red
-
-         navigationController?.navigationBar.standardAppearance = appearance
-         navigationController?.navigationBar.compactAppearance = appearance
-         navigationController?.navigationBar.compactScrollEdgeAppearance = appearance
-         navigationController?.navigationBar.scrollEdgeAppearance = appearance
-
-         navigationController?.navigationBar.traverseSubviews(apply: { subview in
-             print("New Subview")
-             print(type(of: subview), "\n")
-             print(subview, "\n")
-             print(subview.frame, "\n")
-             print(subview.backgroundColor, "\n")
-             subview.backgroundColor = subview.backgroundColor?.withAlphaComponent(0.3)
-         })
-         */
-//        navigationController?.navigationBar.
-
-        /*
-                 let headerView = UIView()
-                 headerView.backgroundColor = .green //.withAlphaComponent(0.5)
-
-                 headerView.translatesAutoresizingMaskIntoConstraints = false
-         //        view.insertSubview(headerView, at: 0)
-                 view.addSubview(headerView)
-                 print("z nav", navigationController?.navigationBar.layer.zPosition)
-                 print("z header", headerView.layer.zPosition)
-
-                 NSLayoutConstraint.activate([
-                     headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                     headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                     headerView.heightAnchor.constraint(equalToConstant: 300),
-                     headerView.topAnchor.constraint(equalTo: view.topAnchor),
-              //       headerView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor)
-                 ])
-                 */
+        navigationController.navigationBar.standardAppearance = appearance
+        navigationController.navigationBar.compactAppearance = appearance
+        navigationController.navigationBar.scrollEdgeAppearance = scrollEdgeAppearance
+        navigationController.navigationBar.compactScrollEdgeAppearance = scrollEdgeAppearance
     }
 
     private enum AssociatedKeys {
         nonisolated(unsafe) static var scrollCancellable: Void?
         nonisolated(unsafe) static var scrollOffset: Void?
         nonisolated(unsafe) static var headerView: Void?
+        nonisolated(unsafe) static var headerTopConstraint: Void?
+        nonisolated(unsafe) static var headerBottomConstraint: Void?
     }
 
     private var heroHeaderView: UIView? {
@@ -128,6 +76,32 @@ public extension UIViewController {
         set { objc_setAssociatedObject(
             self,
             &AssociatedKeys.headerView,
+            newValue,
+            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+        ) }
+    }
+
+    private var headerTopConstraint: NSLayoutConstraint? {
+        get {
+            objc_getAssociatedObject(self,
+                                     &AssociatedKeys.headerTopConstraint) as? NSLayoutConstraint
+        }
+        set { objc_setAssociatedObject(
+            self,
+            &AssociatedKeys.headerTopConstraint,
+            newValue,
+            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+        ) }
+    }
+
+    private var headerBottomConstraint: NSLayoutConstraint? {
+        get {
+            objc_getAssociatedObject(self,
+                                     &AssociatedKeys.headerBottomConstraint) as? NSLayoutConstraint
+        }
+        set { objc_setAssociatedObject(
+            self,
+            &AssociatedKeys.headerBottomConstraint,
             newValue,
             .OBJC_ASSOCIATION_RETAIN_NONATOMIC
         ) }
@@ -157,19 +131,11 @@ public extension UIViewController {
         scrollCancellable = scrollView.publisher(for: \.contentOffset)
             .sink { [weak self] offset in
                 self?.heroScrollOffset = offset.y
-                print("HeroKit: Scroll offset: \(offset.y)")
-                /*
-                 self?.navigationController?.navigationBar.traverseSubviews(apply: { subview in
-                     print("New Subview")
-                     print(type(of: subview), "\n")
-                     print(subview, "\n")
-                     print(subview.frame, "\n")
-                     print(subview.backgroundColor, "\n")
-                     print("Z Posistion", subview.layer.zPosition)
-                    })
-                  */
+                self?.updateHeaderConstraints(for: offset.y)
             }
     }
+
+    private func updateHeaderConstraints(for _: CGFloat) { }
 
     private func findScrollView() -> UIScrollView? {
         if let tableVC = self as? UITableViewController {
@@ -201,6 +167,28 @@ extension UIView {
         for subview in subviews {
             subview.traverseSubviews(apply: apply)
         }
+    }
+}
+
+extension UINavigationBarAppearance {
+    static func withStyle(backgroundColor: UIColor,
+                          foregroundColor: UIColor?) -> UINavigationBarAppearance
+    {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = backgroundColor
+
+        if let foregroundColor {
+            let textAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: foregroundColor]
+            appearance.titleTextAttributes = textAttributes
+            appearance.largeTitleTextAttributes = textAttributes
+
+            if #available(iOS 26, *) {
+                appearance.largeSubtitleTextAttributes = textAttributes
+            }
+        }
+
+        return appearance
     }
 }
 
