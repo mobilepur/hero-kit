@@ -4,7 +4,7 @@ import UIKit
 class ViewController: UIViewController {
 
     private lazy var collectionView: UICollectionView = {
-        var config = UICollectionLayoutListConfiguration(appearance: .plain)
+        var config = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
         let layout = UICollectionViewCompositionalLayout.list(using: config)
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
@@ -60,8 +60,13 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Color Collection"
-        view.backgroundColor = .systemBackground
+        if #available(iOS 26, *) {
+            navigationItem.largeTitle = "Large Title"
+            navigationItem.title = "Normal Title"
+        } else {
+            title = "Color Collection"
+        }
+        // view.backgroundColor = .systemBackground
         setupCollectionView()
         applySnapshot()
         try? configureHeader(.color(.systemGreen))
