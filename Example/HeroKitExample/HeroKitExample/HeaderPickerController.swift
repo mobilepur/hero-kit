@@ -56,13 +56,16 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
     }()
 
     override func viewDidLoad() {
-        super.viewDidLoad()
-        if #available(iOS 26, *) {
-            navigationItem.largeTitle = "Large Title"
-            navigationItem.title = "Normal Title"
-        } else {
-            title = "Color Collection"
-        }
+        title = "Color Collection"
+        /*
+         super.viewDidLoad()
+         if #available(iOS 26, *) {
+             navigationItem.largeTitle = "Large Title"
+             navigationItem.title = "Normal Title"
+         } else {
+             title = "Color Collection"
+         }
+         */
         // view.backgroundColor = .systemBackground
         setupCollectionView()
         applySnapshot()
