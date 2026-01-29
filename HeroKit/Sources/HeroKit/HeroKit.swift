@@ -30,24 +30,24 @@ extension UIViewController {
     }
 
     private func setupHeaderView(
-        _ headerView: UIView,
+        _ contentView: UIView,
         configuration: HeroHeader.HeaderViewConfiguration,
         scrollView: UIScrollView
     ) {
         configureTransparentNavigationBar()
 
-        let (stackView, contentConstraint) = createHeaderStackView(
-            headerView: headerView,
+        let (heroHeaderView, contentConstraint) = createHeroHeaderView(
+            contentView: contentView,
             configuration: configuration
         )
-        heroHeaderView = stackView
+        headerContainer = heroHeaderView
         contentHeightConstraint = contentConstraint
 
-        let constraints = layoutHeaderView(stackView)
+        let constraints = layoutHeaderView(heroHeaderView)
         headerTopConstraint = constraints.top
         headerHeightConstraint = constraints.height
 
-        let totalHeight = stackView.frame.height
+        let totalHeight = heroHeaderView.frame.height
         let navBarHeight = navigationController?.navigationBar.frame.maxY ?? 88
 
         print("DEBUG setupHeaderView:")
@@ -64,35 +64,29 @@ extension UIViewController {
         headerTotalHeight = totalHeight
     }
 
-    private func createHeaderStackView(
-        headerView: UIView,
+    private func createHeroHeaderView(
+        contentView: UIView,
         configuration: HeroHeader.HeaderViewConfiguration
-    ) -> (stackView: UIStackView, contentConstraint: NSLayoutConstraint) {
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.alignment = .fill
-        stackView.distribution = .fill
-        stackView.clipsToBounds = true
-
-        // headerView with height constraint (adjusted during stretch)
-        headerView.translatesAutoresizingMaskIntoConstraints = false
-        let contentConstraint = headerView.heightAnchor
+    ) -> (headerView: HeroHeaderView, contentConstraint: NSLayoutConstraint) {
+        // contentView with height constraint (adjusted during stretch)
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        let contentConstraint = contentView.heightAnchor
             .constraint(equalToConstant: configuration.height)
         contentConstraint.isActive = true
-        stackView.addArrangedSubview(headerView)
 
-        // Optional: Add large title
+        // Optional: Create large title view
+        var largeTitleView: UIView?
         if case let .belowHeader(titleConfig) = configuration.largeTitleDisplayMode,
            let title = navigationItem.title ?? title
         {
-            let largeTitleView = UIView.largeTitleLabel(
+            largeTitleView = UIView.largeTitleLabel(
                 title,
                 allowsLineWrap: titleConfig.allowsLineWrap
             )
-            stackView.addArrangedSubview(largeTitleView)
         }
 
-        return (stackView, contentConstraint)
+        let headerView = HeroHeaderView(contentView: contentView, largeTitleView: largeTitleView)
+        return (headerView, contentConstraint)
     }
 }
 
@@ -173,7 +167,7 @@ private extension UIViewController {
     enum AssociatedKeys {
         nonisolated(unsafe) static var scrollCancellable: Void?
         nonisolated(unsafe) static var scrollOffset: Void?
-        nonisolated(unsafe) static var headerView: Void?
+        nonisolated(unsafe) static var headerContainer: Void?
         nonisolated(unsafe) static var headerTopConstraint: Void?
         nonisolated(unsafe) static var headerHeightConstraint: Void?
         nonisolated(unsafe) static var contentHeightConstraint: Void?
@@ -181,11 +175,11 @@ private extension UIViewController {
         nonisolated(unsafe) static var headerTotalHeight: Void?
     }
 
-    var heroHeaderView: UIView? {
-        get { objc_getAssociatedObject(self, &AssociatedKeys.headerView) as? UIView }
+    var headerContainer: HeroHeaderView? {
+        get { objc_getAssociatedObject(self, &AssociatedKeys.headerContainer) as? HeroHeaderView }
         set { objc_setAssociatedObject(
             self,
-            &AssociatedKeys.headerView,
+            &AssociatedKeys.headerContainer,
             newValue,
             .OBJC_ASSOCIATION_RETAIN_NONATOMIC
         ) }

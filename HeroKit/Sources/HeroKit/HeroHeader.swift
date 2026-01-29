@@ -8,23 +8,35 @@ public enum HeroHeader {
         case headerView(view: UIView, configuration: HeaderViewConfiguration = .init())
     }
 
+    // MARK: - configurations
+
     public struct HeaderViewConfiguration {
         public let height: CGFloat
         public let minHeight: CGFloat?
         public let stretches: Bool
         public let largeTitleDisplayMode: LargeTitleDisplayMode
+        public let smallTitleDisplayMode: SmallTitleDisplayMode
 
         public init(
             height: CGFloat = 1000,
             minHeight: CGFloat? = nil,
             stretches: Bool = true,
-            largeTitleDisplayMode: LargeTitleDisplayMode = .none
+            largeTitleDisplayMode: LargeTitleDisplayMode = .none,
+            smallTitleDisplayMode: SmallTitleDisplayMode = .whenLargeTitleHidden
         ) {
             self.height = height
             self.minHeight = minHeight
             self.stretches = stretches
             self.largeTitleDisplayMode = largeTitleDisplayMode
+            self.smallTitleDisplayMode = smallTitleDisplayMode
         }
+    }
+
+    public enum SmallTitleDisplayMode: Hashable, Sendable {
+        case never
+        case always
+        case whenHeaderCollapsed
+        case whenLargeTitleHidden
     }
 
     public enum LargeTitleDisplayMode: Hashable, Sendable {
