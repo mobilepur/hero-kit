@@ -5,9 +5,10 @@ public class HeroHeaderView: UIStackView {
     public let contentView: UIView
     public private(set) var largeTitleView: UIView?
 
-    public var isCollapsed: Bool = false
-    public var isFullyExpanded: Bool = true
-    public var isStretching: Bool = false
+    public internal(set) var isCollapsed: Bool = false
+    public internal(set) var isFullyExpanded: Bool = true
+    public internal(set) var isStretching: Bool = false
+    public internal(set) var isLargeTitleHidden: Bool = false
 
     init(contentView: UIView, largeTitleView: UIView? = nil) {
         self.contentView = contentView

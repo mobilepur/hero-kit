@@ -58,6 +58,10 @@ extension UIViewController {
         headerConfiguration = configuration
         headerTotalHeight = totalHeight
 
+        // Store title and apply initial small title visibility
+        storedTitle = navigationItem.title ?? title
+        applySmallTitleVisibility(for: configuration.smallTitleDisplayMode, isCollapsed: false)
+
         heroHeaderDelegate?.heroHeader(self, didSetup: heroHeaderView)
     }
 
@@ -156,6 +160,24 @@ extension UIViewController {
         navigationController.navigationBar.scrollEdgeAppearance = scrollEdgeAppearance
         navigationController.navigationBar.compactScrollEdgeAppearance = scrollEdgeAppearance
     }
+
+    func applySmallTitleVisibility(
+        for mode: HeroHeader.SmallTitleDisplayMode,
+        isCollapsed: Bool,
+        isLargeTitleHidden: Bool = false
+    ) {
+        let shouldShow: Bool = switch mode {
+        case .never:
+            false
+        case .always:
+            true
+        case .whenHeaderCollapsed:
+            isCollapsed
+        case .whenLargeTitleHidden:
+            isLargeTitleHidden
+        }
+        navigationItem.title = shouldShow ? storedTitle : nil
+    }
 }
 
 private extension UIViewController {
@@ -170,6 +192,7 @@ private extension UIViewController {
         nonisolated(unsafe) static var headerConfiguration: Void?
         nonisolated(unsafe) static var headerTotalHeight: Void?
         nonisolated(unsafe) static var heroHeaderDelegate: Void?
+        nonisolated(unsafe) static var storedTitle: Void?
     }
 
     var heroHeaderDelegate: HeroHeaderDelegate? {
@@ -287,6 +310,18 @@ private extension UIViewController {
         }
     }
 
+    var storedTitle: String? {
+        get { objc_getAssociatedObject(self, &AssociatedKeys.storedTitle) as? String }
+        set {
+            objc_setAssociatedObject(
+                self,
+                &AssociatedKeys.storedTitle,
+                newValue,
+                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+            )
+        }
+    }
+
     func subscribeToScrollOffset(of scrollView: UIScrollView) {
         scrollCancellable = scrollView.publisher(for: \.contentOffset)
             .sink { [weak self] offset in
@@ -319,6 +354,16 @@ private extension UIViewController {
                 heroHeaderDelegate?.heroHeader(self, didStretch: headerView)
             }
 
+            // Large title visible, header not collapsed when stretching
+            if headerView.isLargeTitleHidden {
+                headerView.isLargeTitleHidden = false
+            }
+            applySmallTitleVisibility(
+                for: configuration.smallTitleDisplayMode,
+                isCollapsed: false,
+                isLargeTitleHidden: false
+            )
+
         } else if invertedOffset < totalHeight {
             // Header collapsing
             let minOffset = max(effectiveMinHeight, invertedOffset)
@@ -343,6 +388,19 @@ private extension UIViewController {
                 }
             }
 
+            // Track large title visibility (hidden when scrolled behind nav bar)
+            let isNowLargeTitleHidden = invertedOffset < configuration.height
+            if isNowLargeTitleHidden != headerView.isLargeTitleHidden {
+                headerView.isLargeTitleHidden = isNowLargeTitleHidden
+            }
+
+            // Update small title visibility
+            applySmallTitleVisibility(
+                for: configuration.smallTitleDisplayMode,
+                isCollapsed: headerView.isCollapsed,
+                isLargeTitleHidden: headerView.isLargeTitleHidden
+            )
+
             // No longer fully expanded
             if headerView.isFullyExpanded {
                 headerView.isFullyExpanded = false
@@ -365,6 +423,16 @@ private extension UIViewController {
                 headerView.isFullyExpanded = true
                 heroHeaderDelegate?.heroHeader(self, didExpandFully: headerView)
             }
+
+            // Large title visible, not collapsed when fully expanded
+            if headerView.isLargeTitleHidden {
+                headerView.isLargeTitleHidden = false
+            }
+            applySmallTitleVisibility(
+                for: configuration.smallTitleDisplayMode,
+                isCollapsed: false,
+                isLargeTitleHidden: false
+            )
         }
 
         let normalizedOffset = offsetY + totalHeight

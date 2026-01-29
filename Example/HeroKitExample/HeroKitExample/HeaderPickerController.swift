@@ -199,8 +199,8 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         print("didSetup: \(headerView)")
     }
 
-    func heroHeader(_: UIViewController, didScroll _: HeroHeaderView, offset: CGFloat) {
-        print("didScroll: offset=\(offset)")
+    func heroHeader(_: UIViewController, didScroll _: HeroHeaderView, offset _: CGFloat) {
+//        print("didScroll: offset=\(offset)")
     }
 
     func heroHeader(_: UIViewController, didCollapse _: HeroHeaderView) {
