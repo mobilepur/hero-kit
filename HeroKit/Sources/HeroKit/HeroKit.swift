@@ -52,25 +52,49 @@ public extension UIViewController {
         let topConstraint = headerView.topAnchor.constraint(equalTo: view.topAnchor)
         headerTopConstraint = topConstraint
 
+        let heightConstraint = headerView.heightAnchor
+            .constraint(equalToConstant: configuration.height)
+        heightConstraint.priority = .required
+
+        // Prevent intrinsic content size from overriding our height
+        headerView.setContentHuggingPriority(.defaultLow, for: .vertical)
+        headerView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+
         NSLayoutConstraint.activate([
             topConstraint,
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: configuration.height),
+            heightConstraint,
         ])
 
         // Adjust scroll view content inset and initial offset (like TODO example)
         let navBarHeight: CGFloat = navigationController?.navigationBar.frame.maxY ?? 88
         let height = configuration.height
+        let insetTop = height - navBarHeight
+
+        print("DEBUG setupHeaderView:")
+        print("  - height: \(height)")
+        print("  - navBarHeight: \(navBarHeight)")
+        print("  - insetTop: \(insetTop)")
+        print("  - headerView.frame: \(headerView.frame)")
+        print("  - scrollView.frame: \(scrollView.frame)")
+        print("  - scrollView.contentInset: \(scrollView.contentInset)")
+        print("  - scrollView.contentOffset: \(scrollView.contentOffset)")
+
         scrollView.contentInset = UIEdgeInsets(
-            top: height - navBarHeight,
+            top: insetTop,
             left: 0,
             bottom: 0,
             right: 0
         )
         // Set contentOffset after layout to prevent CollectionView from resetting it
         DispatchQueue.main.async {
-            scrollView.contentOffset.y = -height
+            scrollView.setContentOffset(.init(x: 0, y: -height), animated: false)
+            print(
+                "DEBUG after async: contentOffset.y = \(scrollView.contentOffset.y)",
+                "height",
+                height
+            )
         }
 
         // Store configuration for collapse handling
