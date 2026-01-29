@@ -17,11 +17,25 @@ public extension UIViewController {
         print("HeroKit: Subscribed to scroll view: \(targetScrollView)")
     }
 
-    private func setupHeader(style: HeroHeader.Style, scrollView _: UIScrollView) throws {
+    private func setupHeader(style: HeroHeader.Style, scrollView: UIScrollView) throws {
         switch style {
         case let .color(backgroundColor, foregroundColor):
             try styleHeader(backgroundColor: backgroundColor, foregroundColor: foregroundColor)
+        case let .headerView(view, height, minHeight):
+            setupHeaderView(view, height: height, minHeight: minHeight, scrollView: scrollView)
         }
+    }
+
+    private func setupHeaderView(
+        _ headerView: UIView,
+        height: CGFloat,
+        minHeight: CGFloat?,
+        scrollView _: UIScrollView
+    ) {
+        // TODO: Implement collapsable header view
+        print(
+            "HeroKit: headerView style not yet implemented - view: \(headerView), height: \(height), minHeight: \(String(describing: minHeight))"
+        )
     }
 
     private func styleHeader(backgroundColor: UIColor, foregroundColor: UIColor?) throws {
