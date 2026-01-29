@@ -44,7 +44,7 @@ public extension UIViewController {
             navigationController.navigationBar.compactScrollEdgeAppearance = appearance
         }
 
-        // Add header view to view hierarchy
+        // Add header view above scroll view
         headerView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(headerView)
 
@@ -59,14 +59,22 @@ public extension UIViewController {
             headerView.heightAnchor.constraint(equalToConstant: configuration.height),
         ])
 
-        // Adjust scroll view content inset
-        let navBarHeight = navigationController?.navigationBar.frame.maxY ?? 0
-        scrollView.contentInset.top = configuration.height - navBarHeight
-        scrollView.verticalScrollIndicatorInsets.top = configuration.height - navBarHeight
+        // Adjust scroll view content inset and initial offset (like TODO example)
+        let navBarHeight: CGFloat = navigationController?.navigationBar.frame.maxY ?? 88
+        let height = configuration.height
+        scrollView.contentInset = UIEdgeInsets(
+            top: height - navBarHeight,
+            left: 0,
+            bottom: 0,
+            right: 0
+        )
+        // Set contentOffset after layout to prevent CollectionView from resetting it
+        DispatchQueue.main.async {
+            scrollView.contentOffset.y = -height
+        }
 
-        // Will be used for collapse functionality later
-        _ = configuration.minHeight
-        _ = configuration.bounces
+        // Store configuration for collapse handling
+        headerConfiguration = configuration
     }
 
     private func styleHeader(backgroundColor: UIColor, foregroundColor: UIColor?) throws {
@@ -98,6 +106,7 @@ public extension UIViewController {
         nonisolated(unsafe) static var headerView: Void?
         nonisolated(unsafe) static var headerTopConstraint: Void?
         nonisolated(unsafe) static var headerBottomConstraint: Void?
+        nonisolated(unsafe) static var headerConfiguration: Void?
     }
 
     private var heroHeaderView: UIView? {
@@ -156,6 +165,23 @@ public extension UIViewController {
         ) }
     }
 
+    private var headerConfiguration: HeroHeader.HeaderViewConfiguration? {
+        get {
+            objc_getAssociatedObject(
+                self,
+                &AssociatedKeys.headerConfiguration
+            ) as? HeroHeader.HeaderViewConfiguration
+        }
+        set {
+            objc_setAssociatedObject(
+                self,
+                &AssociatedKeys.headerConfiguration,
+                newValue,
+                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+            )
+        }
+    }
+
     private func subscribeToScrollOffset(of scrollView: UIScrollView) {
         scrollCancellable = scrollView.publisher(for: \.contentOffset)
             .sink { [weak self] offset in
@@ -164,7 +190,22 @@ public extension UIViewController {
             }
     }
 
-    private func updateHeaderConstraints(for _: CGFloat) { }
+    private func updateHeaderConstraints(for offsetY: CGFloat) {
+        guard let configuration = headerConfiguration,
+              let topConstraint = headerTopConstraint
+        else { return }
+
+        let offsetY = -offsetY
+        let minOffset = max(configuration.minHeight ?? 0, offsetY)
+
+        if minOffset < configuration.height {
+            // header collapsed
+            topConstraint.constant = minOffset - configuration.height
+        } else {
+            // header fully expanded
+            topConstraint.constant = 0
+        }
+    }
 
 }
 
