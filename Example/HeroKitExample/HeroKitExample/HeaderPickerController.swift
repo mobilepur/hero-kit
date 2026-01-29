@@ -121,13 +121,10 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
     ]
 
     private let viewItems: [StyleItem] = [
-        .headerView(name: "Image Header", imageName: "photo.fill", height: 200),
-        .headerView(
-            name: "Tall Image Header",
-            imageName: "photo.fill",
-            height: 300,
-            minHeight: 100
-        ),
+        .headerView(assetName: "bikes", height: 200),
+        .headerView(assetName: "ricefields", height: 200),
+        .headerView(assetName: "temple", height: 200),
+        .headerView(assetName: "vulcano", height: 200),
     ]
 }
 
@@ -149,12 +146,12 @@ nonisolated enum Section: Hashable, Sendable {
 
 nonisolated enum StyleItem: Hashable, Sendable {
     case color(name: String, red: CGFloat, green: CGFloat, blue: CGFloat)
-    case headerView(name: String, imageName: String, height: CGFloat, minHeight: CGFloat? = nil)
+    case headerView(assetName: String, height: CGFloat, minHeight: CGFloat? = nil)
 
     var name: String {
         switch self {
         case let .color(name, _, _, _): name
-        case let .headerView(name, _, _, _): name
+        case let .headerView(assetName, _, _): assetName.capitalized
         }
     }
 
@@ -163,8 +160,8 @@ nonisolated enum StyleItem: Hashable, Sendable {
         case let .color(_, red, green, blue):
             let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
             return Self.colorImage(for: color)
-        case let .headerView(_, imageName, _, _):
-            return UIImage(systemName: imageName)
+        case let .headerView(assetName, _, _):
+            return UIImage(named: assetName)
         }
     }
 
@@ -173,11 +170,10 @@ nonisolated enum StyleItem: Hashable, Sendable {
         case let .color(_, red, green, blue):
             let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
             return .color(backgroundColor: color, foregroundColor: .white)
-        case let .headerView(_, imageName, height, minHeight):
-            let imageView = UIImageView(image: UIImage(systemName: imageName))
+        case let .headerView(assetName, height, minHeight):
+            let imageView = UIImageView(image: UIImage(named: assetName))
             imageView.contentMode = .scaleAspectFill
             imageView.clipsToBounds = true
-            imageView.backgroundColor = .systemGray5
             return .headerView(view: imageView, height: height, minHeight: minHeight)
         }
     }
