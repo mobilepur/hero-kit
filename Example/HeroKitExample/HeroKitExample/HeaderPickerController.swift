@@ -40,6 +40,8 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
             var content = cell.defaultContentConfiguration()
             content.text = item.name
             content.image = item.image
+            content.imageProperties.maximumSize = CGSize(width: 40, height: 40)
+            content.imageProperties.cornerRadius = 6
             cell.contentConfiguration = content
         }
 
