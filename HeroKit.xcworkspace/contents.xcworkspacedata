@@ -7,4 +7,7 @@
    <FileRef
       location = "group:HeroKit">
    </FileRef>
+   <FileRef
+      location = "group:docs">
+   </FileRef>
 </Workspace>
