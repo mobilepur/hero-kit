@@ -12,6 +12,12 @@ extension HeroHeader.HeaderViewConfiguration {
         if !stretches {
             parts.append("no stretch")
         }
+        switch largeTitleDisplayMode {
+        case .none:
+            break
+        case let .belowHeader(config):
+            parts.append(config.allowsLineWrap ? "large title (wrap)" : "large title")
+        }
         return parts.joined(separator: ", ")
     }
 

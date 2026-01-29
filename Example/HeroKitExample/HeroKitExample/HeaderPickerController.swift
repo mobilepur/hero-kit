@@ -52,7 +52,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
             ) { [weak self] headerView, _, indexPath in
                 guard let section = self?.dataSource.sectionIdentifier(for: indexPath.section)
                 else { return }
-                var content = headerView.defaultContentConfiguration()
+                var content = UIListContentConfiguration.prominentInsetGroupedHeader()
                 content.text = section.title
                 headerView.contentConfiguration = content
             }
@@ -136,6 +136,12 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
         .headerView(assetName: "ricefields", height: 400),
         .headerView(assetName: "temple", height: 500, stretches: true),
         .headerView(assetName: "vulcano", height: 300, stretches: false),
+        .headerView(assetName: "bikes", height: 300, largeTitleDisplayMode: .belowHeader()),
+        .headerView(
+            assetName: "ricefields",
+            height: 250,
+            largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
+        ),
     ]
 }
 
@@ -161,13 +167,14 @@ nonisolated enum StyleItem: Hashable, Sendable {
         assetName: String,
         height: CGFloat = 240,
         minHeight: CGFloat? = nil,
-        stretches: Bool = true
+        stretches: Bool = true,
+        largeTitleDisplayMode: HeroHeader.LargeTitleDisplayMode = .none
     )
 
     var name: String {
         switch self {
         case let .color(name, _, _, _): name
-        case let .headerView(assetName, _, _, _): assetName.capitalized
+        case let .headerView(assetName, _, _, _, _): assetName.capitalized
         }
     }
 
@@ -176,7 +183,7 @@ nonisolated enum StyleItem: Hashable, Sendable {
         case let .color(_, red, green, blue):
             let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
             return Self.colorImage(for: color)
-        case let .headerView(assetName, _, _, _):
+        case let .headerView(assetName, _, _, _, _):
             return UIImage(named: assetName)
         }
     }
@@ -185,11 +192,12 @@ nonisolated enum StyleItem: Hashable, Sendable {
         switch self {
         case .color:
             return nil
-        case let .headerView(_, height, minHeight, stretches):
+        case let .headerView(_, height, minHeight, stretches, largeTitleDisplayMode):
             let config = HeroHeader.HeaderViewConfiguration(
                 height: height,
                 minHeight: minHeight,
-                stretches: stretches
+                stretches: stretches,
+                largeTitleDisplayMode: largeTitleDisplayMode
             )
             return config.description
         }
@@ -200,14 +208,15 @@ nonisolated enum StyleItem: Hashable, Sendable {
         case let .color(_, red, green, blue):
             let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
             return .color(backgroundColor: color, foregroundColor: .white)
-        case let .headerView(assetName, height, minHeight, stretches):
+        case let .headerView(assetName, height, minHeight, stretches, largeTitleDisplayMode):
             let imageView = UIImageView(image: UIImage(named: assetName))
             imageView.contentMode = .scaleAspectFill
             imageView.clipsToBounds = true
             let configuration = HeroHeader.HeaderViewConfiguration(
                 height: height,
                 minHeight: minHeight,
-                stretches: stretches
+                stretches: stretches,
+                largeTitleDisplayMode: largeTitleDisplayMode
             )
             return .headerView(view: imageView, configuration: configuration)
         }
