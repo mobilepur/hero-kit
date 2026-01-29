@@ -128,19 +128,16 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
     ]
 
     private let viewItems: [StyleItem] = [
-        // Height 300, no options
+        // Base case with two heights
         .headerView(title: "Bikes", assetName: "bikes", height: 300),
-        // Height 500, no options
         .headerView(title: "Rice Fields", assetName: "ricefields", height: 500),
 
-        // Height 300, stretches
+        // Stretch variations
         .headerView(title: "Temple", assetName: "temple", height: 300, stretches: true),
-        // Height 300, no stretch
         .headerView(title: "Vulcano", assetName: "vulcano", height: 300, stretches: false),
 
-        // Height 500, minHeight
-        .headerView(title: "Bikes", assetName: "bikes", height: 500, minHeight: 100),
-        // Height 300, minHeight, stretches
+        // MinHeight
+        .headerView(title: "Bikes", assetName: "bikes", height: 300, minHeight: 80),
         .headerView(
             title: "Rice Fields",
             assetName: "ricefields",
@@ -156,7 +153,6 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
             height: 300,
             largeTitleDisplayMode: .belowHeader()
         ),
-        // Large title, stretches
         .headerView(
             title: "Discover",
             assetName: "vulcano",
@@ -164,12 +160,11 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
             stretches: true,
             largeTitleDisplayMode: .belowHeader()
         ),
-        // Large title, minHeight
         .headerView(
             title: "Adventure",
             assetName: "bikes",
-            height: 500,
-            minHeight: 100,
+            height: 300,
+            minHeight: 80,
             largeTitleDisplayMode: .belowHeader()
         ),
 
@@ -180,7 +175,6 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
             height: 300,
             largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
         ),
-        // Large title with wrap, stretches
         .headerView(
             title: "Beautiful Rice Terraces",
             assetName: "ricefields",
@@ -188,12 +182,11 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
             stretches: true,
             largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
         ),
-        // Large title with wrap, minHeight, stretches
         .headerView(
             title: "Volcanic Wonders of Indonesia",
             assetName: "vulcano",
-            height: 500,
-            minHeight: 120,
+            height: 300,
+            minHeight: 80,
             stretches: true,
             largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
         ),
