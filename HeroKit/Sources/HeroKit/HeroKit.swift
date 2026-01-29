@@ -54,7 +54,7 @@ public extension UIViewController {
 
         let heightConstraint = headerView.heightAnchor
             .constraint(equalToConstant: configuration.height)
-        heightConstraint.priority = .required
+        headerHeightConstraint = heightConstraint
 
         // Prevent intrinsic content size from overriding our height
         headerView.setContentHuggingPriority(.defaultLow, for: .vertical)
@@ -129,7 +129,7 @@ public extension UIViewController {
         nonisolated(unsafe) static var scrollOffset: Void?
         nonisolated(unsafe) static var headerView: Void?
         nonisolated(unsafe) static var headerTopConstraint: Void?
-        nonisolated(unsafe) static var headerBottomConstraint: Void?
+        nonisolated(unsafe) static var headerHeightConstraint: Void?
         nonisolated(unsafe) static var headerConfiguration: Void?
     }
 
@@ -156,14 +156,14 @@ public extension UIViewController {
         ) }
     }
 
-    private var headerBottomConstraint: NSLayoutConstraint? {
+    private var headerHeightConstraint: NSLayoutConstraint? {
         get {
             objc_getAssociatedObject(self,
-                                     &AssociatedKeys.headerBottomConstraint) as? NSLayoutConstraint
+                                     &AssociatedKeys.headerHeightConstraint) as? NSLayoutConstraint
         }
         set { objc_setAssociatedObject(
             self,
-            &AssociatedKeys.headerBottomConstraint,
+            &AssociatedKeys.headerHeightConstraint,
             newValue,
             .OBJC_ASSOCIATION_RETAIN_NONATOMIC
         ) }
@@ -216,18 +216,26 @@ public extension UIViewController {
 
     private func updateHeaderConstraints(for offsetY: CGFloat) {
         guard let configuration = headerConfiguration,
-              let topConstraint = headerTopConstraint
+              let topConstraint = headerTopConstraint,
+              let heightConstraint = headerHeightConstraint
         else { return }
 
-        let offsetY = -offsetY
-        let minOffset = max(configuration.minHeight ?? 0, offsetY)
+        let invertedOffset = -offsetY
+        let height = configuration.height
 
-        if minOffset < configuration.height {
-            // header collapsed
-            topConstraint.constant = minOffset - configuration.height
-        } else {
-            // header fully expanded
+        if invertedOffset > height, configuration.stretches {
+            // Overscroll - stretch effect
+            heightConstraint.constant = invertedOffset
             topConstraint.constant = 0
+        } else if invertedOffset < height {
+            // Header collapsing
+            let minOffset = max(configuration.minHeight ?? 0, invertedOffset)
+            topConstraint.constant = minOffset - height
+            heightConstraint.constant = height
+        } else {
+            // Normal expanded state
+            topConstraint.constant = 0
+            heightConstraint.constant = height
         }
     }
 

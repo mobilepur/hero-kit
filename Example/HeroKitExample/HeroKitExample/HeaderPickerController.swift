@@ -134,8 +134,8 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
     private let viewItems: [StyleItem] = [
         .headerView(assetName: "bikes", height: 250),
         .headerView(assetName: "ricefields", height: 400),
-        .headerView(assetName: "temple", height: 500),
-        .headerView(assetName: "vulcano", height: 300),
+        .headerView(assetName: "temple", height: 500, stretches: true),
+        .headerView(assetName: "vulcano", height: 300, stretches: false),
     ]
 }
 
@@ -161,7 +161,7 @@ nonisolated enum StyleItem: Hashable, Sendable {
         assetName: String,
         height: CGFloat = 240,
         minHeight: CGFloat? = nil,
-        bounces: Bool = true
+        stretches: Bool = true
     )
 
     var name: String {
@@ -185,11 +185,11 @@ nonisolated enum StyleItem: Hashable, Sendable {
         switch self {
         case .color:
             return nil
-        case let .headerView(_, height, minHeight, bounces):
+        case let .headerView(_, height, minHeight, stretches):
             let config = HeroHeader.HeaderViewConfiguration(
                 height: height,
                 minHeight: minHeight,
-                bounces: bounces
+                stretches: stretches
             )
             return config.description
         }
@@ -200,14 +200,14 @@ nonisolated enum StyleItem: Hashable, Sendable {
         case let .color(_, red, green, blue):
             let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
             return .color(backgroundColor: color, foregroundColor: .white)
-        case let .headerView(assetName, height, minHeight, bounces):
+        case let .headerView(assetName, height, minHeight, stretches):
             let imageView = UIImageView(image: UIImage(named: assetName))
             imageView.contentMode = .scaleAspectFill
             imageView.clipsToBounds = true
             let configuration = HeroHeader.HeaderViewConfiguration(
                 height: height,
                 minHeight: minHeight,
-                bounces: bounces
+                stretches: stretches
             )
             return .headerView(view: imageView, configuration: configuration)
         }

@@ -9,8 +9,8 @@ extension HeroHeader.HeaderViewConfiguration {
         if let minHeight {
             parts.append("min: \(Int(minHeight))")
         }
-        if !bounces {
-            parts.append("no bounce")
+        if !stretches {
+            parts.append("no stretch")
         }
         return parts.joined(separator: ", ")
     }

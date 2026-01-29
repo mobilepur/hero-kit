@@ -11,12 +11,12 @@ public enum HeroHeader {
     public struct HeaderViewConfiguration {
         public let height: CGFloat
         public let minHeight: CGFloat?
-        public let bounces: Bool
+        public let stretches: Bool
 
-        public init(height: CGFloat = 1000, minHeight: CGFloat? = nil, bounces: Bool = true) {
+        public init(height: CGFloat = 1000, minHeight: CGFloat? = nil, stretches: Bool = true) {
             self.height = height
             self.minHeight = minHeight
-            self.bounces = bounces
+            self.stretches = stretches
         }
     }
 
