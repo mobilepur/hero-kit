@@ -21,15 +21,14 @@ public extension UIViewController {
         switch style {
         case let .color(backgroundColor, foregroundColor):
             try styleHeader(backgroundColor: backgroundColor, foregroundColor: foregroundColor)
-        case let .headerView(view, height, minHeight):
-            setupHeaderView(view, height: height, minHeight: minHeight, scrollView: scrollView)
+        case let .headerView(view, configuration):
+            setupHeaderView(view, configuration: configuration, scrollView: scrollView)
         }
     }
 
     private func setupHeaderView(
         _ headerView: UIView,
-        height: CGFloat,
-        minHeight: CGFloat?,
+        configuration: HeroHeader.HeaderViewConfiguration,
         scrollView: UIScrollView
     ) {
         // Store header view reference
@@ -57,15 +56,17 @@ public extension UIViewController {
             topConstraint,
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: height),
+            headerView.heightAnchor.constraint(equalToConstant: configuration.height),
         ])
 
         // Adjust scroll view content inset
         let navBarHeight = navigationController?.navigationBar.frame.maxY ?? 0
-        scrollView.contentInset.top = height - navBarHeight
-        scrollView.verticalScrollIndicatorInsets.top = height - navBarHeight
+        scrollView.contentInset.top = configuration.height - navBarHeight
+        scrollView.verticalScrollIndicatorInsets.top = configuration.height - navBarHeight
 
-        _ = minHeight // Will be used for collapse functionality later
+        // Will be used for collapse functionality later
+        _ = configuration.minHeight
+        _ = configuration.bounces
     }
 
     private func styleHeader(backgroundColor: UIColor, foregroundColor: UIColor?) throws {

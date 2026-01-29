@@ -148,7 +148,7 @@ nonisolated enum Section: Hashable, Sendable {
 
 nonisolated enum StyleItem: Hashable, Sendable {
     case color(name: String, red: CGFloat, green: CGFloat, blue: CGFloat)
-    case headerView(assetName: String, height: CGFloat, minHeight: CGFloat? = nil)
+    case headerView(assetName: String, height: CGFloat = 240, minHeight: CGFloat? = nil)
 
     var name: String {
         switch self {
@@ -176,7 +176,11 @@ nonisolated enum StyleItem: Hashable, Sendable {
             let imageView = UIImageView(image: UIImage(named: assetName))
             imageView.contentMode = .scaleAspectFill
             imageView.clipsToBounds = true
-            return .headerView(view: imageView, height: height, minHeight: minHeight)
+            let configuration = HeroHeader.HeaderViewConfiguration(
+                height: height,
+                minHeight: minHeight
+            )
+            return .headerView(view: imageView, configuration: configuration)
         }
     }
 
