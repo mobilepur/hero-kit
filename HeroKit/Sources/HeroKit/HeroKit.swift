@@ -14,6 +14,11 @@ public extension UIViewController {
         try setupHeader(style: style, scrollView: targetScrollView)
         subscribeToScrollOffset(of: targetScrollView)
     }
+}
+
+// MARK: - helper
+
+extension UIViewController {
 
     private func setupHeader(style: HeroHeader.Style, scrollView: UIScrollView) throws {
         switch style {
@@ -69,14 +74,14 @@ public extension UIViewController {
         stackView.distribution = .fill
         stackView.clipsToBounds = true
 
-        // headerView mit Höhen-Constraint (wird beim Stretch angepasst)
+        // headerView with height constraint (adjusted during stretch)
         headerView.translatesAutoresizingMaskIntoConstraints = false
         let contentConstraint = headerView.heightAnchor
             .constraint(equalToConstant: configuration.height)
         contentConstraint.isActive = true
         stackView.addArrangedSubview(headerView)
 
-        // Optional: Large Title hinzufügen
+        // Optional: Add large title
         if case let .belowHeader(titleConfig) = configuration.largeTitleDisplayMode,
            let title = navigationItem.title ?? title
         {
@@ -105,10 +110,10 @@ extension UIViewController {
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
         ])
 
-        // Layout durchführen um intrinsische Höhe zu berechnen
+        // Perform layout to calculate intrinsic height
         view.layoutIfNeeded()
 
-        // Jetzt Höhen-Constraint setzen (für spätere Collapse/Stretch Animationen)
+        // Set height constraint (for collapse/stretch animations)
         let heightConstraint = headerView.heightAnchor
             .constraint(equalToConstant: headerView.frame.height)
         heightConstraint.isActive = true
@@ -161,8 +166,11 @@ extension UIViewController {
         navigationController.navigationBar.scrollEdgeAppearance = scrollEdgeAppearance
         navigationController.navigationBar.compactScrollEdgeAppearance = scrollEdgeAppearance
     }
+}
 
-    private enum AssociatedKeys {
+private extension UIViewController {
+
+    enum AssociatedKeys {
         nonisolated(unsafe) static var scrollCancellable: Void?
         nonisolated(unsafe) static var scrollOffset: Void?
         nonisolated(unsafe) static var headerView: Void?
@@ -173,7 +181,7 @@ extension UIViewController {
         nonisolated(unsafe) static var headerTotalHeight: Void?
     }
 
-    private var heroHeaderView: UIView? {
+    var heroHeaderView: UIView? {
         get { objc_getAssociatedObject(self, &AssociatedKeys.headerView) as? UIView }
         set { objc_setAssociatedObject(
             self,
@@ -183,7 +191,7 @@ extension UIViewController {
         ) }
     }
 
-    private var headerTopConstraint: NSLayoutConstraint? {
+    var headerTopConstraint: NSLayoutConstraint? {
         get {
             objc_getAssociatedObject(self,
                                      &AssociatedKeys.headerTopConstraint) as? NSLayoutConstraint
@@ -196,7 +204,7 @@ extension UIViewController {
         ) }
     }
 
-    private var headerHeightConstraint: NSLayoutConstraint? {
+    var headerHeightConstraint: NSLayoutConstraint? {
         get {
             objc_getAssociatedObject(self,
                                      &AssociatedKeys.headerHeightConstraint) as? NSLayoutConstraint
@@ -209,7 +217,7 @@ extension UIViewController {
         ) }
     }
 
-    private var contentHeightConstraint: NSLayoutConstraint? {
+    var contentHeightConstraint: NSLayoutConstraint? {
         get {
             objc_getAssociatedObject(self,
                                      &AssociatedKeys.contentHeightConstraint) as? NSLayoutConstraint
@@ -222,7 +230,7 @@ extension UIViewController {
         ) }
     }
 
-    private var scrollCancellable: AnyCancellable? {
+    var scrollCancellable: AnyCancellable? {
         get { objc_getAssociatedObject(self, &AssociatedKeys.scrollCancellable) as? AnyCancellable }
         set { objc_setAssociatedObject(
             self,
@@ -232,7 +240,7 @@ extension UIViewController {
         ) }
     }
 
-    private(set) var heroScrollOffset: CGFloat {
+    var heroScrollOffset: CGFloat {
         get { (objc_getAssociatedObject(self, &AssociatedKeys.scrollOffset) as? CGFloat) ?? 0 }
         set { objc_setAssociatedObject(
             self,
@@ -242,7 +250,7 @@ extension UIViewController {
         ) }
     }
 
-    private var headerConfiguration: HeroHeader.HeaderViewConfiguration? {
+    var headerConfiguration: HeroHeader.HeaderViewConfiguration? {
         get {
             objc_getAssociatedObject(
                 self,
@@ -259,7 +267,7 @@ extension UIViewController {
         }
     }
 
-    private var headerTotalHeight: CGFloat {
+    var headerTotalHeight: CGFloat {
         get { (objc_getAssociatedObject(self, &AssociatedKeys.headerTotalHeight) as? CGFloat) ?? 0 }
         set {
             objc_setAssociatedObject(
@@ -271,7 +279,7 @@ extension UIViewController {
         }
     }
 
-    private func subscribeToScrollOffset(of scrollView: UIScrollView) {
+    func subscribeToScrollOffset(of scrollView: UIScrollView) {
         scrollCancellable = scrollView.publisher(for: \.contentOffset)
             .sink { [weak self] offset in
                 self?.heroScrollOffset = offset.y
@@ -279,7 +287,7 @@ extension UIViewController {
             }
     }
 
-    private func updateHeaderConstraints(for offsetY: CGFloat) {
+    func updateHeaderConstraints(for offsetY: CGFloat) {
         guard let configuration = headerConfiguration,
               let topConstraint = headerTopConstraint,
               let heightConstraint = headerHeightConstraint
