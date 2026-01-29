@@ -13,10 +13,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: windowScene)
 
-        let controller = HeaderPickerController(navbarStyle: .color(
-            backgroundColor: .systemBlue,
-            foregroundColor: .white
-        ))
+        let controller = HeaderPickerController(
+            title: "Style Picker",
+            navbarStyle: .color(backgroundColor: .systemBlue, foregroundColor: .white)
+        )
         controller.delegate = self
 
         let nav = UINavigationController(rootViewController: controller)
@@ -30,9 +30,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 extension SceneDelegate: HeaderPickerControllerDelegate {
     func headerPicker(
         _ controller: HeaderPickerController,
-        didPickCellWithHeaderStyle style: HeroHeader.Style
+        didPickCellWithTitle title: String,
+        style: HeroHeader.Style
     ) {
-        let nextController = HeaderPickerController(navbarStyle: style)
+        let nextController = HeaderPickerController(title: title, navbarStyle: style)
         nextController.delegate = self
         controller.navigationController?.pushViewController(nextController, animated: true)
     }

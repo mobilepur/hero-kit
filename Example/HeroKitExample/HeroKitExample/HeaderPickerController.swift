@@ -4,7 +4,8 @@ import UIKit
 protocol HeaderPickerControllerDelegate {
     func headerPicker(
         _ controller: HeaderPickerController,
-        didPickCellWithHeaderStyle: HeroHeader.Style
+        didPickCellWithTitle title: String,
+        style: HeroHeader.Style
     )
 }
 
@@ -13,9 +14,10 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
     let navbarStyle: HeroHeader.Style
     var delegate: HeaderPickerControllerDelegate?
 
-    init(navbarStyle: HeroHeader.Style) {
+    init(title: String, navbarStyle: HeroHeader.Style) {
         self.navbarStyle = navbarStyle
         super.init(nibName: nil, bundle: nil)
+        self.title = title
     }
 
     @available(*, unavailable)
@@ -78,7 +80,6 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
     }()
 
     override func viewDidLoad() {
-        title = "Style Picker"
         if #unavailable(iOS 26) {
             navigationController?.navigationBar.prefersLargeTitles = true
         }
@@ -102,7 +103,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         collectionView.deselectItem(at: indexPath, animated: true)
         guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
-        delegate?.headerPicker(self, didPickCellWithHeaderStyle: item.style)
+        delegate?.headerPicker(self, didPickCellWithTitle: item.name, style: item.style)
     }
 
     private func applySnapshot() {
@@ -118,28 +119,82 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
     private let colorItems: [StyleItem] = [
         .color(name: "Red", red: 1.0, green: 0.23, blue: 0.19),
         .color(name: "Orange", red: 1.0, green: 0.58, blue: 0.0),
-        .color(name: "Yellow", red: 1.0, green: 0.8, blue: 0.0),
         .color(name: "Green", red: 0.2, green: 0.78, blue: 0.35),
-        .color(name: "Mint", red: 0.0, green: 0.78, blue: 0.75),
         .color(name: "Teal", red: 0.19, green: 0.69, blue: 0.78),
-        .color(name: "Cyan", red: 0.32, green: 0.86, blue: 0.86),
         .color(name: "Blue", red: 0.0, green: 0.48, blue: 1.0),
         .color(name: "Indigo", red: 0.35, green: 0.34, blue: 0.84),
         .color(name: "Purple", red: 0.69, green: 0.32, blue: 0.87),
         .color(name: "Pink", red: 1.0, green: 0.18, blue: 0.33),
-        .color(name: "Brown", red: 0.64, green: 0.52, blue: 0.37),
-        .color(name: "Gray", red: 0.56, green: 0.56, blue: 0.58),
     ]
 
     private let viewItems: [StyleItem] = [
-        .headerView(assetName: "bikes", height: 250),
-        .headerView(assetName: "ricefields", height: 400),
-        .headerView(assetName: "temple", height: 500, stretches: true),
-        .headerView(assetName: "vulcano", height: 300, stretches: false),
-        .headerView(assetName: "bikes", height: 300, largeTitleDisplayMode: .belowHeader()),
+        // Height 300, no options
+        .headerView(title: "Bikes", assetName: "bikes", height: 300),
+        // Height 500, no options
+        .headerView(title: "Rice Fields", assetName: "ricefields", height: 500),
+
+        // Height 300, stretches
+        .headerView(title: "Temple", assetName: "temple", height: 300, stretches: true),
+        // Height 300, no stretch
+        .headerView(title: "Vulcano", assetName: "vulcano", height: 300, stretches: false),
+
+        // Height 500, minHeight
+        .headerView(title: "Bikes", assetName: "bikes", height: 500, minHeight: 100),
+        // Height 300, minHeight, stretches
         .headerView(
+            title: "Rice Fields",
             assetName: "ricefields",
-            height: 250,
+            height: 300,
+            minHeight: 80,
+            stretches: true
+        ),
+
+        // Large title
+        .headerView(
+            title: "Explore",
+            assetName: "temple",
+            height: 300,
+            largeTitleDisplayMode: .belowHeader()
+        ),
+        // Large title, stretches
+        .headerView(
+            title: "Discover",
+            assetName: "vulcano",
+            height: 300,
+            stretches: true,
+            largeTitleDisplayMode: .belowHeader()
+        ),
+        // Large title, minHeight
+        .headerView(
+            title: "Adventure",
+            assetName: "bikes",
+            height: 500,
+            minHeight: 100,
+            largeTitleDisplayMode: .belowHeader()
+        ),
+
+        // Large title with wrap
+        .headerView(
+            title: "Ancient Temples of Bali",
+            assetName: "temple",
+            height: 300,
+            largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
+        ),
+        // Large title with wrap, stretches
+        .headerView(
+            title: "Beautiful Rice Terraces",
+            assetName: "ricefields",
+            height: 300,
+            stretches: true,
+            largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
+        ),
+        // Large title with wrap, minHeight, stretches
+        .headerView(
+            title: "Volcanic Wonders of Indonesia",
+            assetName: "vulcano",
+            height: 500,
+            minHeight: 120,
+            stretches: true,
             largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
         ),
     ]
@@ -164,6 +219,7 @@ nonisolated enum Section: Hashable, Sendable {
 nonisolated enum StyleItem: Hashable, Sendable {
     case color(name: String, red: CGFloat, green: CGFloat, blue: CGFloat)
     case headerView(
+        title: String,
         assetName: String,
         height: CGFloat = 240,
         minHeight: CGFloat? = nil,
@@ -174,7 +230,7 @@ nonisolated enum StyleItem: Hashable, Sendable {
     var name: String {
         switch self {
         case let .color(name, _, _, _): name
-        case let .headerView(assetName, _, _, _, _): assetName.capitalized
+        case let .headerView(title, _, _, _, _, _): title
         }
     }
 
@@ -183,7 +239,7 @@ nonisolated enum StyleItem: Hashable, Sendable {
         case let .color(_, red, green, blue):
             let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
             return Self.colorImage(for: color)
-        case let .headerView(assetName, _, _, _, _):
+        case let .headerView(_, assetName, _, _, _, _):
             return UIImage(named: assetName)
         }
     }
@@ -192,7 +248,7 @@ nonisolated enum StyleItem: Hashable, Sendable {
         switch self {
         case .color:
             return nil
-        case let .headerView(_, height, minHeight, stretches, largeTitleDisplayMode):
+        case let .headerView(_, _, height, minHeight, stretches, largeTitleDisplayMode):
             let config = HeroHeader.HeaderViewConfiguration(
                 height: height,
                 minHeight: minHeight,
@@ -205,10 +261,10 @@ nonisolated enum StyleItem: Hashable, Sendable {
 
     var style: HeroHeader.Style {
         switch self {
-        case let .color(_, red, green, blue):
+        case let .color(name, red, green, blue):
             let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
             return .color(backgroundColor: color, foregroundColor: .white)
-        case let .headerView(assetName, height, minHeight, stretches, largeTitleDisplayMode):
+        case let .headerView(_, assetName, height, minHeight, stretches, largeTitleDisplayMode):
             let imageView = UIImageView(image: UIImage(named: assetName))
             imageView.contentMode = .scaleAspectFill
             imageView.clipsToBounds = true

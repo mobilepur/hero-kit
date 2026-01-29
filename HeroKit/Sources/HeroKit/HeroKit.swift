@@ -31,8 +31,12 @@ public extension UIViewController {
     ) {
         configureTransparentNavigationBar()
 
-        let stackView = createHeaderStackView(headerView: headerView, configuration: configuration)
+        let (stackView, contentConstraint) = createHeaderStackView(
+            headerView: headerView,
+            configuration: configuration
+        )
         heroHeaderView = stackView
+        contentHeightConstraint = contentConstraint
 
         let constraints = layoutHeaderView(stackView)
         headerTopConstraint = constraints.top
@@ -58,16 +62,18 @@ public extension UIViewController {
     private func createHeaderStackView(
         headerView: UIView,
         configuration: HeroHeader.HeaderViewConfiguration
-    ) -> UIStackView {
+    ) -> (stackView: UIStackView, contentConstraint: NSLayoutConstraint) {
         let stackView = UIStackView()
         stackView.axis = .vertical
         stackView.alignment = .fill
         stackView.distribution = .fill
         stackView.clipsToBounds = true
 
-        // headerView mit fixer Höhe
+        // headerView mit Höhen-Constraint (wird beim Stretch angepasst)
         headerView.translatesAutoresizingMaskIntoConstraints = false
-        headerView.heightAnchor.constraint(equalToConstant: configuration.height).isActive = true
+        let contentConstraint = headerView.heightAnchor
+            .constraint(equalToConstant: configuration.height)
+        contentConstraint.isActive = true
         stackView.addArrangedSubview(headerView)
 
         // Optional: Large Title hinzufügen
@@ -81,7 +87,7 @@ public extension UIViewController {
             stackView.addArrangedSubview(largeTitleView)
         }
 
-        return stackView
+        return (stackView, contentConstraint)
     }
 }
 
@@ -162,6 +168,7 @@ extension UIViewController {
         nonisolated(unsafe) static var headerView: Void?
         nonisolated(unsafe) static var headerTopConstraint: Void?
         nonisolated(unsafe) static var headerHeightConstraint: Void?
+        nonisolated(unsafe) static var contentHeightConstraint: Void?
         nonisolated(unsafe) static var headerConfiguration: Void?
         nonisolated(unsafe) static var headerTotalHeight: Void?
     }
@@ -197,6 +204,19 @@ extension UIViewController {
         set { objc_setAssociatedObject(
             self,
             &AssociatedKeys.headerHeightConstraint,
+            newValue,
+            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+        ) }
+    }
+
+    private var contentHeightConstraint: NSLayoutConstraint? {
+        get {
+            objc_getAssociatedObject(self,
+                                     &AssociatedKeys.contentHeightConstraint) as? NSLayoutConstraint
+        }
+        set { objc_setAssociatedObject(
+            self,
+            &AssociatedKeys.contentHeightConstraint,
             newValue,
             .OBJC_ASSOCIATION_RETAIN_NONATOMIC
         ) }
@@ -270,17 +290,21 @@ extension UIViewController {
 
         if invertedOffset > totalHeight, configuration.stretches {
             // Overscroll - stretch effect
+            let stretchAmount = invertedOffset - totalHeight
             heightConstraint.constant = invertedOffset
+            contentHeightConstraint?.constant = configuration.height + stretchAmount
             topConstraint.constant = 0
         } else if invertedOffset < totalHeight {
             // Header collapsing
             let minOffset = max(configuration.minHeight ?? 0, invertedOffset)
             topConstraint.constant = minOffset - totalHeight
             heightConstraint.constant = totalHeight
+            contentHeightConstraint?.constant = configuration.height
         } else {
             // Normal expanded state
             topConstraint.constant = 0
             heightConstraint.constant = totalHeight
+            contentHeightConstraint?.constant = configuration.height
         }
     }
 

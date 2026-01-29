@@ -9,9 +9,7 @@ extension HeroHeader.HeaderViewConfiguration {
         if let minHeight {
             parts.append("min: \(Int(minHeight))")
         }
-        if !stretches {
-            parts.append("no stretch")
-        }
+        parts.append(stretches ? "stretch" : "no stretch")
         switch largeTitleDisplayMode {
         case .none:
             break
