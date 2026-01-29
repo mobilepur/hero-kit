@@ -60,13 +60,17 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
         /*
          super.viewDidLoad()
          if #available(iOS 26, *) {
-             navigationItem.largeTitle = "Large Title"
-             navigationItem.title = "Normal Title"
+         navigationItem.largeTitle = "Large Title"
+         navigationItem.title = "Normal Title"
          } else {
-             title = "Color Collection"
+         title = "Color Collection"
          }
          */
         // view.backgroundColor = .systemBackground
+        if #unavailable(iOS 26) {
+            navigationController?.navigationBar.prefersLargeTitles = true
+        }
+
         setupCollectionView()
         applySnapshot()
         try? configureHeader(navbarStyle)
@@ -98,9 +102,10 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
         dataSource.apply(snapshot, animatingDifferences: false)
     }
 
-    private static func colorImage(for color: UIColor,
-                                   size: CGSize = CGSize(width: 28, height: 28)) -> UIImage
-    {
+    private static func colorImage(
+        for color: UIColor,
+        size: CGSize = CGSize(width: 28, height: 28)
+    ) -> UIImage {
         let renderer = UIGraphicsImageRenderer(size: size)
         return renderer.image { context in
             color.setFill()

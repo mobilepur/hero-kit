@@ -29,6 +29,7 @@ public extension UIViewController {
         // for now large titles with colored backgrounds are not supported in iOS 26
         if #available(iOS 26, *) {
             navigationItem.largeTitleDisplayMode = .inline
+            navigationController.navigationBar.prefersLargeTitles = false
         }
 
         let appearance = UINavigationBarAppearance.withStyle(
@@ -39,10 +40,6 @@ public extension UIViewController {
             backgroundColor: backgroundColor,
             foregroundColor: foregroundColor
         )
-
-        if #available(iOS 26, *) {
-            scrollEdgeAppearance.backgroundColor = backgroundColor.withAlphaComponent(0.2)
-        }
 
         navigationController.navigationBar.standardAppearance = appearance
         navigationController.navigationBar.compactAppearance = appearance
