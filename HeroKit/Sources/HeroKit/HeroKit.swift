@@ -30,12 +30,42 @@ public extension UIViewController {
         _ headerView: UIView,
         height: CGFloat,
         minHeight: CGFloat?,
-        scrollView _: UIScrollView
+        scrollView: UIScrollView
     ) {
-        // TODO: Implement collapsable header view
-        print(
-            "HeroKit: headerView style not yet implemented - view: \(headerView), height: \(height), minHeight: \(String(describing: minHeight))"
-        )
+        // Store header view reference
+        heroHeaderView = headerView
+
+        // Make navigation bar transparent
+        if let navigationController {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithTransparentBackground()
+            navigationController.navigationBar.standardAppearance = appearance
+            navigationController.navigationBar.scrollEdgeAppearance = appearance
+            navigationController.navigationBar.compactAppearance = appearance
+            navigationController.navigationBar.compactScrollEdgeAppearance = appearance
+        }
+
+        // Add header view to view hierarchy
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(headerView)
+
+        // Setup constraints
+        let topConstraint = headerView.topAnchor.constraint(equalTo: view.topAnchor)
+        headerTopConstraint = topConstraint
+
+        NSLayoutConstraint.activate([
+            topConstraint,
+            headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            headerView.heightAnchor.constraint(equalToConstant: height),
+        ])
+
+        // Adjust scroll view content inset
+        let navBarHeight = navigationController?.navigationBar.frame.maxY ?? 0
+        scrollView.contentInset.top = height - navBarHeight
+        scrollView.verticalScrollIndicatorInsets.top = height - navBarHeight
+
+        _ = minHeight // Will be used for collapse functionality later
     }
 
     private func styleHeader(backgroundColor: UIColor, foregroundColor: UIColor?) throws {
