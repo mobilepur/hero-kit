@@ -9,7 +9,7 @@ protocol HeaderPickerControllerDelegate {
     )
 }
 
-class HeaderPickerController: UIViewController, UICollectionViewDelegate {
+class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHeaderDelegate {
 
     let navbarStyle: HeroHeader.Style
     var delegate: HeaderPickerControllerDelegate?
@@ -86,6 +86,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
 
         setupCollectionView()
         applySnapshot()
+        headerDelegate = self
         try? configureHeader(navbarStyle)
     }
 
@@ -191,6 +192,36 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
             largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
         ),
     ]
+
+    // MARK: - HeroHeaderDelegate
+
+    func heroHeader(_: UIViewController, didSetup headerView: HeroHeaderView) {
+        print("didSetup: \(headerView)")
+    }
+
+    func heroHeader(_: UIViewController, didScroll _: HeroHeaderView, offset: CGFloat) {
+        print("didScroll: offset=\(offset)")
+    }
+
+    func heroHeader(_: UIViewController, didCollapse _: HeroHeaderView) {
+        print("didCollapse")
+    }
+
+    func heroHeader(_: UIViewController, didBecameVisible _: HeroHeaderView) {
+        print("didBecameVisible")
+    }
+
+    func heroHeader(_: UIViewController, didExpandFully _: HeroHeaderView) {
+        print("didExpandFully")
+    }
+
+    func heroHeader(_: UIViewController, didStretch _: HeroHeaderView) {
+        print("didStretch")
+    }
+
+    func heroHeader(_: UIViewController, didUnstretch _: HeroHeaderView) {
+        print("didUnstretch")
+    }
 }
 
 // MARK: - Section

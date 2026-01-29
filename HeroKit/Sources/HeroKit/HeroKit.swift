@@ -6,6 +6,11 @@ import UIKit
 
 public extension UIViewController {
 
+    var headerDelegate: HeroHeaderDelegate? {
+        get { heroHeaderDelegate }
+        set { heroHeaderDelegate = newValue }
+    }
+
     func configureHeader(_ style: HeroHeader.Style, scrollView: UIScrollView? = nil) throws {
         guard let targetScrollView = scrollView ?? findScrollView() else {
             throw HeroHeader.Error.scrollViewNotFound
@@ -49,19 +54,11 @@ extension UIViewController {
 
         let totalHeight = heroHeaderView.frame.height
         let navBarHeight = navigationController?.navigationBar.frame.maxY ?? 88
-
-        print("DEBUG setupHeaderView:")
-        print("  - totalHeight: \(totalHeight)")
-        print("  - navBarHeight: \(navBarHeight)")
-        print("  - insetTop: \(totalHeight - navBarHeight)")
-        print("  - scrollView.frame: \(scrollView.frame)")
-
         configureScrollViewInsets(scrollView, headerHeight: totalHeight, navBarHeight: navBarHeight)
-
-        print("DEBUG after: contentOffset.y = \(scrollView.contentOffset.y)")
-
         headerConfiguration = configuration
         headerTotalHeight = totalHeight
+
+        heroHeaderDelegate?.heroHeader(self, didSetup: heroHeaderView)
     }
 
     private func createHeroHeaderView(
@@ -112,7 +109,6 @@ extension UIViewController {
             .constraint(equalToConstant: headerView.frame.height)
         heightConstraint.isActive = true
 
-        print("DEBUG layoutHeaderView: frame.height = \(headerView.frame.height)")
         return (top: topConstraint, height: heightConstraint)
     }
 }
@@ -173,6 +169,24 @@ private extension UIViewController {
         nonisolated(unsafe) static var contentHeightConstraint: Void?
         nonisolated(unsafe) static var headerConfiguration: Void?
         nonisolated(unsafe) static var headerTotalHeight: Void?
+        nonisolated(unsafe) static var heroHeaderDelegate: Void?
+    }
+
+    var heroHeaderDelegate: HeroHeaderDelegate? {
+        get {
+            objc_getAssociatedObject(
+                self,
+                &AssociatedKeys.heroHeaderDelegate
+            ) as? HeroHeaderDelegate
+        }
+        set {
+            objc_setAssociatedObject(
+                self,
+                &AssociatedKeys.heroHeaderDelegate,
+                newValue,
+                .OBJC_ASSOCIATION_ASSIGN
+            )
+        }
     }
 
     var headerContainer: HeroHeaderView? {
@@ -284,11 +298,13 @@ private extension UIViewController {
     func updateHeaderConstraints(for offsetY: CGFloat) {
         guard let configuration = headerConfiguration,
               let topConstraint = headerTopConstraint,
-              let heightConstraint = headerHeightConstraint
+              let heightConstraint = headerHeightConstraint,
+              let headerView = headerContainer
         else { return }
 
         let invertedOffset = -offsetY
         let totalHeight = headerTotalHeight
+        let effectiveMinHeight = configuration.minHeight ?? 0
 
         if invertedOffset > totalHeight, configuration.stretches {
             // Overscroll - stretch effect
@@ -296,18 +312,63 @@ private extension UIViewController {
             heightConstraint.constant = invertedOffset
             contentHeightConstraint?.constant = configuration.height + stretchAmount
             topConstraint.constant = 0
+
+            // didStretch
+            if !headerView.isStretching {
+                headerView.isStretching = true
+                heroHeaderDelegate?.heroHeader(self, didStretch: headerView)
+            }
+
         } else if invertedOffset < totalHeight {
             // Header collapsing
-            let minOffset = max(configuration.minHeight ?? 0, invertedOffset)
+            let minOffset = max(effectiveMinHeight, invertedOffset)
             topConstraint.constant = minOffset - totalHeight
             heightConstraint.constant = totalHeight
             contentHeightConstraint?.constant = configuration.height
+
+            // didUnstretch
+            if headerView.isStretching {
+                headerView.isStretching = false
+                heroHeaderDelegate?.heroHeader(self, didUnstretch: headerView)
+            }
+
+            // didCollapse / didBecameVisible
+            let isNowCollapsed = invertedOffset <= effectiveMinHeight
+            if isNowCollapsed != headerView.isCollapsed {
+                headerView.isCollapsed = isNowCollapsed
+                if isNowCollapsed {
+                    heroHeaderDelegate?.heroHeader(self, didCollapse: headerView)
+                } else {
+                    heroHeaderDelegate?.heroHeader(self, didBecameVisible: headerView)
+                }
+            }
+
+            // No longer fully expanded
+            if headerView.isFullyExpanded {
+                headerView.isFullyExpanded = false
+            }
+
         } else {
             // Normal expanded state
             topConstraint.constant = 0
             heightConstraint.constant = totalHeight
             contentHeightConstraint?.constant = configuration.height
+
+            // didUnstretch
+            if headerView.isStretching {
+                headerView.isStretching = false
+                heroHeaderDelegate?.heroHeader(self, didUnstretch: headerView)
+            }
+
+            // didExpandFully
+            if !headerView.isFullyExpanded {
+                headerView.isFullyExpanded = true
+                heroHeaderDelegate?.heroHeader(self, didExpandFully: headerView)
+            }
         }
+
+        let normalizedOffset = offsetY + totalHeight
+        heroHeaderDelegate?.heroHeader(self, didScroll: headerView, offset: normalizedOffset)
     }
 
 }
