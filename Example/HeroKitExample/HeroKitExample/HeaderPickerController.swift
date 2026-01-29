@@ -120,6 +120,14 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate {
         .color(name: "Yellow", red: 1.0, green: 0.8, blue: 0.0),
         .color(name: "Green", red: 0.2, green: 0.78, blue: 0.35),
         .color(name: "Mint", red: 0.0, green: 0.78, blue: 0.75),
+        .color(name: "Teal", red: 0.19, green: 0.69, blue: 0.78),
+        .color(name: "Cyan", red: 0.32, green: 0.86, blue: 0.86),
+        .color(name: "Blue", red: 0.0, green: 0.48, blue: 1.0),
+        .color(name: "Indigo", red: 0.35, green: 0.34, blue: 0.84),
+        .color(name: "Purple", red: 0.69, green: 0.32, blue: 0.87),
+        .color(name: "Pink", red: 1.0, green: 0.18, blue: 0.33),
+        .color(name: "Brown", red: 0.64, green: 0.52, blue: 0.37),
+        .color(name: "Gray", red: 0.56, green: 0.56, blue: 0.58),
     ]
 
     private let viewItems: [StyleItem] = [
