@@ -2,19 +2,6 @@ import Combine
 import ObjectiveC
 import UIKit
 
-// MARK: - Header Style
-
-public enum HeroHeader {
-    public enum Style {
-        case color(backgroundColor: UIColor, foregroundColor: UIColor?)
-    }
-
-    public enum Error: Swift.Error {
-        case scrollViewNotFound
-        case navigationControllerNotFound
-    }
-}
-
 // MARK: - UIViewController Extension
 
 public extension UIViewController {
@@ -137,59 +124,6 @@ public extension UIViewController {
 
     private func updateHeaderConstraints(for _: CGFloat) { }
 
-    private func findScrollView() -> UIScrollView? {
-        if let tableVC = self as? UITableViewController {
-            return tableVC.tableView
-        }
-        if let collectionVC = self as? UICollectionViewController {
-            return collectionVC.collectionView
-        }
-        return findScrollView(in: view)
-    }
-
-    private func findScrollView(in view: UIView) -> UIScrollView? {
-        if let scrollView = view as? UIScrollView {
-            return scrollView
-        }
-        for subview in view.subviews {
-            if let found = findScrollView(in: subview) {
-                return found
-            }
-        }
-        return nil
-    }
-
-}
-
-extension UIView {
-    func traverseSubviews(apply: ((UIView) -> Void)?) {
-        apply?(self)
-        for subview in subviews {
-            subview.traverseSubviews(apply: apply)
-        }
-    }
-}
-
-extension UINavigationBarAppearance {
-    static func withStyle(backgroundColor: UIColor,
-                          foregroundColor: UIColor?) -> UINavigationBarAppearance
-    {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = backgroundColor
-
-        if let foregroundColor {
-            let textAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: foregroundColor]
-            appearance.titleTextAttributes = textAttributes
-            appearance.largeTitleTextAttributes = textAttributes
-
-            if #available(iOS 26, *) {
-                appearance.largeSubtitleTextAttributes = textAttributes
-            }
-        }
-
-        return appearance
-    }
 }
 
 /*
