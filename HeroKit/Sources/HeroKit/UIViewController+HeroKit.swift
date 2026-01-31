@@ -52,6 +52,12 @@ extension UIViewController {
         headerTopConstraint = constraints.top
         headerHeightConstraint = constraints.height
 
+        // Setup ViewModel
+        let heroViewModel = HeroHeader.ViewModel(configuration: configuration)
+        let layout = HeroHeader.Layout(headerHeightConstraint: constraints.height)
+        heroViewModel.didSetup(layout: layout)
+        viewModel = heroViewModel
+
         let totalHeight = heroHeaderView.frame.height
         let navBarHeight = navigationController?.navigationBar.frame.maxY ?? 88
         configureScrollViewInsets(scrollView, headerHeight: totalHeight, navBarHeight: navBarHeight)
@@ -180,10 +186,31 @@ extension UIViewController {
     }
 }
 
+// MARK: - ViewModel (internal for testing)
+
+extension UIViewController {
+    private enum ViewModelKey {
+        nonisolated(unsafe) static var viewModel: Void?
+    }
+
+    var viewModel: HeroHeader.ViewModel? {
+        get {
+            objc_getAssociatedObject(self, &ViewModelKey.viewModel) as? HeroHeader.ViewModel
+        }
+        set {
+            objc_setAssociatedObject(
+                self,
+                &ViewModelKey.viewModel,
+                newValue,
+                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+            )
+        }
+    }
+}
+
 private extension UIViewController {
 
     enum AssociatedKeys {
-        nonisolated(unsafe) static var viewModel: Void?
         nonisolated(unsafe) static var scrollCancellable: Void?
         nonisolated(unsafe) static var scrollOffset: Void?
         nonisolated(unsafe) static var headerContainer: Void?
@@ -194,20 +221,6 @@ private extension UIViewController {
         nonisolated(unsafe) static var headerTotalHeight: Void?
         nonisolated(unsafe) static var heroHeaderDelegate: Void?
         nonisolated(unsafe) static var storedTitle: Void?
-    }
-
-    var viewModel: HeroHeader.ViewModel? {
-        get {
-            objc_getAssociatedObject(self, &AssociatedKeys.viewModel) as? HeroHeader.ViewModel
-        }
-        set {
-            objc_setAssociatedObject(
-                self,
-                &AssociatedKeys.viewModel,
-                newValue,
-                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-            )
-        }
     }
 
     var heroHeaderDelegate: HeroHeaderDelegate? {

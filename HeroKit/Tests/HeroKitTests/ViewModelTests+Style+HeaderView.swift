@@ -49,6 +49,27 @@ extension ViewModelTest {
             #expect(stub.setupHeaderHeight > configuration.height)
         }
 
+        @Test("ViewModel has correct headerHeight after setup")
+        func viewModel_headerHeight() throws {
+            let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
+            let (controller, stub) = makeController()
+            _ = stub
+
+            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
+
+            #expect(controller.viewModel?.headerHeight == configuration.height)
+        }
+
+        @Test("didSetup delegate is called")
+        func didSetup_delegateCalled() throws {
+            let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
+            let (controller, stub) = makeController()
+
+            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
+
+            #expect(stub.didSetupWasCalled == true)
+        }
+
         // MARK: - Helper
 
         private func makeController(title: String? = nil) -> (MockController, StubDelegate) {
@@ -76,8 +97,10 @@ final class MockController: UICollectionViewController {
 @MainActor
 class StubDelegate: HeroHeaderDelegate {
     var setupHeaderHeight: CGFloat = 0
+    var didSetupWasCalled = false
 
     func heroHeader(_ controller: UIViewController, didSetup headerView: HeroHeaderView) {
+        didSetupWasCalled = true
         setupHeaderHeight = headerView.frame.height
     }
 }
