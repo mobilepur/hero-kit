@@ -13,72 +13,55 @@ extension ViewModelTest {
     @MainActor
     struct HeaderViewStyleTests {
 
-        @Test("didSetup without LargeTitle sets headerHeight to configuration.height")
-        func didSetup_noLargeTitle_height() {
+        @Test("didSetup without LargeTitle")
+        func didSetup_height() throws {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
-            let sut = HeroHeader.ViewModel(configuration: configuration)
+            let (controller, stub) = makeController()
 
-            // Setup content with real constraints
-            let contentView = MockHeader()
-            contentView.translatesAutoresizingMaskIntoConstraints = false
-            contentView.heightAnchor.constraint(equalToConstant: configuration.height).isActive = true
+            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
 
-            let headerView = HeroHeaderView(contentView: contentView)
-            headerView.translatesAutoresizingMaskIntoConstraints = false
-            headerView.widthAnchor.constraint(equalToConstant: 300).isActive = true
-            headerView.layoutIfNeeded()
-
-            let headerHeightConstraint = headerView.heightAnchor.constraint(equalToConstant: headerView.frame.height)
-            let layout = HeroHeader.Layout(headerHeightConstraint: headerHeightConstraint)
-
-            sut.didSetup(layout: layout)
-
-            #expect(sut.headerHeight == configuration.height)
+            #expect(stub.setupHeaderHeight == configuration.height)
         }
 
-        @Test("didSetup with LargeTitle (single line) sets headerHeight to content + title height")
-        func didSetup_largeTitle_singleLine_height() {
+        @Test("didSetup with LargeTitle but no title set")
+        func didSetup_height_withLargeTitle_noTitleSet() throws {
             let configuration = HeroHeader.HeaderViewConfiguration(
                 height: 100,
                 largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: false))
             )
-            let sut = HeroHeader.ViewModel(configuration: configuration)
+            let (controller, stub) = makeController()
 
-            // Setup content with real constraints
-            let contentView = MockHeader()
-            contentView.translatesAutoresizingMaskIntoConstraints = false
-            contentView.heightAnchor.constraint(equalToConstant: configuration.height).isActive = true
+            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
 
-            let largeTitleView = UIView.largeTitleLabel("Title")
-
-            let headerView = HeroHeaderView(contentView: contentView, largeTitleView: largeTitleView)
-            headerView.translatesAutoresizingMaskIntoConstraints = false
-            headerView.widthAnchor.constraint(equalToConstant: 300).isActive = true
-            headerView.layoutIfNeeded()
-
-            let headerHeightConstraint = headerView.heightAnchor.constraint(equalToConstant: headerView.frame.height)
-            let layout = HeroHeader.Layout(headerHeightConstraint: headerHeightConstraint)
-
-            sut.didSetup(layout: layout)
-            #expect(sut.headerHeight > configuration.height)
+            #expect(stub.setupHeaderHeight == configuration.height)
         }
 
-        @Test("didSetup callback provides headerView with correct frame height")
-        func didSetup_headerView_frame_height() {
-            let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
-            let contentView = MockHeader()
+        @Test("didSetup with LargeTitle and title")
+        func didSetup_height_withLargeTitle() throws {
+            let configuration = HeroHeader.HeaderViewConfiguration(
+                height: 100,
+                largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: false))
+            )
+            let (controller, stub) = makeController(title: "Title")
 
-            let stubDelegate = StubDelegate()
-            let mockController = MockController()
-            mockController.headerDelegate = stubDelegate
+            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
 
-            try! mockController.configureHeader(.headerView(view: contentView, configuration: configuration))
+            #expect(stub.setupHeaderHeight > configuration.height)
+        }
 
-            #expect(stubDelegate.setupHeaderHeight == configuration.height)
+        // MARK: - Helper
+
+        private func makeController(title: String? = nil) -> (MockController, StubDelegate) {
+            let stub = StubDelegate()
+            let controller = MockController()
+            controller.title = title
+            controller.headerDelegate = stub
+            return (controller, stub)
         }
     }
 }
 
+// MARK: - Helper 
 final class MockController: UICollectionViewController {
     init() {
         super.init(collectionViewLayout: UICollectionViewFlowLayout())
@@ -95,7 +78,6 @@ class StubDelegate: HeroHeaderDelegate {
     var setupHeaderHeight: CGFloat = 0
 
     func heroHeader(_ controller: UIViewController, didSetup headerView: HeroHeaderView) {
-        print(headerView.frame)
         setupHeaderHeight = headerView.frame.height
     }
 }
