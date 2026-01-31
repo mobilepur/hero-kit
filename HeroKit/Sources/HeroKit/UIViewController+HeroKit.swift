@@ -183,6 +183,7 @@ extension UIViewController {
 private extension UIViewController {
 
     enum AssociatedKeys {
+        nonisolated(unsafe) static var viewModel: Void?
         nonisolated(unsafe) static var scrollCancellable: Void?
         nonisolated(unsafe) static var scrollOffset: Void?
         nonisolated(unsafe) static var headerContainer: Void?
@@ -193,6 +194,22 @@ private extension UIViewController {
         nonisolated(unsafe) static var headerTotalHeight: Void?
         nonisolated(unsafe) static var heroHeaderDelegate: Void?
         nonisolated(unsafe) static var storedTitle: Void?
+    }
+
+    var viewModel: HeroHeader.ViewModel {
+        if let existing = objc_getAssociatedObject(self, &AssociatedKeys.viewModel)
+            as? HeroHeader.ViewModel
+        {
+            return existing
+        }
+        let new = HeroHeader.ViewModel()
+        objc_setAssociatedObject(
+            self,
+            &AssociatedKeys.viewModel,
+            new,
+            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+        )
+        return new
     }
 
     var heroHeaderDelegate: HeroHeaderDelegate? {
