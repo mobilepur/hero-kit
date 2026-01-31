@@ -10,6 +10,17 @@ public class HeroHeaderView: UIStackView {
     public internal(set) var isStretching: Bool = false
     public internal(set) var isLargeTitleHidden: Bool = false
 
+    convenience init(
+        contentView: UIView,
+        largeTitle: String,
+        allowsLineWrap: Bool = false
+    ) {
+        self.init(
+            contentView: contentView,
+            largeTitleView: .largeTitleLabel(largeTitle, allowsLineWrap: allowsLineWrap)
+        )
+    }
+
     init(contentView: UIView, largeTitleView: UIView? = nil) {
         self.contentView = contentView
         self.largeTitleView = largeTitleView

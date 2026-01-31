@@ -196,20 +196,18 @@ private extension UIViewController {
         nonisolated(unsafe) static var storedTitle: Void?
     }
 
-    var viewModel: HeroHeader.ViewModel {
-        if let existing = objc_getAssociatedObject(self, &AssociatedKeys.viewModel)
-            as? HeroHeader.ViewModel
-        {
-            return existing
+    var viewModel: HeroHeader.ViewModel? {
+        get {
+            objc_getAssociatedObject(self, &AssociatedKeys.viewModel) as? HeroHeader.ViewModel
         }
-        let new = HeroHeader.ViewModel()
-        objc_setAssociatedObject(
-            self,
-            &AssociatedKeys.viewModel,
-            new,
-            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-        )
-        return new
+        set {
+            objc_setAssociatedObject(
+                self,
+                &AssociatedKeys.viewModel,
+                newValue,
+                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+            )
+        }
     }
 
     var heroHeaderDelegate: HeroHeaderDelegate? {
