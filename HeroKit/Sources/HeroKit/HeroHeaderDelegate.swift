@@ -1,5 +1,6 @@
 import UIKit
 
+@MainActor
 public protocol HeroHeaderDelegate: AnyObject {
     func heroHeader(_ controller: UIViewController, didSetup headerView: HeroHeaderView)
     func heroHeader(_ controller: UIViewController, didCollapse headerView: HeroHeaderView)

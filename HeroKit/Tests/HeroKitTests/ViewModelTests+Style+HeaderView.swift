@@ -63,5 +63,39 @@ extension ViewModelTest {
             #expect(sut.headerHeight > configuration.height)
         }
 
+        @Test("didSetup callback provides headerView with correct frame height")
+        func didSetup_headerView_frame_height() {
+            let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
+            let contentView = MockHeader()
+
+            let stubDelegate = StubDelegate()
+            let mockController = MockController()
+            mockController.headerDelegate = stubDelegate
+
+            try! mockController.configureHeader(.headerView(view: contentView, configuration: configuration))
+
+            #expect(stubDelegate.setupHeaderHeight == configuration.height)
+        }
+    }
+}
+
+final class MockController: UICollectionViewController {
+    init() {
+        super.init(collectionViewLayout: UICollectionViewFlowLayout())
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+@MainActor
+class StubDelegate: HeroHeaderDelegate {
+    var setupHeaderHeight: CGFloat = 0
+
+    func heroHeader(_ controller: UIViewController, didSetup headerView: HeroHeaderView) {
+        print(headerView.frame)
+        setupHeaderHeight = headerView.frame.height
     }
 }
