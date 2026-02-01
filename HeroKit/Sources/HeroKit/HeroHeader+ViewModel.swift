@@ -5,17 +5,20 @@ extension HeroHeader {
     @MainActor
     final class ViewModel {
         let configuration: HeaderViewConfiguration
-        var layout: Layout?
         weak var delegate: HeroHeaderDelegate?
         weak var controller: UIViewController?
-        weak var headerView: HeroHeaderView?
+        private(set) var headerView: HeroHeaderView?
+        private(set) var layout: Layout?
 
-        init(configuration: HeaderViewConfiguration) {
+        init(controller: UIViewController, configuration: HeaderViewConfiguration) {
+            self.controller = controller
             self.configuration = configuration
         }
 
-        func didSetup(layout: Layout) {
+        func setup(headerView: HeroHeaderView, layout: Layout) {
+            self.headerView = headerView
             self.layout = layout
+            delegate?.heroHeader(controller!, didSetup: headerView)
         }
 
         var headerHeight: CGFloat {

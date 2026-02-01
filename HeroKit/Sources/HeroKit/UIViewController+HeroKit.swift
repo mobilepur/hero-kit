@@ -53,9 +53,10 @@ extension UIViewController {
         headerHeightConstraint = constraints.height
 
         // Setup ViewModel
-        let heroViewModel = HeroHeader.ViewModel(configuration: configuration)
+        let heroViewModel = HeroHeader.ViewModel(controller: self, configuration: configuration)
+        heroViewModel.delegate = heroHeaderDelegate
         let layout = HeroHeader.Layout(headerHeightConstraint: constraints.height)
-        heroViewModel.didSetup(layout: layout)
+        heroViewModel.setup(headerView: heroHeaderView, layout: layout)
         viewModel = heroViewModel
 
         let totalHeight = heroHeaderView.frame.height
@@ -67,8 +68,6 @@ extension UIViewController {
         // Store title and apply initial small title visibility
         storedTitle = navigationItem.title ?? title
         applySmallTitleVisibility(for: configuration.smallTitleDisplayMode, isCollapsed: false)
-
-        heroHeaderDelegate?.heroHeader(self, didSetup: heroHeaderView)
     }
 
     private func createHeroHeaderView(
