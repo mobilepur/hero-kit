@@ -2,9 +2,13 @@ import UIKit
 
 extension HeroHeader {
 
+    @MainActor
     final class ViewModel {
         let configuration: HeaderViewConfiguration
         var layout: Layout?
+        weak var delegate: HeroHeaderDelegate?
+        weak var controller: UIViewController?
+        weak var headerView: HeroHeaderView?
 
         init(configuration: HeaderViewConfiguration) {
             self.configuration = configuration
@@ -19,6 +23,8 @@ extension HeroHeader {
         }
 
         func didScroll(offset: CGFloat) {
+            guard let controller, let headerView else { return }
+            delegate?.heroHeader(controller, didScroll: headerView, offset: offset)
         }
     }
 
