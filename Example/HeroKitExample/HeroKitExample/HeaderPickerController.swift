@@ -5,7 +5,8 @@ protocol HeaderPickerControllerDelegate {
     func headerPicker(
         _ controller: HeaderPickerController,
         didPickCellWithTitle title: String,
-        style: HeroHeader.Style
+        style: HeroHeader.Style,
+        assetName: String?
     )
 }
 
@@ -14,8 +15,21 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     let navbarStyle: HeroHeader.Style
     var delegate: HeaderPickerControllerDelegate?
 
-    init(title: String, navbarStyle: HeroHeader.Style) {
+    // Configuration state for live updates
+    private var currentConfiguration: HeroHeader.HeaderViewConfiguration?
+    private var currentAssetName: String?
+    private var stretchEnabled: Bool = true
+
+    init(title: String, navbarStyle: HeroHeader.Style, assetName: String? = nil) {
         self.navbarStyle = navbarStyle
+        self.currentAssetName = assetName
+
+        // Extract configuration if headerView style
+        if case let .headerView(_, configuration) = navbarStyle {
+            self.currentConfiguration = configuration
+            self.stretchEnabled = configuration.stretches
+        }
+
         super.init(nibName: nil, bundle: nil)
         self.title = title
     }
@@ -34,8 +48,9 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         return collectionView
     }()
 
-    private lazy var dataSource: UICollectionViewDiffableDataSource<Section, StyleItem> = {
-        let cellRegistration = UICollectionView.CellRegistration<
+    private lazy var dataSource: UICollectionViewDiffableDataSource<Section, Item> = {
+        // Style cell registration
+        let styleCellRegistration = UICollectionView.CellRegistration<
             UICollectionViewListCell,
             StyleItem
         > { cell, _, item in
@@ -46,6 +61,24 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             content.imageProperties.maximumSize = CGSize(width: 40, height: 40)
             content.imageProperties.cornerRadius = 6
             cell.contentConfiguration = content
+        }
+
+        // Toggle cell registration for configuration items
+        let toggleCellRegistration = UICollectionView.CellRegistration<
+            UICollectionViewListCell,
+            ConfigItem
+        > { [weak self] cell, _, item in
+            var content = cell.defaultContentConfiguration()
+            content.text = item.title
+            cell.contentConfiguration = content
+
+            let toggle = UISwitch()
+            toggle.isOn = self?.stretchEnabled ?? true
+            toggle.addTarget(self, action: #selector(self?.stretchToggleChanged(_:)), for: .valueChanged)
+            cell.accessories = [.customView(configuration: .init(
+                customView: toggle,
+                placement: .trailing()
+            ))]
         }
 
         let headerRegistration = UICollectionView
@@ -59,14 +92,23 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                 headerView.contentConfiguration = content
             }
 
-        let dataSource = UICollectionViewDiffableDataSource<Section, StyleItem>(
+        let dataSource = UICollectionViewDiffableDataSource<Section, Item>(
             collectionView: collectionView
         ) { collectionView, indexPath, item in
-            collectionView.dequeueConfiguredReusableCell(
-                using: cellRegistration,
-                for: indexPath,
-                item: item
-            )
+            switch item {
+            case let .style(styleItem):
+                collectionView.dequeueConfiguredReusableCell(
+                    using: styleCellRegistration,
+                    for: indexPath,
+                    item: styleItem
+                )
+            case let .config(configItem):
+                collectionView.dequeueConfiguredReusableCell(
+                    using: toggleCellRegistration,
+                    for: indexPath,
+                    item: configItem
+                )
+            }
         }
 
         dataSource.supplementaryViewProvider = { collectionView, _, indexPath in
@@ -103,16 +145,54 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         collectionView.deselectItem(at: indexPath, animated: true)
-        guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
-        delegate?.headerPicker(self, didPickCellWithTitle: item.name, style: item.style)
+        guard let item = dataSource.itemIdentifier(for: indexPath),
+              case let .style(styleItem) = item
+        else { return }
+        delegate?.headerPicker(
+            self,
+            didPickCellWithTitle: styleItem.name,
+            style: styleItem.style,
+            assetName: styleItem.assetName
+        )
     }
 
     private func applySnapshot() {
-        var snapshot = NSDiffableDataSourceSnapshot<Section, StyleItem>()
-        snapshot.appendSections([.colors, .views])
-        snapshot.appendItems(colorItems, toSection: .colors)
-        snapshot.appendItems(viewItems, toSection: .views)
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
+
+        // Show configuration section only for headerView styles
+        if currentConfiguration != nil {
+            snapshot.appendSections([Section.configuration])
+            snapshot.appendItems([Item.config(.stretch)], toSection: Section.configuration)
+        }
+
+        snapshot.appendSections([Section.colors, Section.views])
+        snapshot.appendItems(colorItems.map { Item.style($0) }, toSection: Section.colors)
+        snapshot.appendItems(viewItems.map { Item.style($0) }, toSection: Section.views)
         dataSource.apply(snapshot, animatingDifferences: false)
+    }
+
+    @objc private func stretchToggleChanged(_ sender: UISwitch) {
+        stretchEnabled = sender.isOn
+        updateHeaderWithCurrentConfiguration()
+    }
+
+    private func updateHeaderWithCurrentConfiguration() {
+        guard let config = currentConfiguration,
+              let assetName = currentAssetName
+        else { return }
+
+        let imageView = UIImageView(image: UIImage(named: assetName))
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+
+        let newConfiguration = HeroHeader.HeaderViewConfiguration(
+            height: config.height,
+            minHeight: config.minHeight,
+            stretches: stretchEnabled,
+            largeTitleDisplayMode: config.largeTitleDisplayMode
+        )
+
+        try? setHeader(.headerView(view: imageView, configuration: newConfiguration))
     }
 
     // MARK: - Data
@@ -193,11 +273,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 // MARK: - Section
 
 nonisolated enum Section: Hashable, Sendable {
+    case configuration
     case colors
     case views
 
     var title: String {
         switch self {
+        case .configuration: "Configuration"
         case .colors: "Colors"
         case .views: "Views"
         }
@@ -221,6 +303,13 @@ nonisolated enum StyleItem: Hashable, Sendable {
         switch self {
         case let .color(name, _, _, _): name
         case let .headerView(title, _, _, _, _, _): title
+        }
+    }
+
+    var assetName: String? {
+        switch self {
+        case .color: nil
+        case let .headerView(_, assetName, _, _, _, _): assetName
         }
     }
 
@@ -276,6 +365,25 @@ nonisolated enum StyleItem: Hashable, Sendable {
         return renderer.image { context in
             color.setFill()
             context.fill(CGRect(origin: .zero, size: size))
+        }
+    }
+}
+
+// MARK: - Item
+
+nonisolated enum Item: Hashable, Sendable {
+    case style(StyleItem)
+    case config(ConfigItem)
+}
+
+// MARK: - ConfigItem
+
+nonisolated enum ConfigItem: Hashable, Sendable {
+    case stretch
+
+    var title: String {
+        switch self {
+        case .stretch: "Stretch"
         }
     }
 }

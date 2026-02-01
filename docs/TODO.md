@@ -1,11 +1,9 @@
-- Small Titles optional 
+## API
 
+rename:
+configureHeader -> setHeader()
 
+expandHeader()
+collapsHeaderContent() // will hide headerContent - large title still visible
+collapsHeader() // will hide header fully 
 
-HeroHeaderDelegate
-- didSetupHeader 
-- didScrollHeader
-- didCollapsHeader
-- didExpandHeader
-- didCollapLargeTitle
-- didExpandLargeTitle

@@ -19,6 +19,9 @@ public extension UIViewController {
             throw HeroHeader.Error.scrollViewNotFound
         }
 
+        // Clean up existing header if present
+        cleanupExistingHeader()
+
         try setupHeader(style: style, scrollView: targetScrollView)
         subscribeToScrollOffset(of: targetScrollView)
     }
@@ -245,6 +248,17 @@ private extension UIViewController {
             .sink { [weak self] offset in
                 self?.viewModel?.didScroll(offset: offset.y)
             }
+    }
+
+    func cleanupExistingHeader() {
+        // Remove existing header view from hierarchy
+        viewModel?.headerView?.removeFromSuperview()
+
+        // Cancel scroll subscription
+        scrollCancellable = nil
+
+        // Clear viewModel
+        viewModel = nil
     }
 
 }

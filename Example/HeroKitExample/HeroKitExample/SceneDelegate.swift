@@ -31,9 +31,14 @@ extension SceneDelegate: HeaderPickerControllerDelegate {
     func headerPicker(
         _ controller: HeaderPickerController,
         didPickCellWithTitle title: String,
-        style: HeroHeader.Style
+        style: HeroHeader.Style,
+        assetName: String?
     ) {
-        let nextController = HeaderPickerController(title: title, navbarStyle: style)
+        let nextController = HeaderPickerController(
+            title: title,
+            navbarStyle: style,
+            assetName: assetName
+        )
         nextController.delegate = self
         controller.navigationController?.pushViewController(nextController, animated: true)
     }
