@@ -49,10 +49,12 @@ extension HeroHeaderTests.Scroll {
 
             // 1. Initial state after setup
             #expect(stub.didSetupWasCalled == true)
+            #expect(controller.viewModel?.state == .expanded)
 
             // 2. Scroll down (overscroll) → stretch
             controller.collectionView.contentOffset = CGPoint(x: 0, y: -headerHeight - 50)
             #expect(stub.didStretchWasCalled == true)
+            #expect(controller.viewModel?.state == .stretched)
 
             /*
             // 3. Scroll up → collapse

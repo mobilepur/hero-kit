@@ -80,10 +80,3 @@ class StubDelegate: HeroHeaderDelegate {
         didExpandFullyWasCalled = true
     }
 }
-
-public enum HeaderState {
-    case stretched      // Overscroll - header is stretched
-    case expanded       // Default state - content and large title visible
-    case contentHidden  // Content behind nav bar, large title still visible
-    case collapsed      // Fully collapsed - only nav bar visible
-}

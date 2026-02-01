@@ -378,7 +378,7 @@ private extension UIViewController {
             // didStretch
             if !headerView.isStretching {
                 headerView.isStretching = true
-                heroHeaderDelegate?.heroHeader(self, didStretch: headerView)
+                // heroHeaderDelegate?.heroHeader(self, didStretch: headerView)
             }
 
             // Large title visible, header not collapsed when stretching
@@ -401,18 +401,18 @@ private extension UIViewController {
             // didUnstretch
             if headerView.isStretching {
                 headerView.isStretching = false
-                heroHeaderDelegate?.heroHeader(self, didUnstretch: headerView)
+                // heroHeaderDelegate?.heroHeader(self, didUnstretch: headerView)
             }
 
             // didCollapse / didBecameVisible
             let isNowCollapsed = invertedOffset <= effectiveMinHeight
             if isNowCollapsed != headerView.isCollapsed {
                 headerView.isCollapsed = isNowCollapsed
-                if isNowCollapsed {
-                    heroHeaderDelegate?.heroHeader(self, didCollapse: headerView)
-                } else {
-                    heroHeaderDelegate?.heroHeader(self, didBecameVisible: headerView)
-                }
+                // if isNowCollapsed {
+                //     heroHeaderDelegate?.heroHeader(self, didCollapse: headerView)
+                // } else {
+                //     heroHeaderDelegate?.heroHeader(self, didBecameVisible: headerView)
+                // }
             }
 
             // Track large title visibility (hidden when scrolled behind nav bar)
@@ -442,13 +442,13 @@ private extension UIViewController {
             // didUnstretch
             if headerView.isStretching {
                 headerView.isStretching = false
-                heroHeaderDelegate?.heroHeader(self, didUnstretch: headerView)
+                // heroHeaderDelegate?.heroHeader(self, didUnstretch: headerView)
             }
 
             // didExpandFully
             if !headerView.isFullyExpanded {
                 headerView.isFullyExpanded = true
-                heroHeaderDelegate?.heroHeader(self, didExpandFully: headerView)
+                // heroHeaderDelegate?.heroHeader(self, didExpandFully: headerView)
             }
 
             // Large title visible, not collapsed when fully expanded
@@ -463,7 +463,7 @@ private extension UIViewController {
         }
 
         let normalizedOffset = offsetY + totalHeight
-        heroHeaderDelegate?.heroHeader(self, didScroll: headerView, offset: normalizedOffset)
+        viewModel?.didScroll(offset: normalizedOffset)
     }
 
 }
