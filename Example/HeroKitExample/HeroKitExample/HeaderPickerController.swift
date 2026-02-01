@@ -19,6 +19,9 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     private var currentConfiguration: HeroHeader.HeaderViewConfiguration?
     private var currentAssetName: String?
     private var stretchEnabled: Bool = true
+    private var largeTitleEnabled: Bool = false
+    private var lineWrapEnabled: Bool = false
+    private var smallTitleDisplayMode: HeroHeader.SmallTitleDisplayMode = .system
 
     init(title: String, navbarStyle: HeroHeader.Style, assetName: String? = nil) {
         self.navbarStyle = navbarStyle
@@ -28,6 +31,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         if case let .headerView(_, configuration) = navbarStyle {
             self.currentConfiguration = configuration
             self.stretchEnabled = configuration.stretches
+
+            // Extract large title settings
+            if case let .belowHeader(largeTitleConfig) = configuration.largeTitleDisplayMode {
+                self.largeTitleEnabled = true
+                self.lineWrapEnabled = largeTitleConfig.allowsLineWrap
+                self.smallTitleDisplayMode = largeTitleConfig.smallTitleDisplayMode
+            }
         }
 
         super.init(nibName: nil, bundle: nil)
@@ -68,15 +78,61 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             UICollectionViewListCell,
             ConfigItem
         > { [weak self] cell, _, item in
+            guard let self else { return }
             var content = cell.defaultContentConfiguration()
             content.text = item.title
             cell.contentConfiguration = content
 
             let toggle = UISwitch()
-            toggle.isOn = self?.stretchEnabled ?? true
-            toggle.addTarget(self, action: #selector(self?.stretchToggleChanged(_:)), for: .valueChanged)
+            toggle.tag = item.tag
+
+            switch item {
+            case .stretch:
+                toggle.isOn = self.stretchEnabled
+            case .largeTitle:
+                toggle.isOn = self.largeTitleEnabled
+            case .lineWrap:
+                toggle.isOn = self.lineWrapEnabled
+            case .smallTitleDisplayMode:
+                return // Handled by segment registration
+            }
+
+            toggle.addTarget(self, action: #selector(self.configToggleChanged(_:)), for: .valueChanged)
             cell.accessories = [.customView(configuration: .init(
                 customView: toggle,
+                placement: .trailing()
+            ))]
+        }
+
+        // Menu cell registration for smallTitleDisplayMode
+        let menuCellRegistration = UICollectionView.CellRegistration<
+            UICollectionViewListCell,
+            ConfigItem
+        > { [weak self] cell, _, item in
+            guard let self else { return }
+            var content = cell.defaultContentConfiguration()
+            content.text = item.title
+            cell.contentConfiguration = content
+
+            let button = UIButton(type: .system)
+            button.showsMenuAsPrimaryAction = true
+            button.changesSelectionAsPrimaryAction = true
+
+            let actions = HeroHeader.SmallTitleDisplayMode.allCases.map { mode in
+                UIAction(
+                    title: mode.displayName,
+                    state: self.smallTitleDisplayMode == mode ? .on : .off
+                ) { [weak self] _ in
+                    self?.smallTitleDisplayMode = mode
+                    self?.updateHeaderWithCurrentConfiguration()
+                }
+            }
+
+            button.menu = UIMenu(children: actions)
+            button.setTitle(self.smallTitleDisplayMode.displayName, for: .normal)
+
+            cell.accessories = [.customView(configuration: .init(
+                customView: button,
                 placement: .trailing()
             ))]
         }
@@ -103,11 +159,20 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                     item: styleItem
                 )
             case let .config(configItem):
-                collectionView.dequeueConfiguredReusableCell(
-                    using: toggleCellRegistration,
-                    for: indexPath,
-                    item: configItem
-                )
+                switch configItem {
+                case .smallTitleDisplayMode:
+                    collectionView.dequeueConfiguredReusableCell(
+                        using: menuCellRegistration,
+                        for: indexPath,
+                        item: configItem
+                    )
+                default:
+                    collectionView.dequeueConfiguredReusableCell(
+                        using: toggleCellRegistration,
+                        for: indexPath,
+                        item: configItem
+                    )
+                }
             }
         }
 
@@ -156,23 +221,48 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         )
     }
 
-    private func applySnapshot() {
+    private func applySnapshot(animatingDifferences: Bool = false) {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
 
         // Show configuration section only for headerView styles
         if currentConfiguration != nil {
             snapshot.appendSections([Section.configuration])
-            snapshot.appendItems([Item.config(.stretch)], toSection: Section.configuration)
+
+            var configItems: [Item] = [
+                Item.config(.stretch),
+                Item.config(.largeTitle),
+            ]
+
+            // Show lineWrap and smallTitleDisplayMode only when largeTitle is enabled
+            if largeTitleEnabled {
+                configItems.append(Item.config(.lineWrap))
+                configItems.append(Item.config(.smallTitleDisplayMode))
+            }
+
+            snapshot.appendItems(configItems, toSection: Section.configuration)
         }
 
         snapshot.appendSections([Section.colors, Section.views])
         snapshot.appendItems(colorItems.map { Item.style($0) }, toSection: Section.colors)
         snapshot.appendItems(viewItems.map { Item.style($0) }, toSection: Section.views)
-        dataSource.apply(snapshot, animatingDifferences: false)
+        dataSource.apply(snapshot, animatingDifferences: animatingDifferences)
     }
 
-    @objc private func stretchToggleChanged(_ sender: UISwitch) {
-        stretchEnabled = sender.isOn
+    @objc private func configToggleChanged(_ sender: UISwitch) {
+        guard let configItem = ConfigItem(tag: sender.tag) else { return }
+
+        switch configItem {
+        case .stretch:
+            stretchEnabled = sender.isOn
+        case .largeTitle:
+            largeTitleEnabled = sender.isOn
+            applySnapshot(animatingDifferences: true)
+        case .lineWrap:
+            lineWrapEnabled = sender.isOn
+        case .smallTitleDisplayMode:
+            break
+        }
+
         updateHeaderWithCurrentConfiguration()
     }
 
@@ -185,11 +275,21 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
 
+        let largeTitleDisplayMode: HeroHeader.LargeTitleDisplayMode
+        if largeTitleEnabled {
+            largeTitleDisplayMode = .belowHeader(.init(
+                allowsLineWrap: lineWrapEnabled,
+                smallTitleDisplayMode: smallTitleDisplayMode
+            ))
+        } else {
+            largeTitleDisplayMode = .none
+        }
+
         let newConfiguration = HeroHeader.HeaderViewConfiguration(
             height: config.height,
             minHeight: config.minHeight,
             stretches: stretchEnabled,
-            largeTitleDisplayMode: config.largeTitleDisplayMode
+            largeTitleDisplayMode: largeTitleDisplayMode
         )
 
         try? setHeader(.headerView(view: imageView, configuration: newConfiguration))
@@ -380,10 +480,51 @@ nonisolated enum Item: Hashable, Sendable {
 
 nonisolated enum ConfigItem: Hashable, Sendable {
     case stretch
+    case largeTitle
+    case lineWrap
+    case smallTitleDisplayMode
 
     var title: String {
         switch self {
         case .stretch: "Stretch"
+        case .largeTitle: "Large Title"
+        case .lineWrap: "Line Wrap"
+        case .smallTitleDisplayMode: "Small Title"
+        }
+    }
+
+    var tag: Int {
+        switch self {
+        case .stretch: 0
+        case .largeTitle: 1
+        case .lineWrap: 2
+        case .smallTitleDisplayMode: 3
+        }
+    }
+
+    init?(tag: Int) {
+        switch tag {
+        case 0: self = .stretch
+        case 1: self = .largeTitle
+        case 2: self = .lineWrap
+        case 3: self = .smallTitleDisplayMode
+        default: return nil
+        }
+    }
+}
+
+// MARK: - SmallTitleDisplayMode helpers
+
+extension HeroHeader.SmallTitleDisplayMode {
+    static var allCases: [HeroHeader.SmallTitleDisplayMode] {
+        [.never, .system, .always]
+    }
+
+    var displayName: String {
+        switch self {
+        case .never: "Never"
+        case .system: "System"
+        case .always: "Always"
         }
     }
 }
