@@ -199,6 +199,9 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     }
 
     private func setupNavigationBar() {
+        // Only show menu for headerView styles (APIs don't work for color style)
+        guard currentConfiguration != nil else { return }
+
         let menu = UIMenu(children: [
             UIAction(title: "Expand Header", image: UIImage(systemName: "arrow.up.left.and.arrow.down.right")) { [weak self] _ in
                 self?.expandHeader()
