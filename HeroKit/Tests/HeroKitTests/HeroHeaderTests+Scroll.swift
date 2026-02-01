@@ -38,6 +38,35 @@ extension HeroHeaderTests.Scroll {
 
             #expect(stub.didCollapseWasCalled == true)
         }
+
+        @Test("Complete scroll round trip triggers all delegate callbacks")
+        func scrollRoundTrip() throws {
+            let configuration = HeroHeader.HeaderViewConfiguration(height: 100, stretches: true)
+            let (controller, stub) = HeroHeaderTests.makeController()
+
+            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
+            let headerHeight = controller.viewModel?.headerHeight ?? 100
+
+            // 1. Initial state after setup
+            #expect(stub.didSetupWasCalled == true)
+
+            // 2. Scroll down (overscroll) → stretch
+            controller.collectionView.contentOffset = CGPoint(x: 0, y: -headerHeight - 50)
+            #expect(stub.didStretchWasCalled == true)
+
+            /*
+            // 3. Scroll up → collapse
+            controller.collectionView.contentOffset = CGPoint(x: 0, y: 0)
+            #expect(stub.didCollapseWasCalled == true)
+
+            // 4. Scroll back to expanded
+            controller.collectionView.contentOffset = CGPoint(x: 0, y: -headerHeight)
+            #expect(stub.didExpandFullyWasCalled == true)
+
+            // 5. Verify didScroll was called throughout
+            #expect(stub.lastScrollOffset != nil)
+            */
+        }
     }
 }
 

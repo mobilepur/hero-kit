@@ -35,8 +35,13 @@ class StubDelegate: HeroHeaderDelegate {
     var setupHeaderHeight: CGFloat = 0
     var didSetupWasCalled = false
     var lastScrollOffset: CGFloat?
-    var didCollapseWasCalled = false
     var didStretchWasCalled = false
+    var didUnstretchWasCalled = false
+    var didCollapseHeaderContentWasCalled = false
+    var didCollapseWasCalled = false
+    var didBecameVisibleWasCalled = false
+    var headerContentDidBecameVisibleWasCalled = false
+    var didExpandFullyWasCalled = false
 
     func heroHeader(_ controller: UIViewController, didSetup headerView: HeroHeaderView) {
         didSetupWasCalled = true
@@ -47,11 +52,38 @@ class StubDelegate: HeroHeaderDelegate {
         lastScrollOffset = offset
     }
 
+    func heroHeader(_ controller: UIViewController, didStretch headerView: HeroHeaderView) {
+        didStretchWasCalled = true
+    }
+
+    func heroHeader(_ controller: UIViewController, didUnstretch headerView: HeroHeaderView) {
+        didUnstretchWasCalled = true
+    }
+
+    func heroHeader(_ controller: UIViewController, didCollapseHeaderContent headerView: HeroHeaderView) {
+        didCollapseHeaderContentWasCalled = true
+    }
+
     func heroHeader(_ controller: UIViewController, didCollapse headerView: HeroHeaderView) {
         didCollapseWasCalled = true
     }
 
-    func heroHeader(_ controller: UIViewController, didStretch headerView: HeroHeaderView) {
-        didStretchWasCalled = true
+    func heroHeader(_ controller: UIViewController, didBecameVisible headerView: HeroHeaderView) {
+        didBecameVisibleWasCalled = true
     }
+
+    func heroHeader(_ controller: UIViewController, headerContentDidBecameVisible headerView: HeroHeaderView) {
+        headerContentDidBecameVisibleWasCalled = true
+    }
+
+    func heroHeader(_ controller: UIViewController, didExpandFully headerView: HeroHeaderView) {
+        didExpandFullyWasCalled = true
+    }
+}
+
+public enum HeaderState {
+    case stretched      // Overscroll - header is stretched
+    case expanded       // Default state - content and large title visible
+    case contentHidden  // Content behind nav bar, large title still visible
+    case collapsed      // Fully collapsed - only nav bar visible
 }
