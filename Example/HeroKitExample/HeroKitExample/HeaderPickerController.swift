@@ -192,9 +192,29 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         }
 
         setupCollectionView()
+        setupNavigationBar()
         applySnapshot()
         headerDelegate = self
         try? setHeader(navbarStyle)
+    }
+
+    private func setupNavigationBar() {
+        let menu = UIMenu(children: [
+            UIAction(title: "Expand Header", image: UIImage(systemName: "arrow.up.left.and.arrow.down.right")) { [weak self] _ in
+                self?.expandHeader()
+            },
+            UIAction(title: "Collapse Content", image: UIImage(systemName: "arrow.down.right.and.arrow.up.left")) { [weak self] _ in
+                self?.collapseHeaderContent()
+            },
+            UIAction(title: "Collapse Header", image: UIImage(systemName: "chevron.up")) { [weak self] _ in
+                self?.collapseHeader()
+            },
+        ])
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "ellipsis.circle"),
+            menu: menu
+        )
     }
 
     private func setupCollectionView() {

@@ -36,6 +36,31 @@ extension HeroHeader {
             layout?.totalHeight ?? 0
         }
 
+        var scrollView: UIScrollView? {
+            controller?.findScrollView()
+        }
+
+        // MARK: - Public API
+
+        func expandHeader(animated: Bool) {
+            guard let layout else { return }
+            let targetOffset = CGPoint(x: 0, y: -layout.totalHeight)
+            scrollView?.setContentOffset(targetOffset, animated: animated)
+        }
+
+        func collapseHeaderContent(animated: Bool) {
+            guard let layout else { return }
+            // Scroll to hide content but keep large title visible
+            let targetOffset = CGPoint(x: 0, y: configuration.height - layout.totalHeight)
+            scrollView?.setContentOffset(targetOffset, animated: animated)
+        }
+
+        func collapseHeader(animated: Bool) {
+            // Scroll to fully collapse - offset 0 means header is behind nav bar
+            let targetOffset = CGPoint(x: 0, y: 0)
+            scrollView?.setContentOffset(targetOffset, animated: animated)
+        }
+
         func didScroll(offset: CGFloat) {
             guard let layout, let headerView else { return }
 

@@ -28,17 +28,17 @@ public extension UIViewController {
 
     /// Expands the header to fully visible state
     func expandHeader(animated: Bool = true) {
-        // TODO: Implement
+        viewModel?.expandHeader(animated: animated)
     }
 
     /// Collapses header content - large title still visible (if present)
     func collapseHeaderContent(animated: Bool = true) {
-        // TODO: Implement
+        viewModel?.collapseHeaderContent(animated: animated)
     }
 
     /// Collapses the header fully - only nav bar visible
     func collapseHeader(animated: Bool = true) {
-        // TODO: Implement
+        viewModel?.collapseHeader(animated: animated)
     }
 }
 
