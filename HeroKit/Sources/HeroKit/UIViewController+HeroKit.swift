@@ -7,8 +7,11 @@ import UIKit
 public extension UIViewController {
 
     var headerDelegate: HeroHeaderDelegate? {
-        get { heroHeaderDelegate }
-        set { heroHeaderDelegate = newValue }
+        get { viewModel?.delegate ?? heroHeaderDelegate }
+        set {
+            heroHeaderDelegate = newValue
+            viewModel?.delegate = newValue
+        }
     }
 
     func setHeader(_ style: HeroHeader.Style, scrollView: UIScrollView? = nil) throws {
@@ -209,6 +212,7 @@ private extension UIViewController {
         nonisolated(unsafe) static var heroHeaderDelegate: Void?
     }
 
+    /// Stores delegate before setHeader() is called. Once ViewModel exists, delegate is stored there.
     var heroHeaderDelegate: HeroHeaderDelegate? {
         get {
             objc_getAssociatedObject(
