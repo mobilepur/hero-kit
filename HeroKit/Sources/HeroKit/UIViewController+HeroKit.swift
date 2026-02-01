@@ -48,8 +48,12 @@ extension UIViewController {
 
     private func setupHeader(style: HeroHeader.Style, scrollView: UIScrollView) throws {
         switch style {
-        case let .color(backgroundColor, foregroundColor):
-            try styleHeader(backgroundColor: backgroundColor, foregroundColor: foregroundColor)
+        case let .color(backgroundColor, foregroundColor, prefersLargeTitles):
+            try styleHeader(
+                backgroundColor: backgroundColor,
+                foregroundColor: foregroundColor,
+                prefersLargeTitles: prefersLargeTitles
+            )
         case let .headerView(view, configuration):
             setupHeaderView(view, configuration: configuration, scrollView: scrollView)
         }
@@ -161,12 +165,21 @@ extension UIViewController {
         scrollView.setContentOffset(CGPoint(x: 0, y: -headerHeight), animated: false)
     }
 
-    private func styleHeader(backgroundColor: UIColor, foregroundColor: UIColor?) throws {
+    private func styleHeader(
+        backgroundColor: UIColor,
+        foregroundColor: UIColor?,
+        prefersLargeTitles: Bool
+    ) throws {
         guard let navigationController else { throw HeroHeader.Error.navigationControllerNotFound }
-        // for now large titles with colored backgrounds are not supported in iOS 26
+
         if #available(iOS 26, *) {
+            // iOS 26+ does not play nicely with large titles when navbar has a background color
+            // TODO: Replicate large title behavior with custom header view
             navigationItem.largeTitleDisplayMode = .inline
             navigationController.navigationBar.prefersLargeTitles = false
+        } else {
+            // Pre-iOS 26: use standard large title API
+            navigationController.navigationBar.prefersLargeTitles = prefersLargeTitles
         }
 
         let appearance = UINavigationBarAppearance.withStyle(

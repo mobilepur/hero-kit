@@ -4,7 +4,11 @@ public enum HeroHeader {
     // MARK: - Header Style
 
     public enum Style {
-        case color(backgroundColor: UIColor, foregroundColor: UIColor?)
+        case color(
+            backgroundColor: UIColor,
+            foregroundColor: UIColor? = nil,
+            prefersLargeTitles: Bool = false
+        )
         case headerView(view: UIView, configuration: HeaderViewConfiguration = .init())
     }
 
