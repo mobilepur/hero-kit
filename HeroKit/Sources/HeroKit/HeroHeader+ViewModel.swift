@@ -3,10 +3,11 @@ import UIKit
 extension HeroHeader {
 
     public enum State {
-        case stretched      // Overscroll - header is stretched
-        case expanded       // Default state - content and large title visible
-        case contentHidden  // Content behind nav bar, large title still visible
-        case collapsed      // Fully collapsed - only nav bar visible
+        case stretched       // Overscroll - header is stretched
+        case fullyExpanded   // Default state - header at rest position
+        case expanded        // Header visible but not fully expanded
+        case contentHidden   // Content behind nav bar, large title still visible
+        case collapsed       // Fully collapsed - only nav bar visible
     }
 
     @MainActor
@@ -16,7 +17,7 @@ extension HeroHeader {
         weak var controller: UIViewController?
         private(set) var headerView: HeroHeaderView?
         private(set) var layout: Layout?
-        private(set) var state: State = .expanded
+        private(set) var state: State = .fullyExpanded
 
         init(controller: UIViewController, configuration: HeaderViewConfiguration) {
             self.controller = controller
@@ -39,28 +40,45 @@ extension HeroHeader {
             let previousState = state
 
             // Calculate new state based on offset
-            // offset = 0 → fully expanded
             // offset < 0 → overscroll (stretching)
+            // offset == 0 → fully expanded (rest position)
+            // 0 < offset < contentHeight → expanded (visible but not fully)
+            // contentHeight <= offset < headerHeight → contentHidden (large title still visible)
             // offset >= headerHeight → collapsed
+            let contentHeight = configuration.height
+
             if offset < 0, configuration.stretches {
                 state = .stretched
             } else if offset >= headerHeight {
                 state = .collapsed
+            } else if offset >= contentHeight {
+                state = .contentHidden
+            } else if offset == 0 {
+                state = .fullyExpanded
             } else {
                 state = .expanded
             }
 
             // Call delegate for state changes
             if state != previousState {
+                // Unstretch when leaving stretched state
+                if previousState == .stretched {
+                    delegate?.heroHeader(controller, didUnstretch: headerView)
+                }
+
                 switch state {
                 case .stretched:
                     delegate?.heroHeader(controller, didStretch: headerView)
+                case .fullyExpanded:
+                    delegate?.heroHeader(controller, didExpandFully: headerView)
+                case .contentHidden:
+                    delegate?.heroHeader(controller, didCollapseHeaderContent: headerView)
                 case .collapsed:
                     delegate?.heroHeader(controller, didCollapse: headerView)
                 case .expanded where previousState == .collapsed:
                     delegate?.heroHeader(controller, didBecameVisible: headerView)
-                case .expanded where previousState == .stretched:
-                    delegate?.heroHeader(controller, didUnstretch: headerView)
+                case .expanded where previousState == .contentHidden:
+                    delegate?.heroHeader(controller, headerContentDidBecameVisible: headerView)
                 default:
                     break
                 }
