@@ -148,26 +148,30 @@ extension HeroHeaderTests.Scroll {
     @MainActor
     struct ViewModel {
 
-        @Test("didScroll calls delegate with offset")
+        @Test("didScroll calls delegate with normalized offset")
         func didScroll_callsDelegate() {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
             let stub = StubDelegate()
             let controller = MockController()
             let headerView = HeroHeaderView(contentView: MockHeader(), largeTitleView: nil)
+            let totalHeight: CGFloat = 100
             let layout = HeroHeader.Layout(
                 headerTopConstraint: NSLayoutConstraint(),
                 headerHeightConstraint: NSLayoutConstraint(),
                 contentHeightConstraint: NSLayoutConstraint(),
-                totalHeight: 100
+                totalHeight: totalHeight
             )
 
             let heroViewModel = HeroHeader.ViewModel(controller: controller, configuration: configuration)
             heroViewModel.delegate = stub
             heroViewModel.setup(headerView: headerView, layout: layout)
 
-            heroViewModel.didScroll(offset: 50)
+            // Raw offsetY from scroll view (negative = scrolled down, positive = scrolled up)
+            let rawOffset: CGFloat = -50
+            heroViewModel.didScroll(offset: rawOffset)
 
-            #expect(stub.lastScrollOffset == 50)
+            // Delegate receives normalized offset: rawOffset + totalHeight
+            #expect(stub.lastScrollOffset == rawOffset + totalHeight)
         }
     }
 }

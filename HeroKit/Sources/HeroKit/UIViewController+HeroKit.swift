@@ -45,18 +45,15 @@ extension UIViewController {
             contentView: contentView,
             configuration: configuration
         )
-        headerContainer = heroHeaderView
-        contentHeightConstraint = contentConstraint
 
         let constraints = layoutHeaderView(heroHeaderView)
-        headerTopConstraint = constraints.top
-        headerHeightConstraint = constraints.height
-
         let totalHeight = heroHeaderView.frame.height
 
-        // Setup ViewModel
+        // Setup ViewModel with all state
         let heroViewModel = HeroHeader.ViewModel(controller: self, configuration: configuration)
         heroViewModel.delegate = heroHeaderDelegate
+        heroViewModel.storedTitle = navigationItem.title ?? title
+
         let layout = HeroHeader.Layout(
             headerTopConstraint: constraints.top,
             headerHeightConstraint: constraints.height,
@@ -65,14 +62,9 @@ extension UIViewController {
         )
         heroViewModel.setup(headerView: heroHeaderView, layout: layout)
         viewModel = heroViewModel
+
         let navBarHeight = navigationController?.navigationBar.frame.maxY ?? 88
         configureScrollViewInsets(scrollView, headerHeight: totalHeight, navBarHeight: navBarHeight)
-        headerConfiguration = configuration
-        headerTotalHeight = totalHeight
-
-        // Store title and apply initial small title visibility
-        storedTitle = navigationItem.title ?? title
-        applySmallTitleVisibility(for: configuration.smallTitleDisplayMode, isCollapsed: false)
     }
 
     private func createHeroHeaderView(
@@ -171,23 +163,6 @@ extension UIViewController {
         navigationController.navigationBar.compactScrollEdgeAppearance = scrollEdgeAppearance
     }
 
-    func applySmallTitleVisibility(
-        for mode: HeroHeader.SmallTitleDisplayMode,
-        isCollapsed: Bool,
-        isLargeTitleHidden: Bool = false
-    ) {
-        let shouldShow: Bool = switch mode {
-        case .never:
-            false
-        case .always:
-            true
-        case .whenHeaderCollapsed:
-            isCollapsed
-        case .whenLargeTitleHidden:
-            isLargeTitleHidden
-        }
-        navigationItem.title = shouldShow ? storedTitle : nil
-    }
 }
 
 // MARK: - ViewModel (internal for testing)
@@ -216,15 +191,7 @@ private extension UIViewController {
 
     enum AssociatedKeys {
         nonisolated(unsafe) static var scrollCancellable: Void?
-        nonisolated(unsafe) static var scrollOffset: Void?
-        nonisolated(unsafe) static var headerContainer: Void?
-        nonisolated(unsafe) static var headerTopConstraint: Void?
-        nonisolated(unsafe) static var headerHeightConstraint: Void?
-        nonisolated(unsafe) static var contentHeightConstraint: Void?
-        nonisolated(unsafe) static var headerConfiguration: Void?
-        nonisolated(unsafe) static var headerTotalHeight: Void?
         nonisolated(unsafe) static var heroHeaderDelegate: Void?
-        nonisolated(unsafe) static var storedTitle: Void?
     }
 
     var heroHeaderDelegate: HeroHeaderDelegate? {
@@ -244,55 +211,6 @@ private extension UIViewController {
         }
     }
 
-    var headerContainer: HeroHeaderView? {
-        get { objc_getAssociatedObject(self, &AssociatedKeys.headerContainer) as? HeroHeaderView }
-        set { objc_setAssociatedObject(
-            self,
-            &AssociatedKeys.headerContainer,
-            newValue,
-            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-        ) }
-    }
-
-    var headerTopConstraint: NSLayoutConstraint? {
-        get {
-            objc_getAssociatedObject(self,
-                                     &AssociatedKeys.headerTopConstraint) as? NSLayoutConstraint
-        }
-        set { objc_setAssociatedObject(
-            self,
-            &AssociatedKeys.headerTopConstraint,
-            newValue,
-            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-        ) }
-    }
-
-    var headerHeightConstraint: NSLayoutConstraint? {
-        get {
-            objc_getAssociatedObject(self,
-                                     &AssociatedKeys.headerHeightConstraint) as? NSLayoutConstraint
-        }
-        set { objc_setAssociatedObject(
-            self,
-            &AssociatedKeys.headerHeightConstraint,
-            newValue,
-            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-        ) }
-    }
-
-    var contentHeightConstraint: NSLayoutConstraint? {
-        get {
-            objc_getAssociatedObject(self,
-                                     &AssociatedKeys.contentHeightConstraint) as? NSLayoutConstraint
-        }
-        set { objc_setAssociatedObject(
-            self,
-            &AssociatedKeys.contentHeightConstraint,
-            newValue,
-            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-        ) }
-    }
-
     var scrollCancellable: AnyCancellable? {
         get { objc_getAssociatedObject(self, &AssociatedKeys.scrollCancellable) as? AnyCancellable }
         set { objc_setAssociatedObject(
@@ -303,172 +221,11 @@ private extension UIViewController {
         ) }
     }
 
-    var heroScrollOffset: CGFloat {
-        get { (objc_getAssociatedObject(self, &AssociatedKeys.scrollOffset) as? CGFloat) ?? 0 }
-        set { objc_setAssociatedObject(
-            self,
-            &AssociatedKeys.scrollOffset,
-            newValue,
-            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-        ) }
-    }
-
-    var headerConfiguration: HeroHeader.HeaderViewConfiguration? {
-        get {
-            objc_getAssociatedObject(
-                self,
-                &AssociatedKeys.headerConfiguration
-            ) as? HeroHeader.HeaderViewConfiguration
-        }
-        set {
-            objc_setAssociatedObject(
-                self,
-                &AssociatedKeys.headerConfiguration,
-                newValue,
-                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-            )
-        }
-    }
-
-    var headerTotalHeight: CGFloat {
-        get { (objc_getAssociatedObject(self, &AssociatedKeys.headerTotalHeight) as? CGFloat) ?? 0 }
-        set {
-            objc_setAssociatedObject(
-                self,
-                &AssociatedKeys.headerTotalHeight,
-                newValue,
-                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-            )
-        }
-    }
-
-    var storedTitle: String? {
-        get { objc_getAssociatedObject(self, &AssociatedKeys.storedTitle) as? String }
-        set {
-            objc_setAssociatedObject(
-                self,
-                &AssociatedKeys.storedTitle,
-                newValue,
-                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-            )
-        }
-    }
-
     func subscribeToScrollOffset(of scrollView: UIScrollView) {
         scrollCancellable = scrollView.publisher(for: \.contentOffset)
             .sink { [weak self] offset in
-                self?.heroScrollOffset = offset.y
-                self?.updateHeaderConstraints(for: offset.y)
+                self?.viewModel?.didScroll(offset: offset.y)
             }
-    }
-
-    func updateHeaderConstraints(for offsetY: CGFloat) {
-        guard let configuration = headerConfiguration,
-              let topConstraint = headerTopConstraint,
-              let heightConstraint = headerHeightConstraint,
-              let headerView = headerContainer
-        else { return }
-
-        let invertedOffset = -offsetY
-        let totalHeight = headerTotalHeight
-        let effectiveMinHeight = configuration.minHeight ?? 0
-
-        if invertedOffset > totalHeight, configuration.stretches {
-            // Overscroll - stretch effect
-            let stretchAmount = invertedOffset - totalHeight
-            heightConstraint.constant = invertedOffset
-            contentHeightConstraint?.constant = configuration.height + stretchAmount
-            topConstraint.constant = 0
-
-            // didStretch
-            if !headerView.isStretching {
-                headerView.isStretching = true
-                // heroHeaderDelegate?.heroHeader(self, didStretch: headerView)
-            }
-
-            // Large title visible, header not collapsed when stretching
-            if headerView.isLargeTitleHidden {
-                headerView.isLargeTitleHidden = false
-            }
-            applySmallTitleVisibility(
-                for: configuration.smallTitleDisplayMode,
-                isCollapsed: false,
-                isLargeTitleHidden: false
-            )
-
-        } else if invertedOffset < totalHeight {
-            // Header collapsing
-            let minOffset = max(effectiveMinHeight, invertedOffset)
-            topConstraint.constant = minOffset - totalHeight
-            heightConstraint.constant = totalHeight
-            contentHeightConstraint?.constant = configuration.height
-
-            // didUnstretch
-            if headerView.isStretching {
-                headerView.isStretching = false
-                // heroHeaderDelegate?.heroHeader(self, didUnstretch: headerView)
-            }
-
-            // didCollapse / didBecameVisible
-            let isNowCollapsed = invertedOffset <= effectiveMinHeight
-            if isNowCollapsed != headerView.isCollapsed {
-                headerView.isCollapsed = isNowCollapsed
-                // if isNowCollapsed {
-                //     heroHeaderDelegate?.heroHeader(self, didCollapse: headerView)
-                // } else {
-                //     heroHeaderDelegate?.heroHeader(self, didBecameVisible: headerView)
-                // }
-            }
-
-            // Track large title visibility (hidden when scrolled behind nav bar)
-            let isNowLargeTitleHidden = invertedOffset < configuration.height
-            if isNowLargeTitleHidden != headerView.isLargeTitleHidden {
-                headerView.isLargeTitleHidden = isNowLargeTitleHidden
-            }
-
-            // Update small title visibility
-            applySmallTitleVisibility(
-                for: configuration.smallTitleDisplayMode,
-                isCollapsed: headerView.isCollapsed,
-                isLargeTitleHidden: headerView.isLargeTitleHidden
-            )
-
-            // No longer fully expanded
-            if headerView.isFullyExpanded {
-                headerView.isFullyExpanded = false
-            }
-
-        } else {
-            // Normal expanded state
-            topConstraint.constant = 0
-            heightConstraint.constant = totalHeight
-            contentHeightConstraint?.constant = configuration.height
-
-            // didUnstretch
-            if headerView.isStretching {
-                headerView.isStretching = false
-                // heroHeaderDelegate?.heroHeader(self, didUnstretch: headerView)
-            }
-
-            // didExpandFully
-            if !headerView.isFullyExpanded {
-                headerView.isFullyExpanded = true
-                // heroHeaderDelegate?.heroHeader(self, didExpandFully: headerView)
-            }
-
-            // Large title visible, not collapsed when fully expanded
-            if headerView.isLargeTitleHidden {
-                headerView.isLargeTitleHidden = false
-            }
-            applySmallTitleVisibility(
-                for: configuration.smallTitleDisplayMode,
-                isCollapsed: false,
-                isLargeTitleHidden: false
-            )
-        }
-
-        let normalizedOffset = offsetY + totalHeight
-        viewModel?.didScroll(offset: normalizedOffset)
     }
 
 }

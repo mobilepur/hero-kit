@@ -18,6 +18,7 @@ extension HeroHeader {
         private(set) var headerView: HeroHeaderView?
         private(set) var layout: Layout?
         private(set) var state: State = .fullyExpanded
+        var storedTitle: String?
 
         init(controller: UIViewController, configuration: HeaderViewConfiguration) {
             self.controller = controller
@@ -27,6 +28,7 @@ extension HeroHeader {
         func setup(headerView: HeroHeaderView, layout: Layout) {
             self.headerView = headerView
             self.layout = layout
+            applySmallTitleVisibility()
             delegate?.heroHeader(controller!, didSetup: headerView)
         }
 
@@ -35,18 +37,71 @@ extension HeroHeader {
         }
 
         func didScroll(offset: CGFloat) {
+            guard let layout, let headerView else { return }
+
+            let invertedOffset = -offset
+            let totalHeight = layout.totalHeight
+            let effectiveMinHeight = configuration.minHeight ?? 0
+
+            if invertedOffset > totalHeight, configuration.stretches {
+                // Overscroll - stretch effect
+                let stretchAmount = invertedOffset - totalHeight
+                layout.headerHeightConstraint.constant = invertedOffset
+                layout.contentHeightConstraint.constant = configuration.height + stretchAmount
+                layout.headerTopConstraint.constant = 0
+
+                headerView.isLargeTitleHidden = false
+
+            } else if invertedOffset < totalHeight {
+                // Header collapsing
+                let minOffset = max(effectiveMinHeight, invertedOffset)
+                layout.headerTopConstraint.constant = minOffset - totalHeight
+                layout.headerHeightConstraint.constant = totalHeight
+                layout.contentHeightConstraint.constant = configuration.height
+
+                headerView.isLargeTitleHidden = invertedOffset < configuration.height
+
+            } else {
+                // Normal expanded state
+                layout.headerTopConstraint.constant = 0
+                layout.headerHeightConstraint.constant = totalHeight
+                layout.contentHeightConstraint.constant = configuration.height
+
+                headerView.isLargeTitleHidden = false
+            }
+
+            // Update state and call delegates
+            let normalizedOffset = offset + totalHeight
+            updateState(for: normalizedOffset)
+
+            // Update small title visibility
+            applySmallTitleVisibility()
+        }
+
+        private func applySmallTitleVisibility() {
+            guard let controller, let headerView else { return }
+
+            let isCollapsed = (state == .collapsed)
+            let shouldShow: Bool = switch configuration.smallTitleDisplayMode {
+            case .never:
+                false
+            case .always:
+                true
+            case .whenHeaderCollapsed:
+                isCollapsed
+            case .whenLargeTitleHidden:
+                headerView.isLargeTitleHidden
+            }
+            controller.navigationItem.title = shouldShow ? storedTitle : nil
+        }
+
+        private func updateState(for offset: CGFloat) {
             guard let controller, let headerView else { return }
 
             let previousState = state
             let contentHeight = configuration.height
 
             // Calculate new state based on offset
-            // offset < 0 → overscroll (stretching)
-            // offset == 0 → fully expanded (rest position)
-            // 0 < offset < contentHeight → expanded (visible but not fully)
-            // contentHeight <= offset < headerHeight → contentHidden (large title still visible)
-            // offset >= headerHeight → collapsed
-
             if offset < 0, configuration.stretches {
                 state = .stretched
             } else if offset >= headerHeight {
@@ -61,7 +116,6 @@ extension HeroHeader {
 
             // Call delegate for state changes
             if state != previousState {
-                // Unstretch when leaving stretched state
                 if previousState == .stretched {
                     delegate?.heroHeader(controller, didUnstretch: headerView)
                 }
