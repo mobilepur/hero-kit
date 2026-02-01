@@ -195,6 +195,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
     // MARK: - HeroHeaderDelegate
 
+    /*
     func heroHeader(_: UIViewController, didSetup headerView: HeroHeaderView) {
         print("didSetup: \(headerView)")
     }
@@ -230,6 +231,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     func heroHeader(_: UIViewController, headerContentDidBecameVisible _: HeroHeaderView) {
         print("headerContentDidBecameVisible")
     }
+    */
 }
 
 // MARK: - Section

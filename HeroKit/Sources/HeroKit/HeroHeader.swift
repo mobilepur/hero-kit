@@ -14,7 +14,6 @@ public enum HeroHeader {
         public let height: CGFloat
         public let stretches: Bool
         public let largeTitleDisplayMode: LargeTitleDisplayMode
-        public let smallTitleDisplayMode: SmallTitleDisplayMode
         public let minHeight: CGFloat?
 
         public init(
@@ -22,21 +21,12 @@ public enum HeroHeader {
             minHeight: CGFloat? = nil,
             stretches: Bool = true,
             largeTitleDisplayMode: LargeTitleDisplayMode = .none,
-            smallTitleDisplayMode: SmallTitleDisplayMode = .whenLargeTitleHidden
         ) {
             self.height = height
             self.minHeight = minHeight
             self.stretches = stretches
             self.largeTitleDisplayMode = largeTitleDisplayMode
-            self.smallTitleDisplayMode = smallTitleDisplayMode
         }
-    }
-
-    public enum SmallTitleDisplayMode: Hashable, Sendable {
-        case never
-        case always
-        case whenHeaderCollapsed
-        case whenLargeTitleHidden
     }
 
     public enum LargeTitleDisplayMode: Hashable, Sendable {
@@ -46,10 +36,21 @@ public enum HeroHeader {
 
     public struct LargeTitleConfiguration: Hashable, Sendable {
         public let allowsLineWrap: Bool
+        public let smallTitleDisplayMode: SmallTitleDisplayMode
 
-        public init(allowsLineWrap: Bool = false) {
+        public init(
+            allowsLineWrap: Bool = false,
+            smallTitleDisplayMode: SmallTitleDisplayMode = .system
+        ) {
             self.allowsLineWrap = allowsLineWrap
+            self.smallTitleDisplayMode = smallTitleDisplayMode
         }
+    }
+
+    public enum SmallTitleDisplayMode: Hashable, Sendable {
+        case never
+        case system // default behaviour: small title only displayed when large titles are not visible
+        case always
     }
 
     public enum Error: Swift.Error {

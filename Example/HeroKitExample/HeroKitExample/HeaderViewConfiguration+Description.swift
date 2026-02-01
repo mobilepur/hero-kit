@@ -15,16 +15,14 @@ extension HeroHeader.HeaderViewConfiguration {
             break
         case let .belowHeader(config):
             parts.append(config.allowsLineWrap ? "large title (wrap)" : "large title")
-        }
-        switch smallTitleDisplayMode {
-        case .never:
-            parts.append("small: never")
-        case .always:
-            parts.append("small: always")
-        case .whenHeaderCollapsed:
-            parts.append("small: collapsed")
-        case .whenLargeTitleHidden:
-            parts.append("small: title hidden")
+            switch config.smallTitleDisplayMode {
+            case .never:
+                parts.append("small: never")
+            case .always:
+                parts.append("small: always")
+            case .system:
+                break // default, don't show
+            }
         }
         return parts.joined(separator: ", ")
     }

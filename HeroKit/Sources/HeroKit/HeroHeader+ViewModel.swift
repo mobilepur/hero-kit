@@ -59,7 +59,9 @@ extension HeroHeader {
                 layout.headerHeightConstraint.constant = totalHeight
                 layout.contentHeightConstraint.constant = configuration.height
 
-                headerView.isLargeTitleHidden = invertedOffset < configuration.height
+                // LargeTitle hidden when scrolled behind nav bar
+                let largeTitleHeight = totalHeight - configuration.height
+                headerView.isLargeTitleHidden = invertedOffset < largeTitleHeight
 
             } else {
                 // Normal expanded state
@@ -75,22 +77,31 @@ extension HeroHeader {
             updateState(for: normalizedOffset)
 
             // Update small title visibility
-            applySmallTitleVisibility()
+            applySmallTitleVisibility(offset: normalizedOffset)
         }
 
-        private func applySmallTitleVisibility() {
+        private func applySmallTitleVisibility(offset: CGFloat = 0) {
             guard let controller, let headerView else { return }
 
-            let isCollapsed = (state == .collapsed)
-            let shouldShow: Bool = switch configuration.smallTitleDisplayMode {
-            case .never:
-                false
-            case .always:
-                true
-            case .whenHeaderCollapsed:
-                isCollapsed
-            case .whenLargeTitleHidden:
-                headerView.isLargeTitleHidden
+            let shouldShow: Bool
+            switch configuration.largeTitleDisplayMode {
+            case .none:
+                // No large title, always show small title
+                shouldShow = true
+            case .belowHeader(let config):
+                shouldShow = switch config.smallTitleDisplayMode {
+                case .never:
+                    false
+                case .always:
+                    true
+                case .system:
+                    headerView.isLargeTitleHidden
+                }
+            }
+
+            let wasShowing = controller.navigationItem.title != nil
+            if shouldShow != wasShowing {
+                print("SmallTitle: \(shouldShow ? "showing" : "hiding") '\(storedTitle ?? "")' at offset \(offset)")
             }
             controller.navigationItem.title = shouldShow ? storedTitle : nil
         }
