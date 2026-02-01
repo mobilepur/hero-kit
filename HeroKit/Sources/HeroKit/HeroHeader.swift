@@ -12,10 +12,10 @@ public enum HeroHeader {
 
     public struct HeaderViewConfiguration {
         public let height: CGFloat
-        public let minHeight: CGFloat?
         public let stretches: Bool
         public let largeTitleDisplayMode: LargeTitleDisplayMode
         public let smallTitleDisplayMode: SmallTitleDisplayMode
+        public let minHeight: CGFloat?
 
         public init(
             height: CGFloat = 1000,
