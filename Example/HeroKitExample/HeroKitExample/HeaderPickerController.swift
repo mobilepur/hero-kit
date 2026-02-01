@@ -222,6 +222,14 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     func heroHeader(_: UIViewController, didUnstretch _: HeroHeaderView) {
         print("didUnstretch")
     }
+
+    func heroHeader(_: UIViewController, didCollapseHeaderContent _: HeroHeaderView) {
+        print("didCollapseHeaderContent")
+    }
+
+    func heroHeader(_: UIViewController, headerContentDidBecameVisible _: HeroHeaderView) {
+        print("headerContentDidBecameVisible")
+    }
 }
 
 // MARK: - Section

@@ -38,6 +38,7 @@ extension HeroHeader {
             guard let controller, let headerView else { return }
 
             let previousState = state
+            let contentHeight = configuration.height
 
             // Calculate new state based on offset
             // offset < 0 → overscroll (stretching)
@@ -45,7 +46,6 @@ extension HeroHeader {
             // 0 < offset < contentHeight → expanded (visible but not fully)
             // contentHeight <= offset < headerHeight → contentHidden (large title still visible)
             // offset >= headerHeight → collapsed
-            let contentHeight = configuration.height
 
             if offset < 0, configuration.stretches {
                 state = .stretched
@@ -71,6 +71,8 @@ extension HeroHeader {
                     delegate?.heroHeader(controller, didStretch: headerView)
                 case .fullyExpanded:
                     delegate?.heroHeader(controller, didExpandFully: headerView)
+                case .contentHidden where previousState == .collapsed:
+                    delegate?.heroHeader(controller, didBecameVisible: headerView)
                 case .contentHidden:
                     delegate?.heroHeader(controller, didCollapseHeaderContent: headerView)
                 case .collapsed:

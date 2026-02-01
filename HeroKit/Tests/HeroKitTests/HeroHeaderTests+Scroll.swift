@@ -115,7 +115,28 @@ extension HeroHeaderTests.Scroll {
             #expect(stub.didCollapseHeaderContentWasCalled == true)
             #expect(controller.viewModel?.state == .contentHidden)
 
-            // TODO: weitere Schritte für collapse, becameVisible, etc.
+            // 5. Scroll more → fully collapsed
+            controller.collectionView.contentOffset = CGPoint(x: 0, y: 0)
+            #expect(stub.didCollapseWasCalled == true)
+            #expect(controller.viewModel?.state == .collapsed)
+
+            // 6. Scroll back slightly → large title visible again
+            controller.collectionView.contentOffset = CGPoint(x: 0, y: -1)
+            #expect(stub.didBecameVisibleWasCalled == true)
+            #expect(controller.viewModel?.state == .contentHidden)
+
+            // 7. Scroll more → content visible again
+            controller.collectionView.contentOffset = CGPoint(x: 0, y: contentThreshold - 1)
+            #expect(stub.headerContentDidBecameVisibleWasCalled == true)
+            #expect(controller.viewModel?.state == .expanded)
+
+            // 8. Scroll back to fully expanded
+            controller.collectionView.contentOffset = CGPoint(x: 0, y: -headerHeight)
+            #expect(stub.didExpandFullyWasCalled == true)
+            #expect(controller.viewModel?.state == .fullyExpanded)
+
+            // 9. Verify didScroll was called throughout
+            #expect(stub.lastScrollOffset != nil)
         }
     }
 }
