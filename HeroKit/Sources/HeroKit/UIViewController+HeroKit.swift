@@ -11,13 +11,28 @@ public extension UIViewController {
         set { heroHeaderDelegate = newValue }
     }
 
-    func configureHeader(_ style: HeroHeader.Style, scrollView: UIScrollView? = nil) throws {
+    func setHeader(_ style: HeroHeader.Style, scrollView: UIScrollView? = nil) throws {
         guard let targetScrollView = scrollView ?? findScrollView() else {
             throw HeroHeader.Error.scrollViewNotFound
         }
 
         try setupHeader(style: style, scrollView: targetScrollView)
         subscribeToScrollOffset(of: targetScrollView)
+    }
+
+    /// Expands the header to fully visible state
+    func expandHeader(animated: Bool = true) {
+        // TODO: Implement
+    }
+
+    /// Collapses header content - large title still visible (if present)
+    func collapseHeaderContent(animated: Bool = true) {
+        // TODO: Implement
+    }
+
+    /// Collapses the header fully - only nav bar visible
+    func collapseHeader(animated: Bool = true) {
+        // TODO: Implement
     }
 }
 

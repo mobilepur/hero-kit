@@ -87,7 +87,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         setupCollectionView()
         applySnapshot()
         headerDelegate = self
-        try? configureHeader(navbarStyle)
+        try? setHeader(navbarStyle)
     }
 
     private func setupCollectionView() {
@@ -129,66 +129,22 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     ]
 
     private let viewItems: [StyleItem] = [
-        // Base case with two heights
+        // No large title
         .headerView(title: "Bikes", assetName: "bikes", height: 300),
-        .headerView(title: "Rice Fields", assetName: "ricefields", height: 500),
 
-        // Stretch variations
-        .headerView(title: "Temple", assetName: "temple", height: 300, stretches: true),
-        .headerView(title: "Vulcano", assetName: "vulcano", height: 300, stretches: false),
-
-        // MinHeight
-        .headerView(title: "Bikes", assetName: "bikes", height: 300, minHeight: 80),
-        .headerView(
-            title: "Rice Fields",
-            assetName: "ricefields",
-            height: 300,
-            minHeight: 80,
-            stretches: true
-        ),
-
-        // Large title
+        // Single line large title
         .headerView(
             title: "Explore",
             assetName: "temple",
             height: 300,
             largeTitleDisplayMode: .belowHeader()
         ),
-        .headerView(
-            title: "Discover",
-            assetName: "vulcano",
-            height: 300,
-            stretches: true,
-            largeTitleDisplayMode: .belowHeader()
-        ),
-        .headerView(
-            title: "Adventure",
-            assetName: "bikes",
-            height: 300,
-            minHeight: 80,
-            largeTitleDisplayMode: .belowHeader()
-        ),
 
-        // Large title with wrap
+        // Two line large title
         .headerView(
             title: "Ancient Temples of Bali",
-            assetName: "temple",
-            height: 300,
-            largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
-        ),
-        .headerView(
-            title: "Beautiful Rice Terraces",
-            assetName: "ricefields",
-            height: 300,
-            stretches: true,
-            largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
-        ),
-        .headerView(
-            title: "Volcanic Wonders of Indonesia",
             assetName: "vulcano",
             height: 300,
-            minHeight: 80,
-            stretches: true,
             largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
         ),
     ]

@@ -16,7 +16,7 @@ extension HeroHeaderTests.Setup {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
             let (controller, stub) = HeroHeaderTests.makeController()
 
-            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
+            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
             #expect(stub.setupHeaderHeight == configuration.height)
         }
@@ -29,7 +29,7 @@ extension HeroHeaderTests.Setup {
             )
             let (controller, stub) = HeroHeaderTests.makeController()
 
-            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
+            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
             #expect(stub.setupHeaderHeight == configuration.height)
         }
@@ -42,7 +42,7 @@ extension HeroHeaderTests.Setup {
             )
             let (controller, stub) = HeroHeaderTests.makeController(title: "Title")
 
-            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
+            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
             #expect(stub.setupHeaderHeight > configuration.height)
         }
@@ -53,7 +53,7 @@ extension HeroHeaderTests.Setup {
             let (controller, stub) = HeroHeaderTests.makeController()
             _ = stub
 
-            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
+            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
             #expect(controller.viewModel?.headerHeight == configuration.height)
         }
@@ -63,7 +63,7 @@ extension HeroHeaderTests.Setup {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
             let (controller, stub) = HeroHeaderTests.makeController()
 
-            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
+            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
             #expect(stub.didSetupWasCalled == true)
         }

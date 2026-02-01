@@ -18,7 +18,7 @@ extension HeroHeaderTests.Scroll {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
             let (controller, stub) = HeroHeaderTests.makeController()
 
-            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
+            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
             // Simulate scroll
             controller.collectionView.contentOffset = CGPoint(x: 0, y: 50)
@@ -31,7 +31,7 @@ extension HeroHeaderTests.Scroll {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
             let (controller, stub) = HeroHeaderTests.makeController()
 
-            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
+            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
             // Scroll up until header is fully collapsed (offsetY >= 0)
             controller.collectionView.contentOffset = CGPoint(x: 0, y: 0)
@@ -44,7 +44,7 @@ extension HeroHeaderTests.Scroll {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100, stretches: true)
             let (controller, stub) = HeroHeaderTests.makeController()
 
-            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
+            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
             let headerHeight = controller.viewModel?.headerHeight ?? 100
 
             // 1. Initial state after setup
@@ -89,7 +89,7 @@ extension HeroHeaderTests.Scroll {
             )
             let (controller, stub) = HeroHeaderTests.makeController(title: "Title")
 
-            try controller.configureHeader(.headerView(view: MockHeader(), configuration: configuration))
+            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
             let headerHeight = controller.viewModel?.headerHeight ?? 100
 
             // 1. Initial state after setup
