@@ -31,7 +31,7 @@ extension HeroHeader {
         }
 
         var headerHeight: CGFloat {
-            layout?.headerHeightConstraint.constant ?? 0
+            layout?.totalHeight ?? 0
         }
 
         func didScroll(offset: CGFloat) {
@@ -91,10 +91,21 @@ extension HeroHeader {
     }
 
     final class Layout {
+        let headerTopConstraint: NSLayoutConstraint
         let headerHeightConstraint: NSLayoutConstraint
+        let contentHeightConstraint: NSLayoutConstraint
+        let totalHeight: CGFloat
 
-        init(headerHeightConstraint: NSLayoutConstraint) {
+        init(
+            headerTopConstraint: NSLayoutConstraint,
+            headerHeightConstraint: NSLayoutConstraint,
+            contentHeightConstraint: NSLayoutConstraint,
+            totalHeight: CGFloat
+        ) {
+            self.headerTopConstraint = headerTopConstraint
             self.headerHeightConstraint = headerHeightConstraint
+            self.contentHeightConstraint = contentHeightConstraint
+            self.totalHeight = totalHeight
         }
     }
 }

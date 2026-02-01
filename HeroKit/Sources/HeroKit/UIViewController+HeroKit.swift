@@ -52,14 +52,19 @@ extension UIViewController {
         headerTopConstraint = constraints.top
         headerHeightConstraint = constraints.height
 
+        let totalHeight = heroHeaderView.frame.height
+
         // Setup ViewModel
         let heroViewModel = HeroHeader.ViewModel(controller: self, configuration: configuration)
         heroViewModel.delegate = heroHeaderDelegate
-        let layout = HeroHeader.Layout(headerHeightConstraint: constraints.height)
+        let layout = HeroHeader.Layout(
+            headerTopConstraint: constraints.top,
+            headerHeightConstraint: constraints.height,
+            contentHeightConstraint: contentConstraint,
+            totalHeight: totalHeight
+        )
         heroViewModel.setup(headerView: heroHeaderView, layout: layout)
         viewModel = heroViewModel
-
-        let totalHeight = heroHeaderView.frame.height
         let navBarHeight = navigationController?.navigationBar.frame.maxY ?? 88
         configureScrollViewInsets(scrollView, headerHeight: totalHeight, navBarHeight: navBarHeight)
         headerConfiguration = configuration
@@ -468,65 +473,3 @@ private extension UIViewController {
 
 }
 
-/*
-
- https://stackoverflow.com/questions/79795513/navigation-header-disappears-with-custom-background-color-in-form-view-on-ios-26
-
- Form {
-     // content as before
- }
- .scrollContentBackground(.hidden)
- .background {
-     VStack(spacing: 0) {
-         Color(red: 0.2, green: 0.5, blue: 0.7)
-             .ignoresSafeArea()
-             .frame(height: 0)
-         Color(.systemGroupedBackground)
-             .ignoresSafeArea(edges: [.leading, .trailing, .bottom])
-     }
- }
- .navigationTitle("Scanner Settings")
- .navigationBarTitleDisplayMode(.large)
- .toolbarBackground(.visible, for: .navigationBar)
- */
-
-/*
- struct CustomNavigationBarModifier: ViewModifier {
-     init() {
-         let appearance = UINavigationBarAppearance()
-         appearance.configureWithOpaqueBackground()
-         if #unavailable(iOS 26.0) {
-             // Set backgroundColor only for versions below iOS 26.0
-             appearance.backgroundColor = .green
-         }
-         appearance.largeTitleTextAttributes = [
-             .font: UIFont.systemFont(ofSize: 30, weight: .heavy),
-             .foregroundColor: UIColor.black,
-         ]
-         appearance.titleTextAttributes = [
-             .font: UIFont.systemFont(ofSize: 15, weight: .regular),
-             .foregroundColor: UIColor.black,
-         ]
-         UINavigationBar.appearance().standardAppearance = appearance
-         UINavigationBar.appearance().scrollEdgeAppearance = appearance
-     }
-
-     func body(content: Content) -> some View {
-         if #available(iOS 26, *) {
-             // Use toolbarBackground for iOS 26.0 and later
-             content
-                 .toolbarBackgroundVisibility(.visible, for: .navigationBar)
-                 .toolbarBackground(.green, for: .navigationBar)
-         } else {
-             content
-         }
-     }
- }
-
- extension View {
-     func defaultNavigationBar() -> some View {
-         modifier(CustomNavigationBarModifier())
-     }
- }
-
- */

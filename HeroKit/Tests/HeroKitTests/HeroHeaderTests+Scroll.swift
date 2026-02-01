@@ -154,7 +154,12 @@ extension HeroHeaderTests.Scroll {
             let stub = StubDelegate()
             let controller = MockController()
             let headerView = HeroHeaderView(contentView: MockHeader(), largeTitleView: nil)
-            let layout = HeroHeader.Layout(headerHeightConstraint: NSLayoutConstraint())
+            let layout = HeroHeader.Layout(
+                headerTopConstraint: NSLayoutConstraint(),
+                headerHeightConstraint: NSLayoutConstraint(),
+                contentHeightConstraint: NSLayoutConstraint(),
+                totalHeight: 100
+            )
 
             let heroViewModel = HeroHeader.ViewModel(controller: controller, configuration: configuration)
             heroViewModel.delegate = stub
