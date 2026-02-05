@@ -12,7 +12,7 @@ protocol HeaderPickerControllerDelegate {
 
 class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHeaderDelegate {
 
-    let navbarStyle: HeroHeader.Style
+    let navbarStyle: HeroHeader.Style?
     var delegate: HeaderPickerControllerDelegate?
 
     // Configuration state for live updates
@@ -23,7 +23,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     private var lineWrapEnabled: Bool = false
     private var smallTitleDisplayMode: HeroHeader.SmallTitleDisplayMode = .system
 
-    init(title: String, navbarStyle: HeroHeader.Style, assetName: String? = nil) {
+    init(title: String, navbarStyle: HeroHeader.Style?, assetName: String? = nil) {
         self.navbarStyle = navbarStyle
         currentAssetName = assetName
 
@@ -194,8 +194,10 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         setupCollectionView()
         setupNavigationBar()
         applySnapshot()
-        headerDelegate = self
-        try? setHeader(navbarStyle)
+        if let navbarStyle {
+            headerDelegate = self
+            try? setHeader(navbarStyle)
+        }
     }
 
     private func setupNavigationBar() {

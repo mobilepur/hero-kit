@@ -75,7 +75,7 @@ extension HeroHeader {
                 layout.contentHeightConstraint.constant = configuration.height + stretchAmount
                 layout.headerTopConstraint.constant = 0
 
-                headerView.isLargeTitleHidden = false
+                //    headerView.isLargeTitleHidden = false
 
             } else if invertedOffset < totalHeight {
                 // Header collapsing
@@ -86,7 +86,7 @@ extension HeroHeader {
 
                 // LargeTitle hidden when scrolled behind nav bar
                 let largeTitleHeight = totalHeight - configuration.height
-                headerView.isLargeTitleHidden = invertedOffset < largeTitleHeight
+                //  headerView.isLargeTitleHidden = invertedOffset < largeTitleHeight
 
             } else {
                 // Normal expanded state
@@ -94,7 +94,7 @@ extension HeroHeader {
                 layout.headerHeightConstraint.constant = totalHeight
                 layout.contentHeightConstraint.constant = configuration.height
 
-                headerView.isLargeTitleHidden = false
+                // headerView.isLargeTitleHidden = false
             }
 
             // Update state and call delegates

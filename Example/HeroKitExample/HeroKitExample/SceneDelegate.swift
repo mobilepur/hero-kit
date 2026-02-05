@@ -15,7 +15,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let controller = HeaderPickerController(
             title: "Style Picker",
-            navbarStyle: .opaque(backgroundColor: .systemBlue, foregroundColor: .white)
+            navbarStyle: nil
         )
         controller.delegate = self
 
