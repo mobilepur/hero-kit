@@ -23,6 +23,8 @@ extension HeroHeader.HeaderViewConfiguration {
             case .system:
                 break // default, don't show
             }
+        case .inline:
+            parts.append("inline title")
         }
         return parts.joined(separator: ", ")
     }

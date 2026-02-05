@@ -350,6 +350,14 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             largeTitleDisplayMode: .belowHeader()
         ),
 
+        // Inline large title
+        .headerView(
+            title: "Bikes & Beyond",
+            assetName: "bikes",
+            height: 300,
+            largeTitleDisplayMode: .inline
+        ),
+
         // Two line large title
         .headerView(
             title: "Ancient Temples of Bali",

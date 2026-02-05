@@ -36,6 +36,7 @@ public enum HeroHeader {
     public enum LargeTitleDisplayMode: Hashable, Sendable {
         case none
         case belowHeader(LargeTitleConfiguration = .init())
+        case inline
     }
 
     public struct LargeTitleConfiguration: Hashable, Sendable {

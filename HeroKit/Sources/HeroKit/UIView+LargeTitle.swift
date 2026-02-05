@@ -29,4 +29,22 @@ public extension UIView {
 
         return container
     }
+
+    /// Creates an inline large title label for overlay on header content (bottom-left)
+    static func inlineTitleLabel(_ title: String, foregroundColor: UIColor = .white) -> UIView {
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = largeTitleFont
+        titleLabel.textColor = foregroundColor
+        titleLabel.numberOfLines = 1
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        // Shadow for readability on images
+        titleLabel.layer.shadowColor = UIColor.black.cgColor
+        titleLabel.layer.shadowOffset = CGSize(width: 0, height: 1)
+        titleLabel.layer.shadowOpacity = 0.6
+        titleLabel.layer.shadowRadius = 4
+
+        return titleLabel
+    }
 }

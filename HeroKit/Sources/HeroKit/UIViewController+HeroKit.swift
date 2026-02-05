@@ -113,8 +113,27 @@ extension UIViewController {
             )
         }
 
+        if case .inline = configuration.largeTitleDisplayMode,
+           let title = navigationItem.title ?? title
+        {
+            addInlineTitleLabel(title, to: contentView)
+        }
+
         let headerView = HeroHeaderView(contentView: contentView, largeTitleView: largeTitleView)
         return (headerView, contentConstraint)
+    }
+
+    private func addInlineTitleLabel(_ title: String, to contentView: UIView) {
+        let inlineLabel = UIView.inlineTitleLabel(title)
+        contentView.addSubview(inlineLabel)
+        NSLayoutConstraint.activate([
+            inlineLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            inlineLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
+            inlineLabel.trailingAnchor.constraint(
+                lessThanOrEqualTo: contentView.trailingAnchor,
+                constant: -16
+            ),
+        ])
     }
 
     private func createOpaqueHeaderView(
@@ -230,7 +249,7 @@ extension UIViewController {
             height: 200,
             minHeight: navigationBarHeight,
             stretches: true,
-            largeTitleDisplayMode: .none
+            largeTitleDisplayMode: .inline
         )
 
         setupHeaderView(
