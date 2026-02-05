@@ -48,8 +48,8 @@ extension UIViewController {
 
     private func setupHeader(style: HeroHeader.Style, scrollView: UIScrollView) throws {
         switch style {
-        case let .color(backgroundColor, foregroundColor, prefersLargeTitles):
-            try styleHeader(
+        case let .opaque(backgroundColor, foregroundColor, prefersLargeTitles):
+            try setupOpaqueHeader(
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor,
                 prefersLargeTitles: prefersLargeTitles
@@ -116,6 +116,16 @@ extension UIViewController {
         let headerView = HeroHeaderView(contentView: contentView, largeTitleView: largeTitleView)
         return (headerView, contentConstraint)
     }
+
+    private func createOpaqueHeaderView(
+        title _: String,
+        backgroundColor: UIColor,
+        foregroundColor _: UIColor?
+    ) -> UIView {
+        let headerView = UIView()
+        headerView.backgroundColor = backgroundColor
+        return headerView
+    }
 }
 
 extension UIViewController {
@@ -165,36 +175,77 @@ extension UIViewController {
         scrollView.setContentOffset(CGPoint(x: 0, y: -headerHeight), animated: false)
     }
 
-    private func styleHeader(
+    private func setupOpaqueHeader(
         backgroundColor: UIColor,
         foregroundColor: UIColor?,
         prefersLargeTitles: Bool
     ) throws {
         guard let navigationController else { throw HeroHeader.Error.navigationControllerNotFound }
 
-        if #available(iOS 26, *) {
-            // iOS 26+ does not play nicely with large titles when navbar has a background color
-            // TODO: Replicate large title behavior with custom header view
-            navigationItem.largeTitleDisplayMode = .inline
-            navigationController.navigationBar.prefersLargeTitles = false
+        if #available(iOS 26, *), prefersLargeTitles {
+            guard let title = navigationItem.title else {
+                throw HeroHeader.Error.titleNotFound
+            }
+            try setupLargeTitleOpaqueHeaderCompatibleMode(
+                title: title,
+                backgroundColor: backgroundColor,
+                foregroundColor: foregroundColor
+            )
         } else {
             // Pre-iOS 26: use standard large title API
             navigationController.navigationBar.prefersLargeTitles = prefersLargeTitles
+
+            let appearance = UINavigationBarAppearance.withStyle(
+                backgroundColor: backgroundColor,
+                foregroundColor: foregroundColor
+            )
+            let scrollEdgeAppearance = UINavigationBarAppearance.withStyle(
+                backgroundColor: backgroundColor,
+                foregroundColor: foregroundColor
+            )
+
+            navigationController.navigationBar.standardAppearance = appearance
+            navigationController.navigationBar.compactAppearance = appearance
+            navigationController.navigationBar.scrollEdgeAppearance = scrollEdgeAppearance
+            navigationController.navigationBar.compactScrollEdgeAppearance = scrollEdgeAppearance
         }
+    }
 
-        let appearance = UINavigationBarAppearance.withStyle(
+    private func setupLargeTitleOpaqueHeaderCompatibleMode(
+        title: String,
+        backgroundColor: UIColor,
+        foregroundColor: UIColor?
+    ) throws {
+        guard let scrollView = findScrollView() else {
+            throw HeroHeader.Error.scrollViewNotFound
+        }
+        // iOS 26+ does not play nicely with large titles when navbar has a background color
+        let headerView = createOpaqueHeaderView(
+            title: title,
             backgroundColor: backgroundColor,
             foregroundColor: foregroundColor
         )
-        let scrollEdgeAppearance = UINavigationBarAppearance.withStyle(
-            backgroundColor: backgroundColor,
-            foregroundColor: foregroundColor
+
+        let configuration = HeroHeader.HeaderViewConfiguration(
+            height: 200,
+            minHeight: navigationBarHeight,
+            stretches: true,
+            largeTitleDisplayMode: .none
         )
 
-        navigationController.navigationBar.standardAppearance = appearance
-        navigationController.navigationBar.compactAppearance = appearance
-        navigationController.navigationBar.scrollEdgeAppearance = scrollEdgeAppearance
-        navigationController.navigationBar.compactScrollEdgeAppearance = scrollEdgeAppearance
+        setupHeaderView(
+            headerView,
+            configuration: configuration,
+            scrollView: scrollView
+        )
+    }
+
+    private var navigationBarHeight: CGFloat {
+        return navigationController?.navigationBar.frame.maxY ?? 88
+    }
+
+    private var navigationbarHeightExtended: CGFloat {
+        return navigationBarHeight + 59
     }
 
 }
@@ -228,7 +279,8 @@ private extension UIViewController {
         nonisolated(unsafe) static var heroHeaderDelegate: Void?
     }
 
-    /// Stores delegate before setHeader() is called. Once ViewModel exists, delegate is stored there.
+    /// Stores delegate before setHeader() is called. Once ViewModel exists, delegate is stored
+    /// there.
     var heroHeaderDelegate: HeroHeaderDelegate? {
         get {
             objc_getAssociatedObject(
@@ -275,4 +327,3 @@ private extension UIViewController {
     }
 
 }
-

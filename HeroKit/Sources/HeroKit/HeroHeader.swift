@@ -4,7 +4,7 @@ public enum HeroHeader {
     // MARK: - Header Style
 
     public enum Style {
-        case color(
+        case opaque(
             backgroundColor: UIColor,
             foregroundColor: UIColor? = nil,
             prefersLargeTitles: Bool = false
@@ -24,7 +24,7 @@ public enum HeroHeader {
             height: CGFloat = 1000,
             minHeight: CGFloat? = nil,
             stretches: Bool = true,
-            largeTitleDisplayMode: LargeTitleDisplayMode = .none,
+            largeTitleDisplayMode: LargeTitleDisplayMode = .none
         ) {
             self.height = height
             self.minHeight = minHeight
@@ -53,12 +53,14 @@ public enum HeroHeader {
 
     public enum SmallTitleDisplayMode: Hashable, Sendable {
         case never
-        case system // default behaviour: small title only displayed when large titles are not visible
+        case system // default behaviour: small title only displayed when large titles are not
+        // visible
         case always
     }
 
     public enum Error: Swift.Error {
         case scrollViewNotFound
         case navigationControllerNotFound
+        case titleNotFound
     }
 }

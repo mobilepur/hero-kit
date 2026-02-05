@@ -25,18 +25,18 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
     init(title: String, navbarStyle: HeroHeader.Style, assetName: String? = nil) {
         self.navbarStyle = navbarStyle
-        self.currentAssetName = assetName
+        currentAssetName = assetName
 
         // Extract configuration if headerView style
         if case let .headerView(_, configuration) = navbarStyle {
-            self.currentConfiguration = configuration
-            self.stretchEnabled = configuration.stretches
+            currentConfiguration = configuration
+            stretchEnabled = configuration.stretches
 
             // Extract large title settings
             if case let .belowHeader(largeTitleConfig) = configuration.largeTitleDisplayMode {
-                self.largeTitleEnabled = true
-                self.lineWrapEnabled = largeTitleConfig.allowsLineWrap
-                self.smallTitleDisplayMode = largeTitleConfig.smallTitleDisplayMode
+                largeTitleEnabled = true
+                lineWrapEnabled = largeTitleConfig.allowsLineWrap
+                smallTitleDisplayMode = largeTitleConfig.smallTitleDisplayMode
             }
         }
 
@@ -88,16 +88,16 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
             switch item {
             case .stretch:
-                toggle.isOn = self.stretchEnabled
+                toggle.isOn = stretchEnabled
             case .largeTitle:
-                toggle.isOn = self.largeTitleEnabled
+                toggle.isOn = largeTitleEnabled
             case .lineWrap:
-                toggle.isOn = self.lineWrapEnabled
+                toggle.isOn = lineWrapEnabled
             case .smallTitleDisplayMode:
                 return // Handled by segment registration
             }
 
-            toggle.addTarget(self, action: #selector(self.configToggleChanged(_:)), for: .valueChanged)
+            toggle.addTarget(self, action: #selector(configToggleChanged(_:)), for: .valueChanged)
             cell.accessories = [.customView(configuration: .init(
                 customView: toggle,
                 placement: .trailing()
@@ -129,7 +129,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             }
 
             button.menu = UIMenu(children: actions)
-            button.setTitle(self.smallTitleDisplayMode.displayName, for: .normal)
+            button.setTitle(smallTitleDisplayMode.displayName, for: .normal)
 
             cell.accessories = [.customView(configuration: .init(
                 customView: button,
@@ -203,13 +203,21 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         guard currentConfiguration != nil else { return }
 
         let menu = UIMenu(children: [
-            UIAction(title: "Expand Header", image: UIImage(systemName: "arrow.up.left.and.arrow.down.right")) { [weak self] _ in
+            UIAction(
+                title: "Expand Header",
+                image: UIImage(systemName: "arrow.up.left.and.arrow.down.right")
+            ) { [weak self] _ in
                 self?.expandHeader()
             },
-            UIAction(title: "Collapse Content", image: UIImage(systemName: "arrow.down.right.and.arrow.up.left")) { [weak self] _ in
+            UIAction(
+                title: "Collapse Content",
+                image: UIImage(systemName: "arrow.down.right.and.arrow.up.left")
+            ) { [weak self] _ in
                 self?.collapseHeaderContent()
             },
-            UIAction(title: "Collapse Header", image: UIImage(systemName: "chevron.up")) { [weak self] _ in
+            UIAction(title: "Collapse Header",
+                     image: UIImage(systemName: "chevron.up"))
+            { [weak self] _ in
                 self?.collapseHeader()
             },
         ])
@@ -298,14 +306,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
 
-        let largeTitleDisplayMode: HeroHeader.LargeTitleDisplayMode
-        if largeTitleEnabled {
-            largeTitleDisplayMode = .belowHeader(.init(
+        let largeTitleDisplayMode: HeroHeader.LargeTitleDisplayMode = if largeTitleEnabled {
+            .belowHeader(.init(
                 allowsLineWrap: lineWrapEnabled,
                 smallTitleDisplayMode: smallTitleDisplayMode
             ))
         } else {
-            largeTitleDisplayMode = .none
+            .none
         }
 
         let newConfiguration = HeroHeader.HeaderViewConfiguration(
@@ -321,13 +328,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     // MARK: - Data
 
     private let colorItems: [StyleItem] = [
-        .color(name: "Red", red: 1.0, green: 0.23, blue: 0.19),
+        .color(name: "Red", red: 1.0, green: 0.23, blue: 0.19, prefersLargeTitles: true),
         .color(name: "Orange", red: 1.0, green: 0.58, blue: 0.0),
-        .color(name: "Green", red: 0.2, green: 0.78, blue: 0.35),
+        .color(name: "Green", red: 0.2, green: 0.78, blue: 0.35, prefersLargeTitles: true),
         .color(name: "Teal", red: 0.19, green: 0.69, blue: 0.78),
-        .color(name: "Blue", red: 0.0, green: 0.48, blue: 1.0),
+        .color(name: "Blue", red: 0.0, green: 0.48, blue: 1.0, prefersLargeTitles: true),
         .color(name: "Indigo", red: 0.35, green: 0.34, blue: 0.84),
-        .color(name: "Purple", red: 0.69, green: 0.32, blue: 0.87),
+        .color(name: "Purple", red: 0.69, green: 0.32, blue: 0.87, prefersLargeTitles: true),
         .color(name: "Pink", red: 1.0, green: 0.18, blue: 0.33),
     ]
 
@@ -355,42 +362,42 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     // MARK: - HeroHeaderDelegate
 
     /*
-    func heroHeader(_: UIViewController, didSetup headerView: HeroHeaderView) {
-        print("didSetup: \(headerView)")
-    }
+         func heroHeader(_: UIViewController, didSetup headerView: HeroHeaderView) {
+             print("didSetup: \(headerView)")
+         }
 
-    func heroHeader(_: UIViewController, didScroll _: HeroHeaderView, offset _: CGFloat) {
-//        print("didScroll: offset=\(offset)")
-    }
+         func heroHeader(_: UIViewController, didScroll _: HeroHeaderView, offset _: CGFloat) {
+     //        print("didScroll: offset=\(offset)")
+         }
 
-    func heroHeader(_: UIViewController, didCollapse _: HeroHeaderView) {
-        print("didCollapse")
-    }
+         func heroHeader(_: UIViewController, didCollapse _: HeroHeaderView) {
+             print("didCollapse")
+         }
 
-    func heroHeader(_: UIViewController, didBecameVisible _: HeroHeaderView) {
-        print("didBecameVisible")
-    }
+         func heroHeader(_: UIViewController, didBecameVisible _: HeroHeaderView) {
+             print("didBecameVisible")
+         }
 
-    func heroHeader(_: UIViewController, didExpandFully _: HeroHeaderView) {
-        print("didExpandFully")
-    }
+         func heroHeader(_: UIViewController, didExpandFully _: HeroHeaderView) {
+             print("didExpandFully")
+         }
 
-    func heroHeader(_: UIViewController, didStretch _: HeroHeaderView) {
-        print("didStretch")
-    }
+         func heroHeader(_: UIViewController, didStretch _: HeroHeaderView) {
+             print("didStretch")
+         }
 
-    func heroHeader(_: UIViewController, didUnstretch _: HeroHeaderView) {
-        print("didUnstretch")
-    }
+         func heroHeader(_: UIViewController, didUnstretch _: HeroHeaderView) {
+             print("didUnstretch")
+         }
 
-    func heroHeader(_: UIViewController, didCollapseHeaderContent _: HeroHeaderView) {
-        print("didCollapseHeaderContent")
-    }
+         func heroHeader(_: UIViewController, didCollapseHeaderContent _: HeroHeaderView) {
+             print("didCollapseHeaderContent")
+         }
 
-    func heroHeader(_: UIViewController, headerContentDidBecameVisible _: HeroHeaderView) {
-        print("headerContentDidBecameVisible")
-    }
-    */
+         func heroHeader(_: UIViewController, headerContentDidBecameVisible _: HeroHeaderView) {
+             print("headerContentDidBecameVisible")
+         }
+         */
 }
 
 // MARK: - Section
@@ -412,7 +419,13 @@ nonisolated enum Section: Hashable, Sendable {
 // MARK: - StyleItem
 
 nonisolated enum StyleItem: Hashable, Sendable {
-    case color(name: String, red: CGFloat, green: CGFloat, blue: CGFloat)
+    case color(
+        name: String,
+        red: CGFloat,
+        green: CGFloat,
+        blue: CGFloat,
+        prefersLargeTitles: Bool = false
+    )
     case headerView(
         title: String,
         assetName: String,
@@ -424,7 +437,7 @@ nonisolated enum StyleItem: Hashable, Sendable {
 
     var name: String {
         switch self {
-        case let .color(name, _, _, _): name
+        case let .color(name, _, _, _, _): name
         case let .headerView(title, _, _, _, _, _): title
         }
     }
@@ -438,7 +451,7 @@ nonisolated enum StyleItem: Hashable, Sendable {
 
     var image: UIImage? {
         switch self {
-        case let .color(_, red, green, blue):
+        case let .color(_, red, green, blue, _):
             let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
             return Self.colorImage(for: color)
         case let .headerView(_, assetName, _, _, _, _):
@@ -448,8 +461,8 @@ nonisolated enum StyleItem: Hashable, Sendable {
 
     var subtitle: String? {
         switch self {
-        case .color:
-            return nil
+        case let .color(_, _, _, _, prefersLargeTitles):
+            return prefersLargeTitles ? "Large Title" : nil
         case let .headerView(_, _, height, minHeight, stretches, largeTitleDisplayMode):
             let config = HeroHeader.HeaderViewConfiguration(
                 height: height,
@@ -463,9 +476,13 @@ nonisolated enum StyleItem: Hashable, Sendable {
 
     var style: HeroHeader.Style {
         switch self {
-        case let .color(name, red, green, blue):
+        case let .color(_, red, green, blue, prefersLargeTitles):
             let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
-            return .color(backgroundColor: color, foregroundColor: .white)
+            return .opaque(
+                backgroundColor: color,
+                foregroundColor: .white,
+                prefersLargeTitles: prefersLargeTitles
+            )
         case let .headerView(_, assetName, height, minHeight, stretches, largeTitleDisplayMode):
             let imageView = UIImageView(image: UIImage(named: assetName))
             imageView.contentMode = .scaleAspectFill
