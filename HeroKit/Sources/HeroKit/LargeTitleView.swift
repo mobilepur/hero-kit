@@ -5,6 +5,7 @@ public class LargeTitleView: UIView {
     private let title: String
     private let allowsLineWrap: Bool
     private let foregroundColor: UIColor
+    private let fog: Bool
     private let fogColor: UIColor
     private var fogHeightConstraint: NSLayoutConstraint?
 
@@ -35,33 +36,38 @@ public class LargeTitleView: UIView {
 
     public init(title: String, allowsLineWrap: Bool = false,
                 foregroundColor: UIColor = .label,
+                fog: Bool = true,
                 fogColor: UIColor = .systemBackground)
     {
         self.title = title
         self.allowsLineWrap = allowsLineWrap
         self.foregroundColor = foregroundColor
+        self.fog = fog
         self.fogColor = fogColor
         super.init(frame: .zero)
         backgroundColor = .clear
         clipsToBounds = true
 
         addSubview(titleLabel)
-        addSubview(fogView)
-
-        let fogHeight = fogView.heightAnchor.constraint(equalToConstant: 0)
-        fogHeightConstraint = fogHeight
+        if fog { addSubview(fogView) }
 
         NSLayoutConstraint.activate([
             titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
             titleLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
             titleLabel.topAnchor.constraint(equalTo: topAnchor, constant: 8),
             titleLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8),
-
-            fogView.topAnchor.constraint(equalTo: topAnchor),
-            fogView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            fogView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            fogHeight,
         ])
+
+        if fog {
+            let fogHeight = fogView.heightAnchor.constraint(equalToConstant: 0)
+            fogHeightConstraint = fogHeight
+            NSLayoutConstraint.activate([
+                fogView.topAnchor.constraint(equalTo: topAnchor),
+                fogView.leadingAnchor.constraint(equalTo: leadingAnchor),
+                fogView.trailingAnchor.constraint(equalTo: trailingAnchor),
+                fogHeight,
+            ])
+        }
     }
 
     @available(*, unavailable)

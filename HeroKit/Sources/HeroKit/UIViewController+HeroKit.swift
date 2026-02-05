@@ -127,8 +127,14 @@ extension UIViewController {
 
     @discardableResult
     private func addInlineTitleLabel(_ title: String, to contentView: UIView) -> LargeTitleView {
+        let hasFog = contentView.backgroundColor != nil
         let fogColor = contentView.backgroundColor ?? .systemBackground
-        let titleView = LargeTitleView(title: title, foregroundColor: .white, fogColor: fogColor)
+        let titleView = LargeTitleView(
+            title: title,
+            foregroundColor: .white,
+            fog: hasFog,
+            fogColor: fogColor
+        )
         titleView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(titleView)
         NSLayoutConstraint.activate([
@@ -249,7 +255,7 @@ extension UIViewController {
         )
 
         let configuration = HeroHeader.HeaderViewConfiguration(
-            height: 200,
+            height: navigationbarHeightExtended,
             minHeight: navigationBarHeight,
             stretches: true,
             largeTitleDisplayMode: .inline
