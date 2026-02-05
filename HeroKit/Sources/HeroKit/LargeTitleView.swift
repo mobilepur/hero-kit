@@ -77,7 +77,10 @@ public class LargeTitleView: UIView {
 
     override public func layoutSubviews() {
         super.layoutSubviews()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         gradientLayer.frame = fogView.bounds
+        CATransaction.commit()
     }
 
     /// Controls how much of the title is covered by the fog layer.

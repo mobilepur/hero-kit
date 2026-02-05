@@ -22,6 +22,8 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     private var largeTitleEnabled: Bool = false
     private var lineWrapEnabled: Bool = false
     private var smallTitleDisplayMode: HeroHeader.SmallTitleDisplayMode = .system
+    private var inlineEnabled: Bool = false
+    private var dimmingMode: HeroHeader.InlineTitleConfiguration.Dimming = .none
 
     init(title: String, navbarStyle: HeroHeader.Style?, assetName: String? = nil) {
         self.navbarStyle = navbarStyle
@@ -37,6 +39,10 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                 largeTitleEnabled = true
                 lineWrapEnabled = largeTitleConfig.allowsLineWrap
                 smallTitleDisplayMode = largeTitleConfig.smallTitleDisplayMode
+            }
+            if case let .inline(inlineConfig) = configuration.largeTitleDisplayMode {
+                inlineEnabled = true
+                dimmingMode = inlineConfig.dimming
             }
         }
 
@@ -93,8 +99,8 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                 toggle.isOn = largeTitleEnabled
             case .lineWrap:
                 toggle.isOn = lineWrapEnabled
-            case .smallTitleDisplayMode:
-                return // Handled by segment registration
+            case .smallTitleDisplayMode, .dimming:
+                return // Handled by menu registration
             }
 
             toggle.addTarget(self, action: #selector(configToggleChanged(_:)), for: .valueChanged)
@@ -137,6 +143,39 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             ))]
         }
 
+        // Dimming menu cell registration
+        let dimmingMenuCellRegistration = UICollectionView.CellRegistration<
+            UICollectionViewListCell,
+            ConfigItem
+        > { [weak self] cell, _, item in
+            guard let self else { return }
+            var content = cell.defaultContentConfiguration()
+            content.text = item.title
+            cell.contentConfiguration = content
+
+            let button = UIButton(type: .system)
+            button.showsMenuAsPrimaryAction = true
+            button.changesSelectionAsPrimaryAction = true
+
+            let actions = HeroHeader.InlineTitleConfiguration.Dimming.allCases.map { mode in
+                UIAction(
+                    title: mode.displayName,
+                    state: self.dimmingMode == mode ? .on : .off
+                ) { [weak self] _ in
+                    self?.dimmingMode = mode
+                    self?.updateHeaderWithCurrentConfiguration()
+                }
+            }
+
+            button.menu = UIMenu(children: actions)
+            button.setTitle(dimmingMode.displayName, for: .normal)
+
+            cell.accessories = [.customView(configuration: .init(
+                customView: button,
+                placement: .trailing()
+            ))]
+        }
+
         let headerRegistration = UICollectionView
             .SupplementaryRegistration<UICollectionViewListCell>(
                 elementKind: UICollectionView.elementKindSectionHeader
@@ -163,6 +202,12 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                 case .smallTitleDisplayMode:
                     collectionView.dequeueConfiguredReusableCell(
                         using: menuCellRegistration,
+                        for: indexPath,
+                        item: configItem
+                    )
+                case .dimming:
+                    collectionView.dequeueConfiguredReusableCell(
+                        using: dimmingMenuCellRegistration,
                         for: indexPath,
                         item: configItem
                     )
@@ -272,6 +317,11 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                 configItems.append(Item.config(.smallTitleDisplayMode))
             }
 
+            // Show dimming option for inline titles
+            if inlineEnabled {
+                configItems.append(Item.config(.dimming))
+            }
+
             snapshot.appendItems(configItems, toSection: Section.configuration)
         }
 
@@ -292,7 +342,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             applySnapshot(animatingDifferences: true)
         case .lineWrap:
             lineWrapEnabled = sender.isOn
-        case .smallTitleDisplayMode:
+        case .smallTitleDisplayMode, .dimming:
             break
         }
 
@@ -308,7 +358,9 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
 
-        let largeTitleDisplayMode: HeroHeader.LargeTitleDisplayMode = if largeTitleEnabled {
+        let largeTitleDisplayMode: HeroHeader.LargeTitleDisplayMode = if inlineEnabled {
+            .inline(.init(dimming: dimmingMode))
+        } else if largeTitleEnabled {
             .belowHeader(.init(
                 allowsLineWrap: lineWrapEnabled,
                 smallTitleDisplayMode: smallTitleDisplayMode
@@ -357,7 +409,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             title: "Bikes & Beyond",
             assetName: "bikes",
             height: 300,
-            largeTitleDisplayMode: .inline
+            largeTitleDisplayMode: .inline()
         ),
 
         // Two line large title
@@ -533,6 +585,7 @@ nonisolated enum ConfigItem: Hashable, Sendable {
     case largeTitle
     case lineWrap
     case smallTitleDisplayMode
+    case dimming
 
     var title: String {
         switch self {
@@ -540,6 +593,7 @@ nonisolated enum ConfigItem: Hashable, Sendable {
         case .largeTitle: "Large Title"
         case .lineWrap: "Line Wrap"
         case .smallTitleDisplayMode: "Small Title"
+        case .dimming: "Dimming"
         }
     }
 
@@ -549,6 +603,7 @@ nonisolated enum ConfigItem: Hashable, Sendable {
         case .largeTitle: 1
         case .lineWrap: 2
         case .smallTitleDisplayMode: 3
+        case .dimming: 4
         }
     }
 
@@ -558,6 +613,7 @@ nonisolated enum ConfigItem: Hashable, Sendable {
         case 1: self = .largeTitle
         case 2: self = .lineWrap
         case 3: self = .smallTitleDisplayMode
+        case 4: self = .dimming
         default: return nil
         }
     }
@@ -575,6 +631,22 @@ extension HeroHeader.SmallTitleDisplayMode {
         case .never: "Never"
         case .system: "System"
         case .always: "Always"
+        }
+    }
+}
+
+// MARK: - Dimming helpers
+
+extension HeroHeader.InlineTitleConfiguration.Dimming {
+    static var allCases: [HeroHeader.InlineTitleConfiguration.Dimming] {
+        [.none, .complete, .gradient]
+    }
+
+    var displayName: String {
+        switch self {
+        case .none: "None"
+        case .complete: "Complete"
+        case .gradient: "Gradient"
         }
     }
 }

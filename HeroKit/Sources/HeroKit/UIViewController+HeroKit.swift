@@ -115,10 +115,14 @@ extension UIViewController {
 
         let headerView = HeroHeaderView(contentView: contentView, largeTitleView: largeTitleView)
 
-        if case .inline = configuration.largeTitleDisplayMode,
+        if case let .inline(inlineConfig) = configuration.largeTitleDisplayMode,
            let title = navigationItem.title ?? title
         {
-            let inlineTitle = addInlineTitleLabel(title, to: contentView)
+            let inlineTitle = addInlineTitleLabel(
+                title,
+                dimming: inlineConfig.dimming,
+                to: contentView
+            )
             headerView.largeTitleView = inlineTitle
         }
 
@@ -126,7 +130,11 @@ extension UIViewController {
     }
 
     @discardableResult
-    private func addInlineTitleLabel(_ title: String, to contentView: UIView) -> LargeTitleView {
+    private func addInlineTitleLabel(
+        _ title: String,
+        dimming: HeroHeader.InlineTitleConfiguration.Dimming,
+        to contentView: UIView
+    ) -> LargeTitleView {
         let hasFog = contentView.backgroundColor != nil
         let fogColor = contentView.backgroundColor ?? .systemBackground
         let titleView = LargeTitleView(
@@ -136,6 +144,21 @@ extension UIViewController {
             fogColor: fogColor
         )
         titleView.translatesAutoresizingMaskIntoConstraints = false
+
+        // Add dimming overlay for readability on bright images
+        switch dimming {
+        case .none:
+            break
+        case .complete:
+            let dimmingView = createDimmingView(gradient: false)
+            contentView.addSubview(dimmingView)
+            pinToEdges(dimmingView, in: contentView)
+        case .gradient:
+            let dimmingView = createDimmingView(gradient: true)
+            contentView.addSubview(dimmingView)
+            pinToEdges(dimmingView, in: contentView)
+        }
+
         contentView.addSubview(titleView)
         NSLayoutConstraint.activate([
             titleView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
@@ -143,6 +166,30 @@ extension UIViewController {
             titleView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
         ])
         return titleView
+    }
+
+    private func createDimmingView(gradient: Bool) -> UIView {
+        if gradient {
+            let dimmingView = GradientDimmingView()
+            dimmingView.translatesAutoresizingMaskIntoConstraints = false
+            dimmingView.isUserInteractionEnabled = false
+            return dimmingView
+        } else {
+            let dimmingView = UIView()
+            dimmingView.translatesAutoresizingMaskIntoConstraints = false
+            dimmingView.isUserInteractionEnabled = false
+            dimmingView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+            return dimmingView
+        }
+    }
+
+    private func pinToEdges(_ subview: UIView, in parent: UIView) {
+        NSLayoutConstraint.activate([
+            subview.topAnchor.constraint(equalTo: parent.topAnchor),
+            subview.leadingAnchor.constraint(equalTo: parent.leadingAnchor),
+            subview.trailingAnchor.constraint(equalTo: parent.trailingAnchor),
+            subview.bottomAnchor.constraint(equalTo: parent.bottomAnchor),
+        ])
     }
 
     private func createOpaqueHeaderView(
@@ -258,7 +305,7 @@ extension UIViewController {
             height: navigationbarHeightExtended,
             minHeight: navigationBarHeight,
             stretches: true,
-            largeTitleDisplayMode: .inline
+            largeTitleDisplayMode: .inline()
         )
 
         setupHeaderView(
@@ -364,4 +411,38 @@ private extension UIViewController {
         viewModel = nil
     }
 
+}
+
+// MARK: - GradientDimmingView
+
+private class GradientDimmingView: UIView {
+
+    private lazy var gradientLayer: CAGradientLayer = {
+        let layer = CAGradientLayer()
+        layer.colors = [
+            UIColor.black.withAlphaComponent(0).cgColor,
+            UIColor.black.withAlphaComponent(0.5).cgColor,
+        ]
+        layer.startPoint = CGPoint(x: 0.5, y: 0)
+        layer.endPoint = CGPoint(x: 0.5, y: 1)
+        return layer
+    }()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        layer.addSublayer(gradientLayer)
+    }
+
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        gradientLayer.frame = bounds
+        CATransaction.commit()
+    }
 }

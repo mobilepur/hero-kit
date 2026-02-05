@@ -23,8 +23,11 @@ extension HeroHeader.HeaderViewConfiguration {
             case .system:
                 break // default, don't show
             }
-        case .inline:
+        case let .inline(config):
             parts.append("inline title")
+            if config.dimming != .none {
+                parts.append("dimming: \(config.dimming)")
+            }
         }
         return parts.joined(separator: ", ")
     }

@@ -9,7 +9,10 @@ public enum HeroHeader {
             foregroundColor: UIColor? = nil,
             prefersLargeTitles: Bool = false
         )
-        case headerView(view: UIView, configuration: HeaderViewConfiguration = .init())
+        case headerView(
+            view: UIView,
+            configuration: HeaderViewConfiguration = .init()
+        )
     }
 
     // MARK: - configurations
@@ -36,7 +39,21 @@ public enum HeroHeader {
     public enum LargeTitleDisplayMode: Hashable, Sendable {
         case none
         case belowHeader(LargeTitleConfiguration = .init())
-        case inline
+        case inline(InlineTitleConfiguration = .init())
+    }
+
+    public struct InlineTitleConfiguration: Hashable, Sendable {
+        public let dimming: Dimming
+
+        public init(dimming: Dimming = .none) {
+            self.dimming = dimming
+        }
+
+        public enum Dimming: Hashable, Sendable {
+            case none
+            case complete
+            case gradient
+        }
     }
 
     public struct LargeTitleConfiguration: Hashable, Sendable {
