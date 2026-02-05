@@ -7,7 +7,8 @@ public extension UIView {
 
     /// Creates a large title label view with padding
     static func largeTitleLabel(_ title: String, allowsLineWrap: Bool = false) -> LargeTitleView {
-        LargeTitleView(title: title, allowsLineWrap: allowsLineWrap)
+        let largeTitle = LargeTitleView(title: title, allowsLineWrap: allowsLineWrap)
+        return largeTitle
     }
 
     /// Creates an inline large title label for overlay on header content (bottom-left)

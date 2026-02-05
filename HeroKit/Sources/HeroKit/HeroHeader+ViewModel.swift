@@ -84,10 +84,30 @@ extension HeroHeader {
                 layout.headerHeightConstraint.constant = totalHeight
                 layout.contentHeightConstraint.constant = configuration.height
 
-                // LargeTitle hidden when it reaches the status bar
-                let statusBarHeight = controller?.view.window?.safeAreaInsets.top ?? 0
                 let largeTitleHeight = totalHeight - configuration.height
-                headerView.isLargeTitleHidden = invertedOffset < largeTitleHeight + statusBarHeight
+                let largeTitleTop = invertedOffset - largeTitleHeight
+
+                let navBarBottom = controller?.navigationController?.navigationBar.frame.maxY ?? 0
+                let statusBarBottom = controller?.view.window?.safeAreaInsets.top ?? 0
+
+                if largeTitleTop <= statusBarBottom {
+                    // Reached status bar — fully hidden
+                    headerView.isLargeTitleHidden = true
+                    (headerView.largeTitleView as? LargeTitleView)?.blurFraction(1)
+                    headerView.largeTitleView?.alpha = 0
+                } else if largeTitleTop < navBarBottom {
+                    // Between navbar and status bar — fog gradually
+                    headerView.isLargeTitleHidden = false
+                    let fraction = 1 - (largeTitleTop - statusBarBottom) /
+                        (navBarBottom - statusBarBottom)
+                    (headerView.largeTitleView as? LargeTitleView)?.blurFraction(fraction)
+                    headerView.largeTitleView?.alpha = 1
+                } else {
+                    // Fully visible
+                    headerView.isLargeTitleHidden = false
+                    (headerView.largeTitleView as? LargeTitleView)?.blurFraction(0)
+                    headerView.largeTitleView?.alpha = 1
+                }
 
             } else {
                 // Normal expanded state
