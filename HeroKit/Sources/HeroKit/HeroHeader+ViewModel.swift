@@ -90,16 +90,29 @@ extension HeroHeader {
                 let navBarBottom = controller?.navigationController?.navigationBar.frame.maxY ?? 0
                 let statusBarBottom = controller?.view.window?.safeAreaInsets.top ?? 0
 
-                if largeTitleTop <= statusBarBottom {
-                    // Reached status bar — fully hidden
+                // For inline titles, the title sits at the bottom of the contentView,
+                // so it's hidden when the header height equals the nav bar height.
+                let hiddenThreshold: CGFloat
+                let fogThreshold: CGFloat
+
+                if case .inline = configuration.largeTitleDisplayMode {
+                    hiddenThreshold = navBarBottom
+                    fogThreshold = navBarBottom + 60
+                } else {
+                    hiddenThreshold = statusBarBottom
+                    fogThreshold = navBarBottom
+                }
+
+                if largeTitleTop <= hiddenThreshold {
+                    // Fully hidden
                     headerView.isLargeTitleHidden = true
                     (headerView.largeTitleView as? LargeTitleView)?.blurFraction(1)
                     headerView.largeTitleView?.alpha = 0
-                } else if largeTitleTop < navBarBottom {
-                    // Between navbar and status bar — fog gradually
+                } else if largeTitleTop < fogThreshold {
+                    // Fog gradually
                     headerView.isLargeTitleHidden = false
-                    let fraction = 1 - (largeTitleTop - statusBarBottom) /
-                        (navBarBottom - statusBarBottom)
+                    let fraction = 1 - (largeTitleTop - hiddenThreshold) /
+                        (fogThreshold - hiddenThreshold)
                     (headerView.largeTitleView as? LargeTitleView)?.blurFraction(fraction)
                     headerView.largeTitleView?.alpha = 1
                 } else {
@@ -143,7 +156,7 @@ extension HeroHeader {
                     headerView.isLargeTitleHidden
                 }
             case .inline:
-                headerView.isCollapsed
+                headerView.isLargeTitleHidden
             }
 
             let wasShowing = controller.navigationItem.title != nil

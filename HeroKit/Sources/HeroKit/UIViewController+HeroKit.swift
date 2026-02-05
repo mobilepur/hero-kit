@@ -113,27 +113,30 @@ extension UIViewController {
             )
         }
 
+        let headerView = HeroHeaderView(contentView: contentView, largeTitleView: largeTitleView)
+
         if case .inline = configuration.largeTitleDisplayMode,
            let title = navigationItem.title ?? title
         {
-            addInlineTitleLabel(title, to: contentView)
+            let inlineTitle = addInlineTitleLabel(title, to: contentView)
+            headerView.largeTitleView = inlineTitle
         }
 
-        let headerView = HeroHeaderView(contentView: contentView, largeTitleView: largeTitleView)
         return (headerView, contentConstraint)
     }
 
-    private func addInlineTitleLabel(_ title: String, to contentView: UIView) {
-        let inlineLabel = UIView.inlineTitleLabel(title)
-        contentView.addSubview(inlineLabel)
+    @discardableResult
+    private func addInlineTitleLabel(_ title: String, to contentView: UIView) -> LargeTitleView {
+        let fogColor = contentView.backgroundColor ?? .systemBackground
+        let titleView = LargeTitleView(title: title, foregroundColor: .white, fogColor: fogColor)
+        titleView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(titleView)
         NSLayoutConstraint.activate([
-            inlineLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            inlineLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
-            inlineLabel.trailingAnchor.constraint(
-                lessThanOrEqualTo: contentView.trailingAnchor,
-                constant: -16
-            ),
+            titleView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            titleView.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor),
+            titleView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
         ])
+        return titleView
     }
 
     private func createOpaqueHeaderView(
@@ -257,6 +260,16 @@ extension UIViewController {
             configuration: configuration,
             scrollView: scrollView
         )
+
+        // Match nav bar small title color to header foreground
+        if let foregroundColor {
+            let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: foregroundColor]
+            navigationController?.navigationBar.standardAppearance.titleTextAttributes = attrs
+            navigationController?.navigationBar.scrollEdgeAppearance?.titleTextAttributes = attrs
+            navigationController?.navigationBar.compactAppearance?.titleTextAttributes = attrs
+            navigationController?.navigationBar.compactScrollEdgeAppearance?
+                .titleTextAttributes = attrs
+        }
     }
 
     private var navigationBarHeight: CGFloat {

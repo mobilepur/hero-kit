@@ -4,6 +4,7 @@ public class LargeTitleView: UIView {
 
     private let title: String
     private let allowsLineWrap: Bool
+    private let foregroundColor: UIColor
     private let fogColor: UIColor
     private var fogHeightConstraint: NSLayoutConstraint?
 
@@ -11,7 +12,7 @@ public class LargeTitleView: UIView {
         let label = UILabel()
         label.text = title
         label.font = UIView.largeTitleFont
-        label.textColor = .label
+        label.textColor = foregroundColor
         label.numberOfLines = allowsLineWrap ? 2 : 1
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -33,10 +34,12 @@ public class LargeTitleView: UIView {
     }()
 
     public init(title: String, allowsLineWrap: Bool = false,
+                foregroundColor: UIColor = .label,
                 fogColor: UIColor = .systemBackground)
     {
         self.title = title
         self.allowsLineWrap = allowsLineWrap
+        self.foregroundColor = foregroundColor
         self.fogColor = fogColor
         super.init(frame: .zero)
         backgroundColor = .clear
