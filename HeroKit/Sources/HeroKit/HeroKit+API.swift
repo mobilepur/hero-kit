@@ -234,15 +234,50 @@ extension UIViewController {
     }
 }
 
+// MARK: - Navigation Bar Appearance Helpers
+
 extension UIViewController {
-    func configureTransparentNavigationBar() {
+
+    /// Applies a single appearance to all navigation bar appearance properties
+    func applyNavigationBarAppearance(_ appearance: UINavigationBarAppearance) {
         guard let navigationController else { return }
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
         navigationController.navigationBar.standardAppearance = appearance
         navigationController.navigationBar.scrollEdgeAppearance = appearance
         navigationController.navigationBar.compactAppearance = appearance
         navigationController.navigationBar.compactScrollEdgeAppearance = appearance
+    }
+
+    /// Configures navigation bar with transparent background
+    func configureTransparentNavigationBar() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        applyNavigationBarAppearance(appearance)
+    }
+
+    /// Configures navigation bar with default system background
+    func configureDefaultNavigationBar() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithDefaultBackground()
+        applyNavigationBarAppearance(appearance)
+    }
+
+    /// Configures navigation bar with opaque colored background
+    func configureOpaqueNavigationBar(backgroundColor: UIColor, foregroundColor: UIColor?) {
+        let appearance = UINavigationBarAppearance.withStyle(
+            backgroundColor: backgroundColor,
+            foregroundColor: foregroundColor
+        )
+        applyNavigationBarAppearance(appearance)
+    }
+
+    /// Sets the title text color on all navigation bar appearances
+    func setNavigationBarTitleColor(_ color: UIColor) {
+        guard let navigationController else { return }
+        let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: color]
+        navigationController.navigationBar.standardAppearance.titleTextAttributes = attrs
+        navigationController.navigationBar.scrollEdgeAppearance?.titleTextAttributes = attrs
+        navigationController.navigationBar.compactAppearance?.titleTextAttributes = attrs
+        navigationController.navigationBar.compactScrollEdgeAppearance?.titleTextAttributes = attrs
     }
 
     private func configureScrollViewInsets(
@@ -285,12 +320,7 @@ extension UIViewController {
                 setupHeaderView(headerView, configuration: configuration, scrollView: scrollView)
             } else {
                 // Pre-iOS 26: system large titles work fine
-                let appearance = UINavigationBarAppearance()
-                appearance.configureWithDefaultBackground()
-                navigationController.navigationBar.standardAppearance = appearance
-                navigationController.navigationBar.scrollEdgeAppearance = appearance
-                navigationController.navigationBar.compactAppearance = appearance
-                navigationController.navigationBar.compactScrollEdgeAppearance = appearance
+                configureDefaultNavigationBar()
                 navigationController.navigationBar.prefersLargeTitles = prefersLargeTitles
             }
             return
@@ -308,20 +338,10 @@ extension UIViewController {
         } else {
             // Pre-iOS 26: use standard large title API
             navigationController.navigationBar.prefersLargeTitles = prefersLargeTitles
-
-            let appearance = UINavigationBarAppearance.withStyle(
+            configureOpaqueNavigationBar(
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor
             )
-            let scrollEdgeAppearance = UINavigationBarAppearance.withStyle(
-                backgroundColor: backgroundColor,
-                foregroundColor: foregroundColor
-            )
-
-            navigationController.navigationBar.standardAppearance = appearance
-            navigationController.navigationBar.compactAppearance = appearance
-            navigationController.navigationBar.scrollEdgeAppearance = scrollEdgeAppearance
-            navigationController.navigationBar.compactScrollEdgeAppearance = scrollEdgeAppearance
         }
     }
 
@@ -357,12 +377,7 @@ extension UIViewController {
 
         // Match nav bar small title color to header foreground
         if let foregroundColor {
-            let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: foregroundColor]
-            navigationController?.navigationBar.standardAppearance.titleTextAttributes = attrs
-            navigationController?.navigationBar.scrollEdgeAppearance?.titleTextAttributes = attrs
-            navigationController?.navigationBar.compactAppearance?.titleTextAttributes = attrs
-            navigationController?.navigationBar.compactScrollEdgeAppearance?
-                .titleTextAttributes = attrs
+            setNavigationBarTitleColor(foregroundColor)
         }
     }
 
