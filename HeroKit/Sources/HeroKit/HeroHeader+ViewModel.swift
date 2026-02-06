@@ -163,6 +163,13 @@ extension HeroHeader {
             if shouldShow != wasShowing {
                 let newTitle = shouldShow ? storedTitle : nil
                 controller.navigationController?.setTitleAnimated(newTitle)
+
+                // Notify delegate of title visibility change
+                if shouldShow {
+                    delegate?.heroHeader(controller, didShowSmallTitle: headerView)
+                } else {
+                    delegate?.heroHeader(controller, didShowLargeTitle: headerView)
+                }
             }
         }
 
