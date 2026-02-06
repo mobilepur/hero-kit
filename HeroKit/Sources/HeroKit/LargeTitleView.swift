@@ -77,6 +77,10 @@ public class LargeTitleView: UIView {
 
     override public func layoutSubviews() {
         super.layoutSubviews()
+
+        // Required for multi-line labels to calculate intrinsic content size correctly
+        titleLabel.preferredMaxLayoutWidth = bounds.width - 32
+
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         gradientLayer.frame = fogView.bounds
