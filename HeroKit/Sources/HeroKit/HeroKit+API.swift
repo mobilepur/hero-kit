@@ -234,50 +234,36 @@ extension UIViewController {
     }
 }
 
-// MARK: - Navigation Bar Appearance Helpers
+// MARK: - Navigation Bar Appearance Helpers (delegate to UINavigationController)
 
 extension UIViewController {
 
     /// Applies a single appearance to all navigation bar appearance properties
     func applyNavigationBarAppearance(_ appearance: UINavigationBarAppearance) {
-        guard let navigationController else { return }
-        navigationController.navigationBar.standardAppearance = appearance
-        navigationController.navigationBar.scrollEdgeAppearance = appearance
-        navigationController.navigationBar.compactAppearance = appearance
-        navigationController.navigationBar.compactScrollEdgeAppearance = appearance
+        navigationController?.applyAppearance(appearance)
     }
 
     /// Configures navigation bar with transparent background
     func configureTransparentNavigationBar() {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        applyNavigationBarAppearance(appearance)
+        navigationController?.configureTransparentAppearance()
     }
 
     /// Configures navigation bar with default system background
     func configureDefaultNavigationBar() {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithDefaultBackground()
-        applyNavigationBarAppearance(appearance)
+        navigationController?.configureDefaultAppearance()
     }
 
     /// Configures navigation bar with opaque colored background
     func configureOpaqueNavigationBar(backgroundColor: UIColor, foregroundColor: UIColor?) {
-        let appearance = UINavigationBarAppearance.withStyle(
+        navigationController?.configureOpaqueAppearance(
             backgroundColor: backgroundColor,
             foregroundColor: foregroundColor
         )
-        applyNavigationBarAppearance(appearance)
     }
 
     /// Sets the title text color on all navigation bar appearances
     func setNavigationBarTitleColor(_ color: UIColor) {
-        guard let navigationController else { return }
-        let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: color]
-        navigationController.navigationBar.standardAppearance.titleTextAttributes = attrs
-        navigationController.navigationBar.scrollEdgeAppearance?.titleTextAttributes = attrs
-        navigationController.navigationBar.compactAppearance?.titleTextAttributes = attrs
-        navigationController.navigationBar.compactScrollEdgeAppearance?.titleTextAttributes = attrs
+        navigationController?.setTitleColor(color)
     }
 
     private func configureScrollViewInsets(
