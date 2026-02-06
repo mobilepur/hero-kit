@@ -2,6 +2,10 @@ import UIKit
 
 extension UIViewController {
 
+    var isDarkMode: Bool {
+        traitCollection.userInterfaceStyle == .dark
+    }
+
     func findScrollView() -> UIScrollView? {
         if let tableVC = self as? UITableViewController {
             return tableVC.tableView

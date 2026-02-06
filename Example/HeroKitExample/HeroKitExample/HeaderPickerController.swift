@@ -25,12 +25,21 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     private var inlineEnabled: Bool = false
     private var dimmingMode: HeroHeader.InlineTitleConfiguration.Dimming = .none
 
+    // Opaque style state
+    private var currentOpaqueStyle: (
+        backgroundColor: UIColor,
+        foregroundColor: UIColor?,
+        prefersLargeTitles: Bool
+    )?
+    private var lightModeOnlyEnabled: Bool = false
+
     init(title: String, navbarStyle: HeroHeader.Style?, assetName: String? = nil) {
         self.navbarStyle = navbarStyle
         currentAssetName = assetName
 
-        // Extract configuration if headerView style
-        if case let .headerView(_, configuration) = navbarStyle {
+        // Extract configuration based on style type
+        switch navbarStyle {
+        case let .headerView(_, configuration):
             currentConfiguration = configuration
             stretchEnabled = configuration.stretches
 
@@ -44,6 +53,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                 inlineEnabled = true
                 dimmingMode = inlineConfig.dimming
             }
+
+        case let .opaque(backgroundColor, foregroundColor, prefersLargeTitles, lightModeOnly):
+            currentOpaqueStyle = (backgroundColor, foregroundColor, prefersLargeTitles)
+            lightModeOnlyEnabled = lightModeOnly
+
+        case .none:
+            break
         }
 
         super.init(nibName: nil, bundle: nil)
@@ -99,6 +115,8 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                 toggle.isOn = largeTitleEnabled
             case .lineWrap:
                 toggle.isOn = lineWrapEnabled
+            case .lightModeOnly:
+                toggle.isOn = lightModeOnlyEnabled
             case .smallTitleDisplayMode, .dimming, .titleChange:
                 return // Handled by menu registration
             }
@@ -342,7 +360,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     private func applySnapshot(animatingDifferences: Bool = false) {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
 
-        // Show configuration section only for headerView styles
+        // Show configuration section for headerView styles
         if currentConfiguration != nil {
             snapshot.appendSections([Section.configuration])
 
@@ -368,6 +386,12 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             snapshot.appendItems(configItems, toSection: Section.configuration)
         }
 
+        // Show configuration section for opaque styles
+        if currentOpaqueStyle != nil {
+            snapshot.appendSections([Section.configuration])
+            snapshot.appendItems([Item.config(.lightModeOnly)], toSection: Section.configuration)
+        }
+
         snapshot.appendSections([Section.colors, Section.views])
         snapshot.appendItems(colorItems.map { Item.style($0) }, toSection: Section.colors)
         snapshot.appendItems(viewItems.map { Item.style($0) }, toSection: Section.views)
@@ -380,16 +404,20 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         switch configItem {
         case .stretch:
             stretchEnabled = sender.isOn
+            updateHeaderWithCurrentConfiguration()
         case .largeTitle:
             largeTitleEnabled = sender.isOn
             applySnapshot(animatingDifferences: true)
+            updateHeaderWithCurrentConfiguration()
         case .lineWrap:
             lineWrapEnabled = sender.isOn
+            updateHeaderWithCurrentConfiguration()
+        case .lightModeOnly:
+            lightModeOnlyEnabled = sender.isOn
+            updateOpaqueHeaderWithCurrentConfiguration()
         case .smallTitleDisplayMode, .dimming, .titleChange:
             break
         }
-
-        updateHeaderWithCurrentConfiguration()
     }
 
     private func updateHeaderWithCurrentConfiguration() {
@@ -420,6 +448,21 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         )
 
         try? setHeader(.headerView(view: imageView, configuration: newConfiguration))
+    }
+
+    private func updateOpaqueHeaderWithCurrentConfiguration() {
+        guard let opaqueStyle = currentOpaqueStyle else { return }
+
+        do {
+            try setHeader(.opaque(
+                backgroundColor: opaqueStyle.backgroundColor,
+                foregroundColor: opaqueStyle.foregroundColor,
+                prefersLargeTitles: opaqueStyle.prefersLargeTitles,
+                lightModeOnly: lightModeOnlyEnabled
+            ))
+        } catch {
+            print("Error updating opaque header: \(error)")
+        }
     }
 
     // MARK: - Data
@@ -642,6 +685,7 @@ nonisolated enum ConfigItem: Hashable, Sendable {
     case smallTitleDisplayMode
     case dimming
     case titleChange
+    case lightModeOnly
 
     var title: String {
         switch self {
@@ -651,6 +695,7 @@ nonisolated enum ConfigItem: Hashable, Sendable {
         case .smallTitleDisplayMode: "Small Title"
         case .dimming: "Dimming"
         case .titleChange: "Title"
+        case .lightModeOnly: "Light Mode Only"
         }
     }
 
@@ -662,6 +707,7 @@ nonisolated enum ConfigItem: Hashable, Sendable {
         case .smallTitleDisplayMode: 3
         case .dimming: 4
         case .titleChange: 5
+        case .lightModeOnly: 6
         }
     }
 
@@ -673,6 +719,7 @@ nonisolated enum ConfigItem: Hashable, Sendable {
         case 3: self = .smallTitleDisplayMode
         case 4: self = .dimming
         case 5: self = .titleChange
+        case 6: self = .lightModeOnly
         default: return nil
         }
     }

@@ -7,7 +7,8 @@ public enum HeroHeader {
         case opaque(
             backgroundColor: UIColor,
             foregroundColor: UIColor? = nil,
-            prefersLargeTitles: Bool = false
+            prefersLargeTitles: Bool = false,
+            lightModeOnly: Bool = false
         )
         case headerView(
             view: UIView,

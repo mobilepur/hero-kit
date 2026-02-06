@@ -48,14 +48,19 @@ extension UIViewController {
 
     private func setupHeader(style: HeroHeader.Style, scrollView: UIScrollView) throws {
         switch style {
-        case let .opaque(backgroundColor, foregroundColor, prefersLargeTitles):
+        case let .opaque(backgroundColor, foregroundColor, prefersLargeTitles, lightModeOnly):
             try setupOpaqueHeader(
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor,
-                prefersLargeTitles: prefersLargeTitles
+                prefersLargeTitles: prefersLargeTitles,
+                lightModeOnly: lightModeOnly
             )
         case let .headerView(view, configuration):
-            setupHeaderView(view, configuration: configuration, scrollView: scrollView)
+            setupHeaderView(
+                view,
+                configuration: configuration,
+                scrollView: scrollView
+            )
         }
     }
 
@@ -253,12 +258,46 @@ extension UIViewController {
     private func setupOpaqueHeader(
         backgroundColor: UIColor,
         foregroundColor: UIColor?,
-        prefersLargeTitles: Bool
+        prefersLargeTitles: Bool,
+        lightModeOnly: Bool
     ) throws {
         guard let navigationController else { throw HeroHeader.Error.navigationControllerNotFound }
 
+        // In dark mode with lightModeOnly, use default system appearance
+        if lightModeOnly, isDarkMode {
+            // On iOS 26+, native large titles don't work, so we still need our headerView
+            if #available(iOS 26, *), prefersLargeTitles {
+                guard let title = navigationItem.title ?? title else {
+                    throw HeroHeader.Error.titleNotFound
+                }
+                guard let scrollView = findScrollView() else {
+                    throw HeroHeader.Error.scrollViewNotFound
+                }
+                // Create transparent header with inline title for dark mode
+                let headerView = UIView()
+                headerView.backgroundColor = .clear
+                let configuration = HeroHeader.HeaderViewConfiguration(
+                    height: navigationbarHeightExtended,
+                    minHeight: navigationBarHeight,
+                    stretches: true,
+                    largeTitleDisplayMode: .inline()
+                )
+                setupHeaderView(headerView, configuration: configuration, scrollView: scrollView)
+            } else {
+                // Pre-iOS 26: system large titles work fine
+                let appearance = UINavigationBarAppearance()
+                appearance.configureWithDefaultBackground()
+                navigationController.navigationBar.standardAppearance = appearance
+                navigationController.navigationBar.scrollEdgeAppearance = appearance
+                navigationController.navigationBar.compactAppearance = appearance
+                navigationController.navigationBar.compactScrollEdgeAppearance = appearance
+                navigationController.navigationBar.prefersLargeTitles = prefersLargeTitles
+            }
+            return
+        }
+
         if #available(iOS 26, *), prefersLargeTitles {
-            guard let title = navigationItem.title else {
+            guard let title = navigationItem.title ?? title else {
                 throw HeroHeader.Error.titleNotFound
             }
             try setupLargeTitleOpaqueHeaderCompatibleMode(
@@ -286,6 +325,9 @@ extension UIViewController {
         }
     }
 
+    /*
+     iOS 26 workaround to replicate pre liquid glass behaviour
+     */
     private func setupLargeTitleOpaqueHeaderCompatibleMode(
         title: String,
         backgroundColor: UIColor,
@@ -294,7 +336,6 @@ extension UIViewController {
         guard let scrollView = findScrollView() else {
             throw HeroHeader.Error.scrollViewNotFound
         }
-        // iOS 26+ does not play nicely with large titles when navbar has a background color
         let headerView = createOpaqueHeaderView(
             title: title,
             backgroundColor: backgroundColor,
