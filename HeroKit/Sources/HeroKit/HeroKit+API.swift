@@ -234,37 +234,7 @@ extension UIViewController {
     }
 }
 
-// MARK: - Navigation Bar Appearance Helpers (delegate to UINavigationController)
-
 extension UIViewController {
-
-    /// Applies a single appearance to all navigation bar appearance properties
-    func applyNavigationBarAppearance(_ appearance: UINavigationBarAppearance) {
-        navigationController?.applyAppearance(appearance)
-    }
-
-    /// Configures navigation bar with transparent background
-    func configureTransparentNavigationBar() {
-        navigationController?.configureTransparentAppearance()
-    }
-
-    /// Configures navigation bar with default system background
-    func configureDefaultNavigationBar() {
-        navigationController?.configureDefaultAppearance()
-    }
-
-    /// Configures navigation bar with opaque colored background
-    func configureOpaqueNavigationBar(backgroundColor: UIColor, foregroundColor: UIColor?) {
-        navigationController?.configureOpaqueAppearance(
-            backgroundColor: backgroundColor,
-            foregroundColor: foregroundColor
-        )
-    }
-
-    /// Sets the title text color on all navigation bar appearances
-    func setNavigationBarTitleColor(_ color: UIColor) {
-        navigationController?.setTitleColor(color)
-    }
 
     private func configureScrollViewInsets(
         _ scrollView: UIScrollView,
