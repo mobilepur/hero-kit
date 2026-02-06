@@ -1,3 +1,4 @@
+import Combine
 import UIKit
 
 extension HeroHeader {
@@ -19,10 +20,33 @@ extension HeroHeader {
         private(set) var layout: Layout?
         private(set) var state: State = .fullyExpanded
         var storedTitle: String?
+        private var titleCancellable: AnyCancellable?
 
         init(controller: UIViewController, configuration: HeaderViewConfiguration) {
             self.controller = controller
             self.configuration = configuration
+            observeTitleChanges()
+        }
+
+        private func observeTitleChanges() {
+            titleCancellable = controller?.publisher(for: \.title)
+                .sink { [weak self] newTitle in
+                    guard let self, let controller, let headerView, let newTitle else { return }
+                    storedTitle = newTitle
+
+                    // Update large title view
+                    (headerView.largeTitleView as? LargeTitleView)?.updateTitle(newTitle)
+
+                    // UIKit syncs viewController.title to navigationItem.title automatically,
+                    // so we must explicitly control small title visibility
+                    if headerView.isLargeTitleHidden {
+                        controller.navigationItem.title = newTitle
+                    } else {
+                        controller.navigationItem.title = nil
+                    }
+
+                    delegate?.heroHeader(controller, didUpdateTitle: headerView, title: newTitle)
+                }
         }
 
         func setup(headerView: HeroHeaderView, layout: Layout) {

@@ -99,7 +99,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                 toggle.isOn = largeTitleEnabled
             case .lineWrap:
                 toggle.isOn = lineWrapEnabled
-            case .smallTitleDisplayMode, .dimming:
+            case .smallTitleDisplayMode, .dimming, .titleChange:
                 return // Handled by menu registration
             }
 
@@ -176,6 +176,40 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             ))]
         }
 
+        // Title menu cell registration
+        let titleMenuCellRegistration = UICollectionView.CellRegistration<
+            UICollectionViewListCell,
+            ConfigItem
+        > { [weak self] cell, _, item in
+            guard let self else { return }
+            var content = cell.defaultContentConfiguration()
+            content.text = item.title
+            cell.contentConfiguration = content
+
+            let button = UIButton(type: .system)
+            button.showsMenuAsPrimaryAction = true
+
+            let titles = [
+                "Short",
+                "A Medium Length Title",
+                "This Is A Very Long Title That Spans Multiple Lines",
+            ]
+
+            let actions = titles.map { titleOption in
+                UIAction(title: titleOption) { [weak self] _ in
+                    self?.title = titleOption
+                }
+            }
+
+            button.menu = UIMenu(children: actions)
+            button.setTitle(title ?? "Select", for: .normal)
+
+            cell.accessories = [.customView(configuration: .init(
+                customView: button,
+                placement: .trailing()
+            ))]
+        }
+
         let headerRegistration = UICollectionView
             .SupplementaryRegistration<UICollectionViewListCell>(
                 elementKind: UICollectionView.elementKindSectionHeader
@@ -208,6 +242,12 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                 case .dimming:
                     collectionView.dequeueConfiguredReusableCell(
                         using: dimmingMenuCellRegistration,
+                        for: indexPath,
+                        item: configItem
+                    )
+                case .titleChange:
+                    collectionView.dequeueConfiguredReusableCell(
+                        using: titleMenuCellRegistration,
                         for: indexPath,
                         item: configItem
                     )
@@ -322,6 +362,9 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                 configItems.append(Item.config(.dimming))
             }
 
+            // Always show title change option
+            configItems.append(Item.config(.titleChange))
+
             snapshot.appendItems(configItems, toSection: Section.configuration)
         }
 
@@ -342,7 +385,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             applySnapshot(animatingDifferences: true)
         case .lineWrap:
             lineWrapEnabled = sender.isOn
-        case .smallTitleDisplayMode, .dimming:
+        case .smallTitleDisplayMode, .dimming, .titleChange:
             break
         }
 
@@ -429,6 +472,10 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
     func heroHeader(_: UIViewController, didShowSmallTitle _: HeroHeaderView) {
         print("didShowSmallTitle")
+    }
+
+    func heroHeader(_: UIViewController, didUpdateTitle _: HeroHeaderView, title: String) {
+        print("didUpdateTitle: \(title)")
     }
 
     /*
@@ -594,6 +641,7 @@ nonisolated enum ConfigItem: Hashable, Sendable {
     case lineWrap
     case smallTitleDisplayMode
     case dimming
+    case titleChange
 
     var title: String {
         switch self {
@@ -602,6 +650,7 @@ nonisolated enum ConfigItem: Hashable, Sendable {
         case .lineWrap: "Line Wrap"
         case .smallTitleDisplayMode: "Small Title"
         case .dimming: "Dimming"
+        case .titleChange: "Title"
         }
     }
 
@@ -612,6 +661,7 @@ nonisolated enum ConfigItem: Hashable, Sendable {
         case .lineWrap: 2
         case .smallTitleDisplayMode: 3
         case .dimming: 4
+        case .titleChange: 5
         }
     }
 
@@ -622,6 +672,7 @@ nonisolated enum ConfigItem: Hashable, Sendable {
         case 2: self = .lineWrap
         case 3: self = .smallTitleDisplayMode
         case 4: self = .dimming
+        case 5: self = .titleChange
         default: return nil
         }
     }

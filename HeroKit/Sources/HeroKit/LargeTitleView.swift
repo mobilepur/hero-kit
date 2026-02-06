@@ -89,4 +89,9 @@ public class LargeTitleView: UIView {
         let clamped = max(0, min(1, fraction))
         fogHeightConstraint?.constant = bounds.height * clamped
     }
+
+    /// Updates the displayed title text.
+    func updateTitle(_ newTitle: String) {
+        titleLabel.text = newTitle
+    }
 }

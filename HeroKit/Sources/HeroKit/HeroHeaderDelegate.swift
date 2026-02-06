@@ -23,6 +23,11 @@ public protocol HeroHeaderDelegate: AnyObject {
     func heroHeader(_ controller: UIViewController, didExpandFully headerView: HeroHeaderView)
     func heroHeader(_ controller: UIViewController, didShowLargeTitle headerView: HeroHeaderView)
     func heroHeader(_ controller: UIViewController, didShowSmallTitle headerView: HeroHeaderView)
+    func heroHeader(
+        _ controller: UIViewController,
+        didUpdateTitle headerView: HeroHeaderView,
+        title: String
+    )
 
 }
 
@@ -39,4 +44,5 @@ public extension HeroHeaderDelegate {
     func heroHeader(_: UIViewController, didExpandFully _: HeroHeaderView) { }
     func heroHeader(_: UIViewController, didShowLargeTitle _: HeroHeaderView) { }
     func heroHeader(_: UIViewController, didShowSmallTitle _: HeroHeaderView) { }
+    func heroHeader(_: UIViewController, didUpdateTitle _: HeroHeaderView, title _: String) { }
 }
