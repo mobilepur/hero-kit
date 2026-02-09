@@ -5,7 +5,9 @@ public class HeroHeaderView: UIStackView {
     public let contentView: UIView
     public internal(set) var largeTitleView: UIView?
 
-    public internal(set) var isLargeTitleHidden: Bool = false
+    public var isLargeTitleHidden: Bool {
+        largeTitleView?.alpha == 0
+    }
 
     convenience init(
         contentView: UIView,

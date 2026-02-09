@@ -98,9 +98,7 @@ extension HeroHeader {
                 layout.headerHeightConstraint.constant = invertedOffset
                 layout.contentHeightConstraint.constant = configuration.height + stretchAmount
                 layout.headerTopConstraint.constant = 0
-
-                headerView.isLargeTitleHidden = false
-
+                headerView.largeTitleView?.alpha = 1
             } else if invertedOffset < totalHeight {
                 // Header collapsing
                 let minOffset = max(effectiveMinHeight, invertedOffset)
@@ -129,19 +127,16 @@ extension HeroHeader {
 
                 if largeTitleTop <= hiddenThreshold {
                     // Fully hidden
-                    headerView.isLargeTitleHidden = true
                     (headerView.largeTitleView as? LargeTitleView)?.blurFraction(1)
                     headerView.largeTitleView?.alpha = 0
                 } else if largeTitleTop < fogThreshold {
                     // Fog gradually
-                    headerView.isLargeTitleHidden = false
                     let fraction = 1 - (largeTitleTop - hiddenThreshold) /
                         (fogThreshold - hiddenThreshold)
                     (headerView.largeTitleView as? LargeTitleView)?.blurFraction(fraction)
                     headerView.largeTitleView?.alpha = 1
                 } else {
                     // Fully visible
-                    headerView.isLargeTitleHidden = false
                     (headerView.largeTitleView as? LargeTitleView)?.blurFraction(0)
                     headerView.largeTitleView?.alpha = 1
                 }
@@ -151,8 +146,7 @@ extension HeroHeader {
                 layout.headerTopConstraint.constant = 0
                 layout.headerHeightConstraint.constant = totalHeight
                 layout.contentHeightConstraint.constant = configuration.height
-
-                headerView.isLargeTitleHidden = false
+                headerView.largeTitleView?.alpha = 1
             }
 
             // Update state and call delegates
