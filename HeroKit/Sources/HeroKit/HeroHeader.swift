@@ -5,6 +5,7 @@ public enum HeroHeader {
 
     public enum Style {
         case opaque(
+            title: TitleConfiguration,
             backgroundColor: UIColor,
             foregroundColor: UIColor? = nil,
             prefersLargeTitles: Bool = false,
@@ -17,6 +18,25 @@ public enum HeroHeader {
     }
 
     // MARK: - configurations
+
+    public struct TitleConfiguration {
+        public let title: String?
+        public let subtitle: String?
+        public let largeTitle: String?
+        public let largeSubtitle: String?
+
+        public init(
+            title: String? = nil,
+            subtitle: String? = nil,
+            largeTitle: String? = nil,
+            largeSubtitle: String? = nil
+        ) {
+            self.title = title
+            self.subtitle = subtitle
+            self.largeTitle = largeTitle
+            self.largeSubtitle = largeSubtitle
+        }
+    }
 
     public struct HeaderViewConfiguration {
         public let height: CGFloat

@@ -48,8 +48,15 @@ extension UIViewController {
 
     private func setupHeader(style: HeroHeader.Style, scrollView: UIScrollView) throws {
         switch style {
-        case let .opaque(backgroundColor, foregroundColor, prefersLargeTitles, lightModeOnly):
+        case let .opaque(
+            titleConfig,
+            backgroundColor,
+            foregroundColor,
+            prefersLargeTitles,
+            lightModeOnly
+        ):
             try setupOpaqueHeader(
+                titleConfig: titleConfig,
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor,
                 prefersLargeTitles: prefersLargeTitles,
@@ -247,6 +254,7 @@ extension UIViewController {
     }
 
     private func setupOpaqueHeader(
+        titleConfig: HeroHeader.TitleConfiguration,
         backgroundColor: UIColor,
         foregroundColor: UIColor?,
         prefersLargeTitles: Bool,
@@ -254,11 +262,15 @@ extension UIViewController {
     ) throws {
         guard let navigationController else { throw HeroHeader.Error.navigationControllerNotFound }
 
+        // Resolve title from config, falling back to navigationItem.title or self.title
+        let resolvedTitle = titleConfig.largeTitle ?? titleConfig.title ?? navigationItem
+            .title ?? title
+
         // In dark mode with lightModeOnly, use default system appearance
         if lightModeOnly, isDarkMode {
             // On iOS 26+, native large titles don't work, so we still need our headerView
             if #available(iOS 26, *), prefersLargeTitles {
-                guard let title = navigationItem.title ?? title else {
+                guard let title = resolvedTitle else {
                     throw HeroHeader.Error.titleNotFound
                 }
                 guard let scrollView = findScrollView() else {
@@ -283,7 +295,7 @@ extension UIViewController {
         }
 
         if #available(iOS 26, *), prefersLargeTitles {
-            guard let title = navigationItem.title ?? title else {
+            guard let title = resolvedTitle else {
                 throw HeroHeader.Error.titleNotFound
             }
             try setupLargeTitleOpaqueHeaderCompatibleMode(

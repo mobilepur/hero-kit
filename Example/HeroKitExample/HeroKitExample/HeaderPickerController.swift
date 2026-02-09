@@ -54,7 +54,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                 dimmingMode = inlineConfig.dimming
             }
 
-        case let .opaque(backgroundColor, foregroundColor, prefersLargeTitles, lightModeOnly):
+        case let .opaque(_, backgroundColor, foregroundColor, prefersLargeTitles, lightModeOnly):
             currentOpaqueStyle = (backgroundColor, foregroundColor, prefersLargeTitles)
             lightModeOnlyEnabled = lightModeOnly
 
@@ -455,6 +455,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
         do {
             try setHeader(.opaque(
+                title: .init(title: title),
                 backgroundColor: opaqueStyle.backgroundColor,
                 foregroundColor: opaqueStyle.foregroundColor,
                 prefersLargeTitles: opaqueStyle.prefersLargeTitles,
@@ -636,9 +637,10 @@ nonisolated enum StyleItem: Hashable, Sendable {
 
     var style: HeroHeader.Style {
         switch self {
-        case let .color(_, red, green, blue, prefersLargeTitles):
+        case let .color(name, red, green, blue, prefersLargeTitles):
             let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
             return .opaque(
+                title: .init(title: name),
                 backgroundColor: color,
                 foregroundColor: .white,
                 prefersLargeTitles: prefersLargeTitles
