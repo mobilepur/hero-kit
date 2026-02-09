@@ -20,6 +20,7 @@ extension HeroHeader {
         private(set) var layout: Layout?
         private(set) var state: State = .fullyExpanded
         var storedTitle: String?
+        var titleConfiguration: TitleConfiguration?
         private var titleCancellable: AnyCancellable?
 
         init(controller: UIViewController, configuration: HeaderViewConfiguration) {
@@ -181,6 +182,12 @@ extension HeroHeader {
             if shouldShow != wasShowing {
                 let newTitle = shouldShow ? storedTitle : nil
                 controller.navigationController?.setTitleAnimated(newTitle)
+
+                // iOS 26+: Set subtitle when small title is shown
+                if #available(iOS 26, *) {
+                    controller.navigationItem.subtitle = shouldShow ? titleConfiguration?
+                        .subtitle : nil
+                }
 
                 // Notify delegate of title visibility change
                 if shouldShow {

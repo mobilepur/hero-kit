@@ -286,6 +286,7 @@ extension UIViewController {
                     largeTitleDisplayMode: .inline()
                 )
                 setupHeaderView(headerView, configuration: configuration, scrollView: scrollView)
+                viewModel?.titleConfiguration = titleConfig
             } else {
                 // Pre-iOS 26: system large titles work fine
                 configureDefaultNavigationBar()
@@ -311,6 +312,9 @@ extension UIViewController {
                 foregroundColor: foregroundColor
             )
         }
+
+        // Pass title configuration to ViewModel for subtitle handling
+        viewModel?.titleConfiguration = titleConfig
     }
 
     /*
