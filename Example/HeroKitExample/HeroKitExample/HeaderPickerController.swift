@@ -88,7 +88,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         > { cell, _, item in
             var content = cell.defaultContentConfiguration()
             content.text = item.name
-            content.secondaryText = item.subtitle
+            content.secondaryText = item.cellSubtitle
             content.image = item.image
             content.imageProperties.maximumSize = CGSize(width: 40, height: 40)
             content.imageProperties.cornerRadius = 6
@@ -469,14 +469,30 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     // MARK: - Data
 
     private let colorItems: [StyleItem] = [
-        .color(name: "Red", red: 1.0, green: 0.23, blue: 0.19, prefersLargeTitles: true),
-        .color(name: "Orange", red: 1.0, green: 0.58, blue: 0.0),
-        .color(name: "Green", red: 0.2, green: 0.78, blue: 0.35, prefersLargeTitles: true),
-        .color(name: "Teal", red: 0.19, green: 0.69, blue: 0.78),
-        .color(name: "Blue", red: 0.0, green: 0.48, blue: 1.0, prefersLargeTitles: true),
-        .color(name: "Indigo", red: 0.35, green: 0.34, blue: 0.84),
-        .color(name: "Purple", red: 0.69, green: 0.32, blue: 0.87, prefersLargeTitles: true),
-        .color(name: "Pink", red: 1.0, green: 0.18, blue: 0.33),
+        .color(
+            titleConfiguration: .init(title: "Red", subtitle: "A warm color"),
+            red: 1.0, green: 0.23, blue: 0.19,
+            prefersLargeTitles: true
+        ),
+        .color(titleConfiguration: .init(title: "Orange"), red: 1.0, green: 0.58, blue: 0.0),
+        .color(
+            titleConfiguration: .init(title: "Green"),
+            red: 0.2, green: 0.78, blue: 0.35,
+            prefersLargeTitles: true
+        ),
+        .color(titleConfiguration: .init(title: "Teal"), red: 0.19, green: 0.69, blue: 0.78),
+        .color(
+            titleConfiguration: .init(title: "Blue", subtitle: "Like the sky"),
+            red: 0.0, green: 0.48, blue: 1.0,
+            prefersLargeTitles: true
+        ),
+        .color(titleConfiguration: .init(title: "Indigo"), red: 0.35, green: 0.34, blue: 0.84),
+        .color(
+            titleConfiguration: .init(title: "Purple"),
+            red: 0.69, green: 0.32, blue: 0.87,
+            prefersLargeTitles: true
+        ),
+        .color(titleConfiguration: .init(title: "Pink"), red: 1.0, green: 0.18, blue: 0.33),
     ]
 
     private let viewItems: [StyleItem] = [
@@ -581,7 +597,7 @@ nonisolated enum Section: Hashable, Sendable {
 
 nonisolated enum StyleItem: Hashable, Sendable {
     case color(
-        name: String,
+        titleConfiguration: HeroHeader.TitleConfiguration,
         red: CGFloat,
         green: CGFloat,
         blue: CGFloat,
@@ -598,7 +614,7 @@ nonisolated enum StyleItem: Hashable, Sendable {
 
     var name: String {
         switch self {
-        case let .color(name, _, _, _, _): name
+        case let .color(titleConfig, _, _, _, _): titleConfig.title ?? ""
         case let .headerView(title, _, _, _, _, _): title
         }
     }
@@ -620,7 +636,8 @@ nonisolated enum StyleItem: Hashable, Sendable {
         }
     }
 
-    var subtitle: String? {
+    /// Subtitle shown in the collection view cell (describes the style configuration)
+    var cellSubtitle: String? {
         switch self {
         case let .color(_, _, _, _, prefersLargeTitles):
             return prefersLargeTitles ? "Large Title" : nil
@@ -637,10 +654,10 @@ nonisolated enum StyleItem: Hashable, Sendable {
 
     var style: HeroHeader.Style {
         switch self {
-        case let .color(name, red, green, blue, prefersLargeTitles):
+        case let .color(titleConfig, red, green, blue, prefersLargeTitles):
             let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
             return .opaque(
-                title: .init(title: name),
+                title: titleConfig,
                 backgroundColor: color,
                 foregroundColor: .white,
                 prefersLargeTitles: prefersLargeTitles

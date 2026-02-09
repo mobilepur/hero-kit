@@ -19,7 +19,7 @@ public enum HeroHeader {
 
     // MARK: - configurations
 
-    public struct TitleConfiguration {
+    public struct TitleConfiguration: Hashable, Sendable {
         public let title: String?
         public let subtitle: String?
         public let largeTitle: String?
