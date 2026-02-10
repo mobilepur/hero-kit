@@ -84,12 +84,12 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         // Style cell registration
         let styleCellRegistration = UICollectionView.CellRegistration<
             UICollectionViewListCell,
-            StyleItem
-        > { cell, _, item in
+            HeroHeader.Style
+        > { cell, _, style in
             var content = cell.defaultContentConfiguration()
-            content.text = item.name
-            content.secondaryText = item.cellSubtitle
-            content.image = item.image
+            content.text = style.displayName
+            content.secondaryText = style.cellSubtitle
+            content.image = style.cellImage
             content.imageProperties.maximumSize = CGSize(width: 40, height: 40)
             content.imageProperties.cornerRadius = 6
             cell.contentConfiguration = content
@@ -243,34 +243,42 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             collectionView: collectionView
         ) { collectionView, indexPath, item in
             switch item {
-            case let .style(styleItem):
-                collectionView.dequeueConfiguredReusableCell(
+            case let .colorStyle(index):
+                let style = ViewModel.colorStyles[index]
+                return collectionView.dequeueConfiguredReusableCell(
                     using: styleCellRegistration,
                     for: indexPath,
-                    item: styleItem
+                    item: style
+                )
+            case let .headerViewStyle(index):
+                let style = ViewModel.headerViewStyles[index]
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: styleCellRegistration,
+                    for: indexPath,
+                    item: style
                 )
             case let .config(configItem):
                 switch configItem {
                 case .smallTitleDisplayMode:
-                    collectionView.dequeueConfiguredReusableCell(
+                    return collectionView.dequeueConfiguredReusableCell(
                         using: menuCellRegistration,
                         for: indexPath,
                         item: configItem
                     )
                 case .dimming:
-                    collectionView.dequeueConfiguredReusableCell(
+                    return collectionView.dequeueConfiguredReusableCell(
                         using: dimmingMenuCellRegistration,
                         for: indexPath,
                         item: configItem
                     )
                 case .titleChange:
-                    collectionView.dequeueConfiguredReusableCell(
+                    return collectionView.dequeueConfiguredReusableCell(
                         using: titleMenuCellRegistration,
                         for: indexPath,
                         item: configItem
                     )
                 default:
-                    collectionView.dequeueConfiguredReusableCell(
+                    return collectionView.dequeueConfiguredReusableCell(
                         using: toggleCellRegistration,
                         for: indexPath,
                         item: configItem
@@ -346,14 +354,23 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         collectionView.deselectItem(at: indexPath, animated: true)
-        guard let item = dataSource.itemIdentifier(for: indexPath),
-              case let .style(styleItem) = item
-        else { return }
+        guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
+
+        let style: HeroHeader.Style
+        switch item {
+        case let .colorStyle(index):
+            style = ViewModel.colorStyles[index]
+        case let .headerViewStyle(index):
+            style = ViewModel.headerViewStyles[index]
+        case .config:
+            return
+        }
+
         delegate?.headerPicker(
             self,
-            didPickCellWithTitle: styleItem.name,
-            style: styleItem.style,
-            assetName: styleItem.assetName
+            didPickCellWithTitle: style.displayName,
+            style: style,
+            assetName: style.assetName
         )
     }
 
@@ -393,8 +410,14 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         }
 
         snapshot.appendSections([Section.colors, Section.views])
-        snapshot.appendItems(colorItems.map { Item.style($0) }, toSection: Section.colors)
-        snapshot.appendItems(viewItems.map { Item.style($0) }, toSection: Section.views)
+        snapshot.appendItems(
+            ViewModel.colorStyles.indices.map { Item.colorStyle($0) },
+            toSection: Section.colors
+        )
+        snapshot.appendItems(
+            ViewModel.headerViewStyles.indices.map { Item.headerViewStyle($0) },
+            toSection: Section.views
+        )
         dataSource.apply(snapshot, animatingDifferences: animatingDifferences)
     }
 
@@ -466,64 +489,6 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         }
     }
 
-    // MARK: - Data
-
-    private let colorItems: [StyleItem] = [
-        .color(
-            titleConfiguration: .init(title: "Red", subtitle: "A warm color"),
-            red: 1.0, green: 0.23, blue: 0.19,
-            prefersLargeTitles: true
-        ),
-        .color(titleConfiguration: .init(title: "Orange"), red: 1.0, green: 0.58, blue: 0.0),
-        .color(
-            titleConfiguration: .init(title: "Green"),
-            red: 0.2, green: 0.78, blue: 0.35,
-            prefersLargeTitles: true
-        ),
-        .color(titleConfiguration: .init(title: "Teal"), red: 0.19, green: 0.69, blue: 0.78),
-        .color(
-            titleConfiguration: .init(title: "Blue", subtitle: "Like the sky"),
-            red: 0.0, green: 0.48, blue: 1.0,
-            prefersLargeTitles: true
-        ),
-        .color(titleConfiguration: .init(title: "Indigo"), red: 0.35, green: 0.34, blue: 0.84),
-        .color(
-            titleConfiguration: .init(title: "Purple"),
-            red: 0.69, green: 0.32, blue: 0.87,
-            prefersLargeTitles: true
-        ),
-        .color(titleConfiguration: .init(title: "Pink"), red: 1.0, green: 0.18, blue: 0.33),
-    ]
-
-    private let viewItems: [StyleItem] = [
-        // No large title
-        .headerView(title: "Bikes", assetName: "bikes", height: 300),
-
-        // Single line large title
-        .headerView(
-            title: "Explore",
-            assetName: "temple",
-            height: 300,
-            largeTitleDisplayMode: .belowHeader()
-        ),
-
-        // Inline large title
-        .headerView(
-            title: "Bikes & Beyond",
-            assetName: "bikes",
-            height: 300,
-            largeTitleDisplayMode: .inline()
-        ),
-
-        // Two line large title
-        .headerView(
-            title: "Ancient Temples of Bali",
-            assetName: "vulcano",
-            height: 300,
-            largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
-        ),
-    ]
-
     // MARK: - HeroHeaderDelegate
 
     func heroHeader(_: UIViewController, didShowLargeTitle _: HeroHeaderView) {
@@ -593,105 +558,11 @@ nonisolated enum Section: Hashable, Sendable {
     }
 }
 
-// MARK: - StyleItem
-
-nonisolated enum StyleItem: Hashable, Sendable {
-    case color(
-        titleConfiguration: HeroHeader.TitleConfiguration,
-        red: CGFloat,
-        green: CGFloat,
-        blue: CGFloat,
-        prefersLargeTitles: Bool = false
-    )
-    case headerView(
-        title: String,
-        assetName: String,
-        height: CGFloat = 240,
-        minHeight: CGFloat? = nil,
-        stretches: Bool = true,
-        largeTitleDisplayMode: HeroHeader.LargeTitleDisplayMode = .none
-    )
-
-    var name: String {
-        switch self {
-        case let .color(titleConfig, _, _, _, _): titleConfig.title ?? ""
-        case let .headerView(title, _, _, _, _, _): title
-        }
-    }
-
-    var assetName: String? {
-        switch self {
-        case .color: nil
-        case let .headerView(_, assetName, _, _, _, _): assetName
-        }
-    }
-
-    var image: UIImage? {
-        switch self {
-        case let .color(_, red, green, blue, _):
-            let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
-            return Self.colorImage(for: color)
-        case let .headerView(_, assetName, _, _, _, _):
-            return UIImage(named: assetName)
-        }
-    }
-
-    /// Subtitle shown in the collection view cell (describes the style configuration)
-    var cellSubtitle: String? {
-        switch self {
-        case let .color(_, _, _, _, prefersLargeTitles):
-            return prefersLargeTitles ? "Large Title" : nil
-        case let .headerView(_, _, height, minHeight, stretches, largeTitleDisplayMode):
-            let config = HeroHeader.HeaderViewConfiguration(
-                height: height,
-                minHeight: minHeight,
-                stretches: stretches,
-                largeTitleDisplayMode: largeTitleDisplayMode
-            )
-            return config.description
-        }
-    }
-
-    var style: HeroHeader.Style {
-        switch self {
-        case let .color(titleConfig, red, green, blue, prefersLargeTitles):
-            let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
-            return .opaque(
-                title: titleConfig,
-                backgroundColor: color,
-                foregroundColor: .white,
-                prefersLargeTitles: prefersLargeTitles
-            )
-        case let .headerView(_, assetName, height, minHeight, stretches, largeTitleDisplayMode):
-            let imageView = UIImageView(image: UIImage(named: assetName))
-            imageView.contentMode = .scaleAspectFill
-            imageView.clipsToBounds = true
-            let configuration = HeroHeader.HeaderViewConfiguration(
-                height: height,
-                minHeight: minHeight,
-                stretches: stretches,
-                largeTitleDisplayMode: largeTitleDisplayMode
-            )
-            return .headerView(view: imageView, configuration: configuration)
-        }
-    }
-
-    private static func colorImage(
-        for color: UIColor,
-        size: CGSize = CGSize(width: 28, height: 28)
-    ) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.image { context in
-            color.setFill()
-            context.fill(CGRect(origin: .zero, size: size))
-        }
-    }
-}
-
 // MARK: - Item
 
 nonisolated enum Item: Hashable, Sendable {
-    case style(StyleItem)
+    case colorStyle(Int)
+    case headerViewStyle(Int)
     case config(ConfigItem)
 }
 
