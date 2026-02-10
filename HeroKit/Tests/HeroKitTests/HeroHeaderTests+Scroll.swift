@@ -3,7 +3,7 @@ import Testing
 import UIKit
 
 extension HeroHeaderTests {
-    enum Scroll {}
+    enum Scroll { }
 }
 
 // MARK: - Integration
@@ -19,6 +19,7 @@ extension HeroHeaderTests.Scroll {
             let (controller, stub) = HeroHeaderTests.makeController()
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            controller.viewModel?.didCompleteSetup()
 
             // Simulate scroll
             controller.collectionView.contentOffset = CGPoint(x: 0, y: 50)
@@ -32,6 +33,7 @@ extension HeroHeaderTests.Scroll {
             let (controller, stub) = HeroHeaderTests.makeController()
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            controller.viewModel?.didCompleteSetup()
 
             // Scroll up until header is fully collapsed (offsetY >= 0)
             controller.collectionView.contentOffset = CGPoint(x: 0, y: 0)
@@ -45,6 +47,7 @@ extension HeroHeaderTests.Scroll {
             let (controller, stub) = HeroHeaderTests.makeController()
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            controller.viewModel?.didCompleteSetup()
             let headerHeight = controller.viewModel?.headerHeight ?? 100
 
             // 1. Initial state after setup
@@ -90,6 +93,7 @@ extension HeroHeaderTests.Scroll {
             let (controller, stub) = HeroHeaderTests.makeController(title: "Title")
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            controller.viewModel?.didCompleteSetup()
             let headerHeight = controller.viewModel?.headerHeight ?? 100
 
             // 1. Initial state after setup
@@ -162,9 +166,14 @@ extension HeroHeaderTests.Scroll {
                 totalHeight: totalHeight
             )
 
-            let heroViewModel = HeroHeader.ViewModel(controller: controller, configuration: configuration)
+            let style = HeroHeader.Style.headerView(
+                view: MockHeader(),
+                configuration: configuration
+            )
+            let heroViewModel = HeroHeader.ViewModel(controller: controller, style: style)
             heroViewModel.delegate = stub
             heroViewModel.setup(headerView: headerView, layout: layout)
+            heroViewModel.didCompleteSetup()
 
             // Raw offsetY from scroll view (negative = scrolled down, positive = scrolled up)
             let rawOffset: CGFloat = -50

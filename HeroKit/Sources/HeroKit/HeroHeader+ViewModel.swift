@@ -21,7 +21,11 @@ extension HeroHeader {
         private(set) var state: State = .fullyExpanded
         var storedTitle: String?
         private var titleCancellable: AnyCancellable?
-        var isInitialScrollComplete = false
+        private var isInitialScrollComplete = false
+
+        func didCompleteSetup() {
+            isInitialScrollComplete = true
+        }
 
         var headerViewConfiguration: HeaderViewConfiguration? {
             style.headerViewConfiguration

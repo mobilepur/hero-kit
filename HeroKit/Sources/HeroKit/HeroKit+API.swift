@@ -256,7 +256,7 @@ extension UIViewController {
         let targetOffset = CGPoint(x: 0, y: -headerHeight)
         DispatchQueue.main.async { [weak self] in
             scrollView.setContentOffset(targetOffset, animated: false)
-            self?.viewModel?.isInitialScrollComplete = true
+            self?.viewModel?.didCompleteSetup()
         }
     }
 
