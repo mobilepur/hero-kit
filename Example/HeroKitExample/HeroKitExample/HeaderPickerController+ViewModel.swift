@@ -1,13 +1,141 @@
+import Combine
 import Foundation
 import HeroKit
 import UIKit
 
 extension HeaderPickerController {
     class ViewModel {
-        let style: HeroHeader.Style
+        // MARK: - Published Style
 
-        init(style: HeroHeader.Style) {
-            self.style = style
+        let styleSubject: CurrentValueSubject<HeroHeader.Style?, Never>
+
+        // MARK: - Configuration State
+
+        private let initialStyle: HeroHeader.Style?
+        private var assetName: String?
+        private var baseConfiguration: HeroHeader.HeaderViewConfiguration?
+
+        // HeaderView options
+        var stretchEnabled: Bool = true { didSet { publishUpdatedStyle() } }
+        var largeTitleEnabled: Bool = false { didSet { publishUpdatedStyle() } }
+        var lineWrapEnabled: Bool = false { didSet { publishUpdatedStyle() } }
+        var smallTitleDisplayMode: HeroHeader
+            .SmallTitleDisplayMode = .system { didSet { publishUpdatedStyle() } }
+        var inlineEnabled: Bool = false { didSet { publishUpdatedStyle() } }
+        var dimmingMode: HeroHeader.InlineTitleConfiguration
+            .Dimming = .none { didSet { publishUpdatedStyle() } }
+
+        // Opaque options
+        private var opaqueStyle: (
+            backgroundColor: UIColor,
+            foregroundColor: UIColor?,
+            prefersLargeTitles: Bool
+        )?
+        var lightModeOnlyEnabled: Bool = false { didSet { publishUpdatedStyle() } }
+
+        // MARK: - Computed Properties
+
+        var isHeaderViewStyle: Bool { baseConfiguration != nil }
+        var isOpaqueStyle: Bool { opaqueStyle != nil }
+
+        // MARK: - Init
+
+        init(style: HeroHeader.Style?, assetName: String? = nil) {
+            initialStyle = style
+            self.assetName = assetName
+            styleSubject = CurrentValueSubject(style)
+
+            extractConfiguration(from: style)
+        }
+
+        private func extractConfiguration(from style: HeroHeader.Style?) {
+            switch style {
+            case let .headerView(_, configuration, _):
+                baseConfiguration = configuration
+                stretchEnabled = configuration.stretches
+
+                if case let .belowHeader(largeTitleConfig) = configuration.largeTitleDisplayMode {
+                    largeTitleEnabled = true
+                    lineWrapEnabled = largeTitleConfig.allowsLineWrap
+                    smallTitleDisplayMode = largeTitleConfig.smallTitleDisplayMode
+                }
+                if case let .inline(inlineConfig) = configuration.largeTitleDisplayMode {
+                    inlineEnabled = true
+                    dimmingMode = inlineConfig.dimming
+                }
+
+            case let .opaque(_, backgroundColor, foregroundColor, prefersLargeTitles,
+                             lightModeOnly):
+                opaqueStyle = (backgroundColor, foregroundColor, prefersLargeTitles)
+                lightModeOnlyEnabled = lightModeOnly
+
+            case .none:
+                break
+            }
+        }
+
+        // MARK: - Style Generation
+
+        private func publishUpdatedStyle() {
+            guard let newStyle = buildCurrentStyle() else { return }
+            styleSubject.send(newStyle)
+        }
+
+        private func buildCurrentStyle() -> HeroHeader.Style? {
+            if let baseConfiguration, let assetName {
+                return buildHeaderViewStyle(
+                    baseConfiguration: baseConfiguration,
+                    assetName: assetName
+                )
+            } else if let opaqueStyle {
+                return buildOpaqueStyle(opaqueStyle: opaqueStyle)
+            }
+            return nil
+        }
+
+        private func buildHeaderViewStyle(
+            baseConfiguration: HeroHeader.HeaderViewConfiguration,
+            assetName: String
+        ) -> HeroHeader.Style {
+            let imageView = UIImageView(image: UIImage(named: assetName))
+            imageView.contentMode = .scaleAspectFill
+            imageView.clipsToBounds = true
+
+            let largeTitleDisplayMode: HeroHeader.LargeTitleDisplayMode = if inlineEnabled {
+                .inline(.init(dimming: dimmingMode))
+            } else if largeTitleEnabled {
+                .belowHeader(.init(
+                    allowsLineWrap: lineWrapEnabled,
+                    smallTitleDisplayMode: smallTitleDisplayMode
+                ))
+            } else {
+                .none
+            }
+
+            let configuration = HeroHeader.HeaderViewConfiguration(
+                height: baseConfiguration.height,
+                minHeight: baseConfiguration.minHeight,
+                stretches: stretchEnabled,
+                largeTitleDisplayMode: largeTitleDisplayMode
+            )
+
+            return .headerView(view: imageView, configuration: configuration)
+        }
+
+        private func buildOpaqueStyle(
+            opaqueStyle: (
+                backgroundColor: UIColor,
+                foregroundColor: UIColor?,
+                prefersLargeTitles: Bool
+            )
+        ) -> HeroHeader.Style {
+            .opaque(
+                title: .init(title: initialStyle?.titleConfiguration?.title),
+                backgroundColor: opaqueStyle.backgroundColor,
+                foregroundColor: opaqueStyle.foregroundColor,
+                prefersLargeTitles: opaqueStyle.prefersLargeTitles,
+                lightModeOnly: lightModeOnlyEnabled
+            )
         }
     }
 }

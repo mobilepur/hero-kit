@@ -1,3 +1,4 @@
+import Combine
 import HeroKit
 import UIKit
 
@@ -12,56 +13,13 @@ protocol HeaderPickerControllerDelegate {
 
 class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHeaderDelegate {
 
-    let navbarStyle: HeroHeader.Style?
     var delegate: HeaderPickerControllerDelegate?
 
-    // Configuration state for live updates
-    private var currentConfiguration: HeroHeader.HeaderViewConfiguration?
-    private var currentAssetName: String?
-    private var stretchEnabled: Bool = true
-    private var largeTitleEnabled: Bool = false
-    private var lineWrapEnabled: Bool = false
-    private var smallTitleDisplayMode: HeroHeader.SmallTitleDisplayMode = .system
-    private var inlineEnabled: Bool = false
-    private var dimmingMode: HeroHeader.InlineTitleConfiguration.Dimming = .none
-
-    // Opaque style state
-    private var currentOpaqueStyle: (
-        backgroundColor: UIColor,
-        foregroundColor: UIColor?,
-        prefersLargeTitles: Bool
-    )?
-    private var lightModeOnlyEnabled: Bool = false
+    private let viewModel: ViewModel
+    private var cancellables = Set<AnyCancellable>()
 
     init(title: String, navbarStyle: HeroHeader.Style?, assetName: String? = nil) {
-        self.navbarStyle = navbarStyle
-        currentAssetName = assetName
-
-        // Extract configuration based on style type
-        switch navbarStyle {
-        case let .headerView(_, configuration, _):
-            currentConfiguration = configuration
-            stretchEnabled = configuration.stretches
-
-            // Extract large title settings
-            if case let .belowHeader(largeTitleConfig) = configuration.largeTitleDisplayMode {
-                largeTitleEnabled = true
-                lineWrapEnabled = largeTitleConfig.allowsLineWrap
-                smallTitleDisplayMode = largeTitleConfig.smallTitleDisplayMode
-            }
-            if case let .inline(inlineConfig) = configuration.largeTitleDisplayMode {
-                inlineEnabled = true
-                dimmingMode = inlineConfig.dimming
-            }
-
-        case let .opaque(_, backgroundColor, foregroundColor, prefersLargeTitles, lightModeOnly):
-            currentOpaqueStyle = (backgroundColor, foregroundColor, prefersLargeTitles)
-            lightModeOnlyEnabled = lightModeOnly
-
-        case .none:
-            break
-        }
-
+        viewModel = ViewModel(style: navbarStyle, assetName: assetName)
         super.init(nibName: nil, bundle: nil)
         self.title = title
     }
@@ -110,13 +68,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
             switch item {
             case .stretch:
-                toggle.isOn = stretchEnabled
+                toggle.isOn = viewModel.stretchEnabled
             case .largeTitle:
-                toggle.isOn = largeTitleEnabled
+                toggle.isOn = viewModel.largeTitleEnabled
             case .lineWrap:
-                toggle.isOn = lineWrapEnabled
+                toggle.isOn = viewModel.lineWrapEnabled
             case .lightModeOnly:
-                toggle.isOn = lightModeOnlyEnabled
+                toggle.isOn = viewModel.lightModeOnlyEnabled
             case .smallTitleDisplayMode, .dimming, .titleChange:
                 return // Handled by menu registration
             }
@@ -142,18 +100,17 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             button.showsMenuAsPrimaryAction = true
             button.changesSelectionAsPrimaryAction = true
 
-            let actions = HeroHeader.SmallTitleDisplayMode.allCases.map { mode in
+            let actions = HeroHeader.SmallTitleDisplayMode.allCases.map { [weak self] mode in
                 UIAction(
                     title: mode.displayName,
-                    state: self.smallTitleDisplayMode == mode ? .on : .off
+                    state: self?.viewModel.smallTitleDisplayMode == mode ? .on : .off
                 ) { [weak self] _ in
-                    self?.smallTitleDisplayMode = mode
-                    self?.updateHeaderWithCurrentConfiguration()
+                    self?.viewModel.smallTitleDisplayMode = mode
                 }
             }
 
             button.menu = UIMenu(children: actions)
-            button.setTitle(smallTitleDisplayMode.displayName, for: .normal)
+            button.setTitle(viewModel.smallTitleDisplayMode.displayName, for: .normal)
 
             cell.accessories = [.customView(configuration: .init(
                 customView: button,
@@ -175,18 +132,18 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             button.showsMenuAsPrimaryAction = true
             button.changesSelectionAsPrimaryAction = true
 
-            let actions = HeroHeader.InlineTitleConfiguration.Dimming.allCases.map { mode in
-                UIAction(
-                    title: mode.displayName,
-                    state: self.dimmingMode == mode ? .on : .off
-                ) { [weak self] _ in
-                    self?.dimmingMode = mode
-                    self?.updateHeaderWithCurrentConfiguration()
+            let actions = HeroHeader.InlineTitleConfiguration.Dimming.allCases
+                .map { [weak self] mode in
+                    UIAction(
+                        title: mode.displayName,
+                        state: self?.viewModel.dimmingMode == mode ? .on : .off
+                    ) { [weak self] _ in
+                        self?.viewModel.dimmingMode = mode
+                    }
                 }
-            }
 
             button.menu = UIMenu(children: actions)
-            button.setTitle(dimmingMode.displayName, for: .normal)
+            button.setTitle(viewModel.dimmingMode.displayName, for: .normal)
 
             cell.accessories = [.customView(configuration: .init(
                 customView: button,
@@ -298,6 +255,8 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     }()
 
     override func viewDidLoad() {
+        super.viewDidLoad()
+
         if #unavailable(iOS 26) {
             navigationController?.navigationBar.prefersLargeTitles = true
         }
@@ -305,15 +264,23 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         setupCollectionView()
         setupNavigationBar()
         applySnapshot()
-        if let navbarStyle {
-            headerDelegate = self
-            try? setHeader(navbarStyle)
-        }
+        bindViewModel()
+    }
+
+    private func bindViewModel() {
+        viewModel.styleSubject
+            .compactMap(\.self)
+            .sink { [weak self] style in
+                guard let self else { return }
+                headerDelegate = self
+                try? setHeader(style)
+            }
+            .store(in: &cancellables)
     }
 
     private func setupNavigationBar() {
         // Only show menu for headerView styles (APIs don't work for color style)
-        guard currentConfiguration != nil else { return }
+        guard viewModel.isHeaderViewStyle else { return }
 
         let menu = UIMenu(children: [
             UIAction(
@@ -378,7 +345,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
 
         // Show configuration section for headerView styles
-        if currentConfiguration != nil {
+        if viewModel.isHeaderViewStyle {
             snapshot.appendSections([Section.configuration])
 
             var configItems: [Item] = [
@@ -387,13 +354,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             ]
 
             // Show lineWrap and smallTitleDisplayMode only when largeTitle is enabled
-            if largeTitleEnabled {
+            if viewModel.largeTitleEnabled {
                 configItems.append(Item.config(.lineWrap))
                 configItems.append(Item.config(.smallTitleDisplayMode))
             }
 
             // Show dimming option for inline titles
-            if inlineEnabled {
+            if viewModel.inlineEnabled {
                 configItems.append(Item.config(.dimming))
             }
 
@@ -404,7 +371,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         }
 
         // Show configuration section for opaque styles
-        if currentOpaqueStyle != nil {
+        if viewModel.isOpaqueStyle {
             snapshot.appendSections([Section.configuration])
             snapshot.appendItems([Item.config(.lightModeOnly)], toSection: Section.configuration)
         }
@@ -426,66 +393,16 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
         switch configItem {
         case .stretch:
-            stretchEnabled = sender.isOn
-            updateHeaderWithCurrentConfiguration()
+            viewModel.stretchEnabled = sender.isOn
         case .largeTitle:
-            largeTitleEnabled = sender.isOn
+            viewModel.largeTitleEnabled = sender.isOn
             applySnapshot(animatingDifferences: true)
-            updateHeaderWithCurrentConfiguration()
         case .lineWrap:
-            lineWrapEnabled = sender.isOn
-            updateHeaderWithCurrentConfiguration()
+            viewModel.lineWrapEnabled = sender.isOn
         case .lightModeOnly:
-            lightModeOnlyEnabled = sender.isOn
-            updateOpaqueHeaderWithCurrentConfiguration()
+            viewModel.lightModeOnlyEnabled = sender.isOn
         case .smallTitleDisplayMode, .dimming, .titleChange:
             break
-        }
-    }
-
-    private func updateHeaderWithCurrentConfiguration() {
-        guard let config = currentConfiguration,
-              let assetName = currentAssetName
-        else { return }
-
-        let imageView = UIImageView(image: UIImage(named: assetName))
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-
-        let largeTitleDisplayMode: HeroHeader.LargeTitleDisplayMode = if inlineEnabled {
-            .inline(.init(dimming: dimmingMode))
-        } else if largeTitleEnabled {
-            .belowHeader(.init(
-                allowsLineWrap: lineWrapEnabled,
-                smallTitleDisplayMode: smallTitleDisplayMode
-            ))
-        } else {
-            .none
-        }
-
-        let newConfiguration = HeroHeader.HeaderViewConfiguration(
-            height: config.height,
-            minHeight: config.minHeight,
-            stretches: stretchEnabled,
-            largeTitleDisplayMode: largeTitleDisplayMode
-        )
-
-        try? setHeader(.headerView(view: imageView, configuration: newConfiguration))
-    }
-
-    private func updateOpaqueHeaderWithCurrentConfiguration() {
-        guard let opaqueStyle = currentOpaqueStyle else { return }
-
-        do {
-            try setHeader(.opaque(
-                title: .init(title: title),
-                backgroundColor: opaqueStyle.backgroundColor,
-                foregroundColor: opaqueStyle.foregroundColor,
-                prefersLargeTitles: opaqueStyle.prefersLargeTitles,
-                lightModeOnly: lightModeOnlyEnabled
-            ))
-        } catch {
-            print("Error updating opaque header: \(error)")
         }
     }
 
