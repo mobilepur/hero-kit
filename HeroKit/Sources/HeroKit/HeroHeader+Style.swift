@@ -78,6 +78,15 @@ public enum HeroHeader {
                 return nil // TODO: implementation missing
             }
         }
+
+        public var foregroundColor: UIColor? {
+            switch self {
+            case let .opaque(_, _, foregroundColor, _, _):
+                return foregroundColor
+            case .headerView:
+                return nil
+            }
+        }
     }
 
     // MARK: - configurations

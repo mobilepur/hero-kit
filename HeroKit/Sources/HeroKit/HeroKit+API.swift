@@ -74,7 +74,8 @@ extension UIViewController {
     private func setupHeaderView(
         _ contentView: UIView,
         style: HeroHeader.Style,
-        scrollView: UIScrollView
+        scrollView: UIScrollView,
+        foregroundColor: UIColor? = nil
     ) {
         guard let configuration = style.headerViewConfiguration else { return }
         configureTransparentNavigationBar()
@@ -83,7 +84,8 @@ extension UIViewController {
             contentView: contentView,
             configuration: configuration,
             title: style.largeTitle,
-            subtite: style.largeSubtitle
+            subtite: style.largeSubtitle,
+            foregroundColor: foregroundColor ?? style.foregroundColor
         )
 
         let constraints = layoutHeaderView(heroHeaderView)
@@ -110,7 +112,8 @@ extension UIViewController {
         contentView: UIView,
         configuration: HeroHeader.HeaderViewConfiguration,
         title: String?,
-        subtite: String?
+        subtite: String?,
+        foregroundColor: UIColor?
     ) -> (headerView: HeroHeaderView, contentConstraint: NSLayoutConstraint) {
         // contentView with height constraint (adjusted during stretch)
         contentView.translatesAutoresizingMaskIntoConstraints = false
@@ -137,6 +140,7 @@ extension UIViewController {
         {
             let inlineTitle = addInlineTitleLabel(
                 title,
+                foregroundColor: foregroundColor ?? .white,
                 dimming: inlineConfig.dimming,
                 to: contentView
             )
@@ -149,6 +153,7 @@ extension UIViewController {
     @discardableResult
     private func addInlineTitleLabel(
         _ title: String,
+        foregroundColor: UIColor,
         dimming: HeroHeader.InlineTitleConfiguration.Dimming,
         to contentView: UIView
     ) -> LargeTitleView {
@@ -156,7 +161,7 @@ extension UIViewController {
         let fogColor = contentView.backgroundColor ?? .systemBackground
         let titleView = LargeTitleView(
             title: title,
-            foregroundColor: .white,
+            foregroundColor: foregroundColor,
             fog: hasFog,
             fogColor: fogColor
         )
@@ -365,7 +370,8 @@ extension UIViewController {
         setupHeaderView(
             headerView,
             style: style,
-            scrollView: scrollView
+            scrollView: scrollView,
+            foregroundColor: foregroundColor
         )
 
         // Match nav bar small title color to header foreground
