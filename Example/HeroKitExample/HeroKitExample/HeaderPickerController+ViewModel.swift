@@ -146,49 +146,43 @@ extension HeaderPickerController.ViewModel {
     static let headerViewAssets = ["bikes", "temple", "bikes", "vulcano"]
 
     static let colorStyles: [HeroHeader.Style] = [
+        // Light background, dark text
         .opaque(
-            title: .init(title: "Red", subtitle: "A warm color"),
-            backgroundColor: UIColor(red: 1.0, green: 0.23, blue: 0.19, alpha: 1.0),
+            title: .init(title: "Mint + Large"),
+            backgroundColor: .systemMint,
+            foregroundColor: .black,
+            prefersLargeTitles: true
+        ),
+        .opaque(
+            title: .init(title: "Yellow + Subtitle", largeSubtitle: "A sunny description"),
+            backgroundColor: .systemYellow,
+            foregroundColor: .black,
+            prefersLargeTitles: true
+        ),
+        .opaque(
+            title: .init(title: "Cyan Small"),
+            backgroundColor: .systemCyan,
+            foregroundColor: .black,
+            prefersLargeTitles: false
+        ),
+        // Dark background, light text
+        .opaque(
+            title: .init(title: "Dark + Large"),
+            backgroundColor: .systemIndigo,
             foregroundColor: .white,
             prefersLargeTitles: true
         ),
         .opaque(
-            title: .init(title: "Orange"),
-            backgroundColor: UIColor(red: 1.0, green: 0.58, blue: 0.0, alpha: 1.0),
-            foregroundColor: .white
-        ),
-        .opaque(
-            title: .init(title: "Green"),
-            backgroundColor: UIColor(red: 0.2, green: 0.78, blue: 0.35, alpha: 1.0),
+            title: .init(title: "Dark + Subtitle", largeSubtitle: "More details here"),
+            backgroundColor: .systemBlue,
             foregroundColor: .white,
             prefersLargeTitles: true
         ),
         .opaque(
-            title: .init(title: "Teal"),
-            backgroundColor: UIColor(red: 0.19, green: 0.69, blue: 0.78, alpha: 1.0),
-            foregroundColor: .white
-        ),
-        .opaque(
-            title: .init(title: "Blue", subtitle: "Like the sky"),
-            backgroundColor: UIColor(red: 0.0, green: 0.48, blue: 1.0, alpha: 1.0),
+            title: .init(title: "Dark Small"),
+            backgroundColor: .systemIndigo,
             foregroundColor: .white,
-            prefersLargeTitles: true
-        ),
-        .opaque(
-            title: .init(title: "Indigo"),
-            backgroundColor: UIColor(red: 0.35, green: 0.34, blue: 0.84, alpha: 1.0),
-            foregroundColor: .white
-        ),
-        .opaque(
-            title: .init(title: "Purple"),
-            backgroundColor: UIColor(red: 0.69, green: 0.32, blue: 0.87, alpha: 1.0),
-            foregroundColor: .white,
-            prefersLargeTitles: true
-        ),
-        .opaque(
-            title: .init(title: "Pink"),
-            backgroundColor: UIColor(red: 1.0, green: 0.18, blue: 0.33, alpha: 1.0),
-            foregroundColor: .white
+            prefersLargeTitles: false
         ),
     ]
 
