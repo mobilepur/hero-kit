@@ -39,7 +39,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
         // Extract configuration based on style type
         switch navbarStyle {
-        case let .headerView(_, configuration):
+        case let .headerView(_, configuration, _):
             currentConfiguration = configuration
             stretchEnabled = configuration.stretches
 

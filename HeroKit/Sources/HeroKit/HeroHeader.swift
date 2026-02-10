@@ -13,8 +13,27 @@ public enum HeroHeader {
         )
         case headerView(
             view: UIView,
-            configuration: HeaderViewConfiguration = .init()
+            configuration: HeaderViewConfiguration = .init(),
+            title: TitleConfiguration? = nil
         )
+
+        public var titleConfiguration: TitleConfiguration? {
+            switch self {
+            case let .opaque(title, _, _, _, _):
+                return title
+            case let .headerView(_, _, title):
+                return title
+            }
+        }
+
+        public var headerViewConfiguration: HeaderViewConfiguration? {
+            switch self {
+            case .opaque:
+                return nil
+            case let .headerView(_, configuration, _):
+                return configuration
+            }
+        }
     }
 
     // MARK: - configurations
@@ -45,7 +64,7 @@ public enum HeroHeader {
         public let minHeight: CGFloat?
 
         public init(
-            height: CGFloat = 1000,
+            height: CGFloat = 200,
             minHeight: CGFloat? = nil,
             stretches: Bool = true,
             largeTitleDisplayMode: LargeTitleDisplayMode = .none

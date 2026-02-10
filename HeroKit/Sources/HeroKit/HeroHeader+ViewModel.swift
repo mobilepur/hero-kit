@@ -13,19 +13,26 @@ extension HeroHeader {
 
     @MainActor
     final class ViewModel {
-        let configuration: HeaderViewConfiguration
+        let style: Style
         weak var delegate: HeroHeaderDelegate?
         weak var controller: UIViewController?
         private(set) var headerView: HeroHeaderView?
         private(set) var layout: Layout?
         private(set) var state: State = .fullyExpanded
         var storedTitle: String?
-        var titleConfiguration: TitleConfiguration?
         private var titleCancellable: AnyCancellable?
 
-        init(controller: UIViewController, configuration: HeaderViewConfiguration) {
+        var headerViewConfiguration: HeaderViewConfiguration? {
+            style.headerViewConfiguration
+        }
+
+        var titleConfiguration: TitleConfiguration? {
+            style.titleConfiguration
+        }
+
+        init(controller: UIViewController, style: Style) {
             self.controller = controller
-            self.configuration = configuration
+            self.style = style
             observeTitleChanges()
         }
 
@@ -74,9 +81,9 @@ extension HeroHeader {
         }
 
         func collapseHeaderContent(animated: Bool) {
-            guard let layout else { return }
+            guard let layout, let headerViewConfiguration else { return }
             // Scroll to hide content but keep large title visible
-            let targetOffset = CGPoint(x: 0, y: configuration.height - layout.totalHeight)
+            let targetOffset = CGPoint(x: 0, y: headerViewConfiguration.height - layout.totalHeight)
             scrollView?.setContentOffset(targetOffset, animated: animated)
         }
 
@@ -87,17 +94,18 @@ extension HeroHeader {
         }
 
         func didScroll(offset: CGFloat) {
-            guard let layout, let headerView else { return }
+            guard let layout, let headerView, let headerViewConfiguration else { return }
 
             let invertedOffset = -offset
             let totalHeight = layout.totalHeight
-            let effectiveMinHeight = configuration.minHeight ?? 0
+            let effectiveMinHeight = headerViewConfiguration.minHeight ?? 0
 
-            if invertedOffset > totalHeight, configuration.stretches {
+            if invertedOffset > totalHeight, headerViewConfiguration.stretches {
                 // Overscroll - stretch effect
                 let stretchAmount = invertedOffset - totalHeight
                 layout.headerHeightConstraint.constant = invertedOffset
-                layout.contentHeightConstraint.constant = configuration.height + stretchAmount
+                layout.contentHeightConstraint.constant = headerViewConfiguration
+                    .height + stretchAmount
                 layout.headerTopConstraint.constant = 0
                 headerView.largeTitleView?.alpha = 1
             } else if invertedOffset < totalHeight {
@@ -105,9 +113,9 @@ extension HeroHeader {
                 let minOffset = max(effectiveMinHeight, invertedOffset)
                 layout.headerTopConstraint.constant = minOffset - totalHeight
                 layout.headerHeightConstraint.constant = totalHeight
-                layout.contentHeightConstraint.constant = configuration.height
+                layout.contentHeightConstraint.constant = headerViewConfiguration.height
 
-                let largeTitleHeight = totalHeight - configuration.height
+                let largeTitleHeight = totalHeight - headerViewConfiguration.height
                 let largeTitleTop = invertedOffset - largeTitleHeight
 
                 let navBarBottom = controller?.navigationController?.navigationBar.frame.maxY ?? 0
@@ -118,7 +126,7 @@ extension HeroHeader {
                 let hiddenThreshold: CGFloat
                 let fogThreshold: CGFloat
 
-                if case .inline = configuration.largeTitleDisplayMode {
+                if case .inline = headerViewConfiguration.largeTitleDisplayMode {
                     hiddenThreshold = navBarBottom
                     fogThreshold = navBarBottom + 60
                 } else {
@@ -146,7 +154,7 @@ extension HeroHeader {
                 // Normal expanded state
                 layout.headerTopConstraint.constant = 0
                 layout.headerHeightConstraint.constant = totalHeight
-                layout.contentHeightConstraint.constant = configuration.height
+                layout.contentHeightConstraint.constant = headerViewConfiguration.height
                 headerView.largeTitleView?.alpha = 1
             }
 
@@ -159,9 +167,9 @@ extension HeroHeader {
         }
 
         private func applySmallTitleVisibility(offset _: CGFloat = 0) {
-            guard let controller, let headerView else { return }
+            guard let controller, let headerView, let headerViewConfiguration else { return }
 
-            let shouldShow: Bool = switch configuration.largeTitleDisplayMode {
+            let shouldShow: Bool = switch headerViewConfiguration.largeTitleDisplayMode {
             case .none:
                 // No large title, always show small title
                 true
@@ -199,13 +207,13 @@ extension HeroHeader {
         }
 
         private func updateState(for offset: CGFloat) {
-            guard let controller, let headerView else { return }
+            guard let controller, let headerView, let headerViewConfiguration else { return }
 
             let previousState = state
-            let contentHeight = configuration.height
+            let contentHeight = headerViewConfiguration.height
 
             // Calculate new state based on offset
-            if offset < 0, configuration.stretches {
+            if offset < 0, headerViewConfiguration.stretches {
                 state = .stretched
             } else if offset >= headerHeight {
                 state = .collapsed
