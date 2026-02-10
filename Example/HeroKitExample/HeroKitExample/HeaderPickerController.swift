@@ -256,22 +256,23 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        if #unavailable(iOS 26) {
-            navigationController?.navigationBar.prefersLargeTitles = true
-        }
-
         setupCollectionView()
         setupNavigationBar()
         applySnapshot()
-        bindViewModel()
+        if let initialStyle = viewModel.styleSubject.value {
+            headerDelegate = self
+            try? setHeader(initialStyle)
+        }
+        setupSubscriptions()
     }
 
-    private func bindViewModel() {
+    private func setupSubscriptions() {
+        // Subscribe to updates only (skip initial value)
         viewModel.styleSubject
+            .dropFirst()
             .compactMap(\.self)
             .sink { [weak self] style in
                 guard let self else { return }
-                headerDelegate = self
                 try? setHeader(style)
             }
             .store(in: &cancellables)
@@ -406,27 +407,30 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
     // MARK: - HeroHeaderDelegate
 
-    func heroHeader(_: UIViewController, didShowLargeTitle _: HeroHeaderView) {
-        print("didShowLargeTitle")
-    }
+    /*
+     func heroHeader(_: UIViewController, didShowLargeTitle _: HeroHeaderView) {
+         print("didShowLargeTitle")
+     }
 
-    func heroHeader(_: UIViewController, didShowSmallTitle _: HeroHeaderView) {
-        print("didShowSmallTitle")
-    }
+     func heroHeader(_: UIViewController, didShowSmallTitle _: HeroHeaderView) {
+         print("didShowSmallTitle")
+     }
 
-    func heroHeader(_: UIViewController, didUpdateTitle _: HeroHeaderView, title: String) {
-        print("didUpdateTitle: \(title)")
-    }
+     func heroHeader(_: UIViewController, didUpdateTitle _: HeroHeaderView, title: String) {
+         print("didUpdateTitle: \(title)")
+     }
+      */
 
     /*
      func heroHeader(_: UIViewController, didSetup headerView: HeroHeaderView) {
-         print("didSetup: \(headerView)")
+         print("didSetup: \(headerView.frame.height)")
      }
 
-     func heroHeader(_: UIViewController, didScroll _: HeroHeaderView, offset _: CGFloat) {
-         // print("didScroll: offset=\(offset)")
+     func heroHeader(_: UIViewController, didScroll _: HeroHeaderView, offset: CGFloat) {
+          print("didScroll: offset=\(offset)")
      }
-
+     */
+    /*
      func heroHeader(_: UIViewController, didCollapse _: HeroHeaderView) {
          print("didCollapse")
      }

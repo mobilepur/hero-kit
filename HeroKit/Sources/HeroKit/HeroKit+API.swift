@@ -100,8 +100,7 @@ extension UIViewController {
         )
         heroViewModel.setup(headerView: heroHeaderView, layout: layout)
         viewModel = heroViewModel
-
-        let navBarHeight = navigationController?.navigationBar.frame.maxY ?? 88
+        let navBarHeight = navigationController?.navbarHeight ?? 88
         configureScrollViewInsets(scrollView, headerHeight: totalHeight, navBarHeight: navBarHeight)
     }
 
@@ -251,7 +250,14 @@ extension UIViewController {
     ) {
         let insetTop = headerHeight - navBarHeight
         scrollView.contentInset = UIEdgeInsets(top: insetTop, left: 0, bottom: 0, right: 0)
-        scrollView.setContentOffset(CGPoint(x: 0, y: -headerHeight), animated: false)
+
+        // Defer setting contentOffset until after layout pass completes
+        // to avoid iOS adjusting it when safeAreaInsets are applied
+        let targetOffset = CGPoint(x: 0, y: -headerHeight)
+        DispatchQueue.main.async { [weak self] in
+            scrollView.setContentOffset(targetOffset, animated: false)
+            self?.viewModel?.isInitialScrollComplete = true
+        }
     }
 
     private func setupOpaqueHeader(

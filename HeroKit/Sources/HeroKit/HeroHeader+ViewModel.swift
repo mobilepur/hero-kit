@@ -21,6 +21,7 @@ extension HeroHeader {
         private(set) var state: State = .fullyExpanded
         var storedTitle: String?
         private var titleCancellable: AnyCancellable?
+        var isInitialScrollComplete = false
 
         var headerViewConfiguration: HeaderViewConfiguration? {
             style.headerViewConfiguration
@@ -58,10 +59,11 @@ extension HeroHeader {
         }
 
         func setup(headerView: HeroHeaderView, layout: Layout) {
+            guard let controller else { return }
             self.headerView = headerView
             self.layout = layout
             applySmallTitleVisibility()
-            delegate?.heroHeader(controller!, didSetup: headerView)
+            delegate?.heroHeader(controller, didSetup: headerView)
         }
 
         var headerHeight: CGFloat {
@@ -94,6 +96,7 @@ extension HeroHeader {
         }
 
         func didScroll(offset: CGFloat) {
+            guard isInitialScrollComplete else { return }
             guard let layout, let headerView, let headerViewConfiguration else { return }
 
             let invertedOffset = -offset
