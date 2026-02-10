@@ -62,10 +62,10 @@ extension UIViewController {
                 prefersLargeTitles: prefersLargeTitles,
                 lightModeOnly: lightModeOnly
             )
-        case let .headerView(view, configuration):
+        case let .headerView(view, _, _):
             setupHeaderView(
                 view,
-                configuration: configuration,
+                style: style,
                 scrollView: scrollView
             )
         }
@@ -73,9 +73,10 @@ extension UIViewController {
 
     private func setupHeaderView(
         _ contentView: UIView,
-        configuration: HeroHeader.HeaderViewConfiguration,
+        style: HeroHeader.Style,
         scrollView: UIScrollView
     ) {
+        guard let configuration = style.headerViewConfiguration else { return }
         configureTransparentNavigationBar()
 
         let (heroHeaderView, contentConstraint) = createHeroHeaderView(
@@ -87,7 +88,7 @@ extension UIViewController {
         let totalHeight = heroHeaderView.frame.height
 
         // Setup ViewModel with all state
-        let heroViewModel = HeroHeader.ViewModel(controller: self, configuration: configuration)
+        let heroViewModel = HeroHeader.ViewModel(controller: self, style: style)
         heroViewModel.delegate = heroHeaderDelegate
         heroViewModel.storedTitle = navigationItem.title ?? title
 
@@ -270,7 +271,7 @@ extension UIViewController {
         if lightModeOnly, isDarkMode {
             // On iOS 26+, native large titles don't work, so we still need our headerView
             if #available(iOS 26, *), prefersLargeTitles {
-                guard let title = resolvedTitle else {
+                guard let _ = resolvedTitle else {
                     throw HeroHeader.Error.titleNotFound
                 }
                 guard let scrollView = findScrollView() else {
@@ -285,8 +286,12 @@ extension UIViewController {
                     stretches: true,
                     largeTitleDisplayMode: .inline()
                 )
-                setupHeaderView(headerView, configuration: configuration, scrollView: scrollView)
-                viewModel?.titleConfiguration = titleConfig
+                let style = HeroHeader.Style.headerView(
+                    view: headerView,
+                    configuration: configuration,
+                    title: titleConfig
+                )
+                setupHeaderView(headerView, style: style, scrollView: scrollView)
             } else {
                 // Pre-iOS 26: system large titles work fine
                 configureDefaultNavigationBar()
@@ -301,6 +306,7 @@ extension UIViewController {
             }
             try setupLargeTitleOpaqueHeaderCompatibleMode(
                 title: title,
+                titleConfig: titleConfig,
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor
             )
@@ -312,9 +318,6 @@ extension UIViewController {
                 foregroundColor: foregroundColor
             )
         }
-
-        // Pass title configuration to ViewModel for subtitle handling
-        viewModel?.titleConfiguration = titleConfig
     }
 
     /*
@@ -322,6 +325,7 @@ extension UIViewController {
      */
     private func setupLargeTitleOpaqueHeaderCompatibleMode(
         title: String,
+        titleConfig: HeroHeader.TitleConfiguration,
         backgroundColor: UIColor,
         foregroundColor: UIColor?
     ) throws {
@@ -341,15 +345,22 @@ extension UIViewController {
             largeTitleDisplayMode: .inline()
         )
 
+        let style = HeroHeader.Style.headerView(
+            view: headerView,
+            configuration: configuration,
+            title: titleConfig
+        )
+
         setupHeaderView(
             headerView,
-            configuration: configuration,
+            style: style,
             scrollView: scrollView
         )
 
         // Match nav bar small title color to header foreground
         if let foregroundColor {
             setNavigationBarTitleColor(foregroundColor)
+            setNavigationBarSubtitleColor(foregroundColor.withAlphaComponent(0.75))
         }
     }
 

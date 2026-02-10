@@ -63,6 +63,13 @@ extension UIViewController {
     func setNavigationBarTitleColor(_ color: UIColor) {
         navigationController?.setTitleColor(color)
     }
+
+    /// Sets the subtitle text color on all navigation bar appearances (iOS 26+)
+    func setNavigationBarSubtitleColor(_ color: UIColor) {
+        if #available(iOS 26, *) {
+            navigationController?.setSubtitleColor(color)
+        }
+    }
 }
 
 // MARK: - UIView Helpers

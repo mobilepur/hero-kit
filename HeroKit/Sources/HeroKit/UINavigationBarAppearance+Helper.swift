@@ -18,7 +18,11 @@ extension UINavigationBarAppearance {
             appearance.largeTitleTextAttributes = textAttributes
 
             if #available(iOS 26, *) {
-                appearance.largeSubtitleTextAttributes = textAttributes
+                let subtitleColor = foregroundColor.withAlphaComponent(0.85)
+                let subtitleAttributes: [NSAttributedString.Key: Any] =
+                    [.foregroundColor: subtitleColor]
+                appearance.subtitleTextAttributes = subtitleAttributes
+                appearance.largeSubtitleTextAttributes = subtitleAttributes
             }
         }
 
@@ -68,5 +72,15 @@ public extension UINavigationController {
         navigationBar.scrollEdgeAppearance?.titleTextAttributes = attrs
         navigationBar.compactAppearance?.titleTextAttributes = attrs
         navigationBar.compactScrollEdgeAppearance?.titleTextAttributes = attrs
+    }
+
+    /// Sets the subtitle text color on all navigation bar appearances (iOS 26+)
+    @available(iOS 26, *)
+    func setSubtitleColor(_ color: UIColor) {
+        let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: color]
+        navigationBar.standardAppearance.subtitleTextAttributes = attrs
+        navigationBar.scrollEdgeAppearance?.subtitleTextAttributes = attrs
+        navigationBar.compactAppearance?.subtitleTextAttributes = attrs
+        navigationBar.compactScrollEdgeAppearance?.subtitleTextAttributes = attrs
     }
 }
