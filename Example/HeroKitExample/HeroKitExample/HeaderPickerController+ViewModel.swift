@@ -12,7 +12,7 @@ extension HeaderPickerController {
         // MARK: - Configuration State
 
         private let initialStyle: HeroHeader.Style?
-        private var assetName: String?
+        private var headerImage: UIImage?
         private var baseConfiguration: HeroHeader.HeaderViewConfiguration?
 
         // HeaderView options
@@ -40,9 +40,8 @@ extension HeaderPickerController {
 
         // MARK: - Init
 
-        init(style: HeroHeader.Style?, assetName: String? = nil) {
+        init(style: HeroHeader.Style?) {
             initialStyle = style
-            self.assetName = assetName
             styleSubject = CurrentValueSubject(style)
 
             extractConfiguration(from: style)
@@ -50,7 +49,8 @@ extension HeaderPickerController {
 
         private func extractConfiguration(from style: HeroHeader.Style?) {
             switch style {
-            case let .headerView(_, configuration, _):
+            case let .headerView(view, configuration, _):
+                headerImage = (view as? UIImageView)?.image
                 baseConfiguration = configuration
                 stretchEnabled = configuration.stretches
 
@@ -82,10 +82,10 @@ extension HeaderPickerController {
         }
 
         private func buildCurrentStyle() -> HeroHeader.Style? {
-            if let baseConfiguration, let assetName {
+            if let baseConfiguration, let headerImage {
                 return buildHeaderViewStyle(
                     baseConfiguration: baseConfiguration,
-                    assetName: assetName
+                    image: headerImage
                 )
             } else if let opaqueStyle {
                 return buildOpaqueStyle(opaqueStyle: opaqueStyle)
@@ -95,9 +95,9 @@ extension HeaderPickerController {
 
         private func buildHeaderViewStyle(
             baseConfiguration: HeroHeader.HeaderViewConfiguration,
-            assetName: String
+            image: UIImage
         ) -> HeroHeader.Style {
-            let imageView = UIImageView(image: UIImage(named: assetName))
+            let imageView = UIImageView(image: image)
             imageView.contentMode = .scaleAspectFill
             imageView.clipsToBounds = true
 
@@ -143,13 +143,7 @@ extension HeaderPickerController {
 // MARK: - Static Data
 
 extension HeaderPickerController.ViewModel {
-    /// Asset names for headerView styles (keyed by title)
-    static let assetNames: [String: String] = [
-        "Bikes": "bikes",
-        "Explore": "temple",
-        "Bikes & Beyond": "bikes",
-        "Ancient Temples of Bali": "vulcano",
-    ]
+    static let headerViewAssets = ["bikes", "temple", "bikes", "vulcano"]
 
     static let colorStyles: [HeroHeader.Style] = [
         .opaque(
@@ -209,13 +203,13 @@ extension HeaderPickerController.ViewModel {
         .headerView(
             view: makeImageView(assetName: "temple"),
             configuration: .init(height: 300, largeTitleDisplayMode: .belowHeader()),
-            title: .init(title: "Explore")
+            title: .init(title: "Below Header")
         ),
         // Inline large title
         .headerView(
             view: makeImageView(assetName: "bikes"),
             configuration: .init(height: 300, largeTitleDisplayMode: .inline()),
-            title: .init(title: "Bikes & Beyond")
+            title: .init(title: "Inline")
         ),
         // Two line large title
         .headerView(
@@ -224,7 +218,7 @@ extension HeaderPickerController.ViewModel {
                 height: 300,
                 largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
             ),
-            title: .init(title: "Ancient Temples of Bali")
+            title: .init(title: "Multiline", subtitle: "Subtitle")
         ),
     ]
 
@@ -244,20 +238,13 @@ extension HeroHeader.Style {
         titleConfiguration?.title ?? "Untitled"
     }
 
-    /// Asset name for headerView styles (used for delegate callback)
-    var assetName: String? {
-        guard let title = titleConfiguration?.title else { return nil }
-        return HeaderPickerController.ViewModel.assetNames[title]
-    }
-
     /// Thumbnail image for collection view cell
     var cellImage: UIImage? {
         switch self {
         case let .opaque(_, backgroundColor, _, _, _):
             return Self.colorImage(for: backgroundColor)
-        case .headerView:
-            guard let assetName else { return nil }
-            return UIImage(named: assetName)
+        case let .headerView(view, _, _):
+            return (view as? UIImageView)?.image
         }
     }
 

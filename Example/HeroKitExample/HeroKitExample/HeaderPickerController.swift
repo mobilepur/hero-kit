@@ -6,8 +6,7 @@ protocol HeaderPickerControllerDelegate {
     func headerPicker(
         _ controller: HeaderPickerController,
         didPickCellWithTitle title: String,
-        style: HeroHeader.Style,
-        assetName: String?
+        style: HeroHeader.Style
     )
 }
 
@@ -18,8 +17,8 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     private let viewModel: ViewModel
     private var cancellables = Set<AnyCancellable>()
 
-    init(title: String, navbarStyle: HeroHeader.Style?, assetName: String? = nil) {
-        viewModel = ViewModel(style: navbarStyle, assetName: assetName)
+    init(title: String, navbarStyle: HeroHeader.Style?) {
+        viewModel = ViewModel(style: navbarStyle)
         super.init(nibName: nil, bundle: nil)
         self.title = title
     }
@@ -336,8 +335,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         delegate?.headerPicker(
             self,
             didPickCellWithTitle: style.displayName,
-            style: style,
-            assetName: style.assetName
+            style: style
         )
     }
 
