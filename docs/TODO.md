@@ -29,6 +29,9 @@ For iOS 26:
 Older versions:
 - we don't set a small title 
 
+## Issues:
+Navigating back to opaque-header wont show colors
+
 ## Long List
 - Gradient in Headers
 - SVG in Headers

@@ -20,6 +20,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         controller.delegate = self
 
         let nav = UINavigationController(rootViewController: controller)
+        print("nav prefers large title", nav.navigationBar.prefersLargeTitles)
         // nav.navigationBar.prefersLargeTitles = true
 
         window?.rootViewController = nav
