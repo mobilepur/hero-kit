@@ -16,7 +16,8 @@ extension HeroHeaderTests.Scroll {
         @Test("didScroll delegate is called when scrolling")
         func didScroll_delegateCalled() throws {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
-            let (controller, stub) = HeroHeaderTests.makeController()
+            let (controller, stub, nav) = HeroHeaderTests.makeController()
+            _ = nav
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
             controller.viewModel?.didCompleteSetup()
@@ -30,7 +31,8 @@ extension HeroHeaderTests.Scroll {
         @Test("didCollapse delegate is called when header collapses")
         func didCollapse_delegateCalled() throws {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
-            let (controller, stub) = HeroHeaderTests.makeController()
+            let (controller, stub, nav) = HeroHeaderTests.makeController()
+            _ = nav
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
             controller.viewModel?.didCompleteSetup()
@@ -44,7 +46,8 @@ extension HeroHeaderTests.Scroll {
         @Test("Complete scroll round trip triggers all delegate callbacks")
         func scrollRoundTrip_noLargeTitles() throws {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100, stretches: true)
-            let (controller, stub) = HeroHeaderTests.makeController()
+            let (controller, stub, nav) = HeroHeaderTests.makeController()
+            _ = nav
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
             controller.viewModel?.didCompleteSetup()
@@ -90,7 +93,8 @@ extension HeroHeaderTests.Scroll {
                 stretches: true,
                 largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: false))
             )
-            let (controller, stub) = HeroHeaderTests.makeController(title: "Title")
+            let (controller, stub, nav) = HeroHeaderTests.makeController(title: "Title")
+            _ = nav
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
             controller.viewModel?.didCompleteSetup()

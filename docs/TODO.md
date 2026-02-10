@@ -30,7 +30,8 @@ Older versions:
 - we don't set a small title 
 
 ## Issues:
-Navigating back to opaque-header wont show colors
+- Navigating back to opaque-header wont show colors
+- Tests are crashing when exectuted all at once
 
 ## Long List
 - Gradient in Headers

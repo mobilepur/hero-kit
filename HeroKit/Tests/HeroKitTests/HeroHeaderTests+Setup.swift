@@ -3,7 +3,7 @@ import Testing
 import UIKit
 
 extension HeroHeaderTests {
-    enum Setup {}
+    enum Setup { }
 }
 
 extension HeroHeaderTests.Setup {
@@ -14,7 +14,8 @@ extension HeroHeaderTests.Setup {
         @Test("didSetup without LargeTitle")
         func didSetup_height() throws {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
-            let (controller, stub) = HeroHeaderTests.makeController()
+            let (controller, stub, nav) = HeroHeaderTests.makeController()
+            _ = nav
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
@@ -27,7 +28,8 @@ extension HeroHeaderTests.Setup {
                 height: 100,
                 largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: false))
             )
-            let (controller, stub) = HeroHeaderTests.makeController()
+            let (controller, stub, nav) = HeroHeaderTests.makeController()
+            _ = nav
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
@@ -40,7 +42,8 @@ extension HeroHeaderTests.Setup {
                 height: 100,
                 largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: false))
             )
-            let (controller, stub) = HeroHeaderTests.makeController(title: "Title")
+            let (controller, stub, nav) = HeroHeaderTests.makeController(title: "Title")
+            _ = nav
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
@@ -50,8 +53,8 @@ extension HeroHeaderTests.Setup {
         @Test("ViewModel has correct headerHeight after setup")
         func viewModel_headerHeight() throws {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
-            let (controller, stub) = HeroHeaderTests.makeController()
-            _ = stub
+            let (controller, stub, nav) = HeroHeaderTests.makeController()
+            _ = (stub, nav)
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
@@ -61,11 +64,31 @@ extension HeroHeaderTests.Setup {
         @Test("didSetup delegate is called")
         func didSetup_delegateCalled() throws {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
-            let (controller, stub) = HeroHeaderTests.makeController()
+            let (controller, stub, nav) = HeroHeaderTests.makeController()
+            _ = nav
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
             #expect(stub.didSetupWasCalled == true)
+        }
+
+        @Test("Initial contentOffset shows header fully expanded")
+        func initialContentOffset() async throws {
+            let configuration = HeroHeader.HeaderViewConfiguration(
+                height: 100,
+                largeTitleDisplayMode: .belowHeader(.init())
+            )
+            let (controller, stub, nav) = HeroHeaderTests.makeController()
+            _ = (stub, nav)
+
+            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+
+            let headerHeight = controller.viewModel?.headerHeight ?? 100
+            let navBarHeight = controller.navigationController?.navbarHeight ?? 0
+            print("navBarHeight", navBarHeight)
+            print("headerHeight", headerHeight)
+            print("contentOffset", controller.collectionView.contentOffset.y)
+            #expect(controller.collectionView.contentOffset.y == -headerHeight)
         }
     }
 }

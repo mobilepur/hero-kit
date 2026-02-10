@@ -14,7 +14,8 @@ extension HeroHeaderTests.API {
         @Test("expandHeader sets state to fullyExpanded")
         func expandHeader() throws {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
-            let (controller, stub) = HeroHeaderTests.makeController()
+            let (controller, stub, nav) = HeroHeaderTests.makeController()
+            _ = nav
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
             controller.viewModel?.didCompleteSetup()
@@ -34,7 +35,8 @@ extension HeroHeaderTests.API {
         @Test("collapseHeader sets contentOffset to zero")
         func collapseHeader() throws {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
-            let (controller, _) = HeroHeaderTests.makeController()
+            let (controller, _, nav) = HeroHeaderTests.makeController()
+            _ = nav
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
@@ -49,7 +51,8 @@ extension HeroHeaderTests.API {
                 height: 100,
                 largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: false))
             )
-            let (controller, _) = HeroHeaderTests.makeController(title: "Title")
+            let (controller, _, nav) = HeroHeaderTests.makeController(title: "Title")
+            _ = nav
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
             let headerHeight = controller.viewModel?.headerHeight ?? 0
