@@ -13,10 +13,31 @@
 - AttributedTitle in LargeTitles support
 - Add tests
 
-## Done
 
-- Delegate Method didShowSmallTitle
-- Delegate Method didShowLargeTitle
-- Darkmode support (lightModeOnly option for opaque headers)
-- HeroKit observes title changes and applies them automatically
+## Subtitle
+
+We added a TitleConfiguration
+- The titles and subtitles should be set according to that title configuration
+- Add examples in example project
+- Subtitle should be a lighter version of the foregroundColor, for example: label -> secondaryLabel
+- If prefersLargeTitles is set and no largeTitle or largeSubtitle is specified, we will use the title/subtitle
+- Add a subtitle to the largeTitleView
+- Add a purple system warning in xcode when largeTitles or largeSubtitles are directly specified in the viewController
+
+For iOS 26:
+- set subtitle as small title if specified:
+Older versions:
+- we don't set a small title 
+
+## Long List
+- Gradient in Headers
+- SVG in Headers
+- ImageURL (online and from bundle with different loading animation typels)
+
+
+
+
+
+
+
 
