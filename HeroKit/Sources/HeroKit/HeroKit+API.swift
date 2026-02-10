@@ -81,7 +81,9 @@ extension UIViewController {
 
         let (heroHeaderView, contentConstraint) = createHeroHeaderView(
             contentView: contentView,
-            configuration: configuration
+            configuration: configuration,
+            title: style.largeTitle,
+            subtite: style.largeSubtitle
         )
 
         let constraints = layoutHeaderView(heroHeaderView)
@@ -106,7 +108,9 @@ extension UIViewController {
 
     private func createHeroHeaderView(
         contentView: UIView,
-        configuration: HeroHeader.HeaderViewConfiguration
+        configuration: HeroHeader.HeaderViewConfiguration,
+        title: String?,
+        subtite: String?
     ) -> (headerView: HeroHeaderView, contentConstraint: NSLayoutConstraint) {
         // contentView with height constraint (adjusted during stretch)
         contentView.translatesAutoresizingMaskIntoConstraints = false
@@ -117,10 +121,11 @@ extension UIViewController {
         // Optional: Create large title view
         var largeTitleView: UIView?
         if case let .belowHeader(titleConfig) = configuration.largeTitleDisplayMode,
-           let title = navigationItem.title ?? title
+           let title
         {
             largeTitleView = UIView.largeTitleLabel(
-                title,
+                title: title,
+                subtitle: subtite,
                 allowsLineWrap: titleConfig.allowsLineWrap
             )
         }

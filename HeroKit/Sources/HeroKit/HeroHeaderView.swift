@@ -12,11 +12,16 @@ public class HeroHeaderView: UIStackView {
     convenience init(
         contentView: UIView,
         largeTitle: String,
+        largeSubtitle: String?,
         allowsLineWrap: Bool = false
     ) {
         self.init(
             contentView: contentView,
-            largeTitleView: .largeTitleLabel(largeTitle, allowsLineWrap: allowsLineWrap)
+            largeTitleView: .largeTitleLabel(
+                title: largeTitle,
+                subtitle: largeSubtitle,
+                allowsLineWrap: allowsLineWrap
+            )
         )
     }
 

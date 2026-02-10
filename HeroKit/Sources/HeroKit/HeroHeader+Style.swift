@@ -34,6 +34,50 @@ public enum HeroHeader {
                 return configuration
             }
         }
+
+        public var largeTitle: String? {
+            switch self {
+            case let .opaque(
+                title: titleConfiguration,
+                backgroundColor: _,
+                foregroundColor: _,
+                prefersLargeTitles: prefersLargeTitle,
+                lightModeOnly: _
+            ):
+                if let largeTitle = titleConfiguration.largeTitle {
+                    return largeTitle
+                }
+                if prefersLargeTitle {
+                    return titleConfiguration.title
+                }
+                return nil
+            case .headerView:
+                return nil // TODO: implementation missing
+            }
+        }
+
+        public var largeSubtitle: String? {
+            // only allow subtitles if large title is set
+            guard largeTitle != nil else { return nil }
+            switch self {
+            case let .opaque(
+                title: titleConfiguration,
+                backgroundColor: _,
+                foregroundColor: _,
+                prefersLargeTitles: prefersLargeTitle,
+                lightModeOnly: _
+            ):
+                if let largeSubtitle = titleConfiguration.largeSubtitle {
+                    return largeSubtitle
+                }
+                if prefersLargeTitle {
+                    return titleConfiguration.subtitle
+                }
+                return nil
+            case .headerView:
+                return nil // TODO: implementation missing
+            }
+        }
     }
 
     // MARK: - configurations

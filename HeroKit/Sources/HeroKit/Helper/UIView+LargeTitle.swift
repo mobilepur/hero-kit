@@ -6,7 +6,9 @@ public extension UIView {
     static let largeTitleFont = UIFont.systemFont(ofSize: 36, weight: .bold)
 
     /// Creates a large title label view with padding
-    static func largeTitleLabel(_ title: String, allowsLineWrap: Bool = false) -> LargeTitleView {
+    static func largeTitleLabel(title: String, subtitle _: String?,
+                                allowsLineWrap: Bool = false) -> LargeTitleView
+    {
         let largeTitle = LargeTitleView(title: title, allowsLineWrap: allowsLineWrap)
         return largeTitle
     }
