@@ -121,6 +121,9 @@
 			);
 			mainGroup = 03464D912F29080000EE771F;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				03464DB52F29082C00EE771F /* XCLocalSwiftPackageReference "hero-kit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 03464D9B2F29080000EE771F /* Products */;
 			projectDirPath = "";
@@ -360,9 +363,17 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		03464DB52F29082C00EE771F /* XCLocalSwiftPackageReference "hero-kit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../..";
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		03464DB32F29082C00EE771F /* HeroKit */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = 03464DB52F29082C00EE771F /* XCLocalSwiftPackageReference "hero-kit" */;
 			productName = HeroKit;
 		};
 /* End XCSwiftPackageProductDependency section */

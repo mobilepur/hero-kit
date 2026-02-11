@@ -1,13 +1,8 @@
-## Xcode
-DerivedData/
-xcuserdata/
-*.xcresult
-
-## Swift Package Manager
-.build/
-.swiftpm/xcode/xcuserdata/
-.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
-# Keep Package.resolved to ensure consistent dependency versions
-
-## macOS
 .DS_Store
+/.build
+/Packages
+xcuserdata/
+DerivedData/
+.swiftpm/configuration/registries.json
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.netrc
