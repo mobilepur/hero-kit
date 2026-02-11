@@ -1,6 +1,20 @@
 import HeroKit
 import UIKit
 
+extension HeroHeader.TitleConfiguration {
+
+    var description: String {
+        var parts: [String] = []
+        if let title {
+            parts.append("title: \"\(title)\"")
+        }
+        if let subtitle = largeSubtitle ?? subtitle {
+            parts.append("subtitle: \"\(subtitle)\"")
+        }
+        return parts.joined(separator: " | ")
+    }
+}
+
 extension HeroHeader.HeaderViewConfiguration {
 
     var description: String {

@@ -182,7 +182,11 @@ extension HeaderPickerController.ViewModel {
             prefersLargeTitles: true
         ),
         .opaque(
-            title: .init(title: "Yellow + Subtitle", largeSubtitle: "A sunny description"),
+            title: .init(
+                title: "Yellow + Subtitle",
+                subtitle: "Bright and cheerful",
+                largeSubtitle: "Bright and cheerful"
+            ),
             backgroundColor: .systemYellow,
             foregroundColor: .black,
             prefersLargeTitles: true
@@ -201,7 +205,11 @@ extension HeaderPickerController.ViewModel {
             prefersLargeTitles: true
         ),
         .opaque(
-            title: .init(title: "Dark + Subtitle", largeSubtitle: "More details here"),
+            title: .init(
+                title: "Dark + Subtitle",
+                subtitle: "Deep and bold",
+                largeSubtitle: "Deep and bold"
+            ),
             backgroundColor: .systemBlue,
             foregroundColor: .white,
             prefersLargeTitles: true
@@ -219,19 +227,27 @@ extension HeaderPickerController.ViewModel {
         .headerView(
             view: makeImageView(assetName: "bikes"),
             configuration: .init(height: 300),
-            title: .init(title: "Bikes")
+            title: .init(title: "City Ride")
         ),
         // Large title below header
         .headerView(
             view: makeImageView(assetName: "temple"),
             configuration: .init(height: 300, largeTitleDisplayMode: .belowHeader()),
-            title: .init(title: "Below Header", largeSubtitle: "With a subtitle")
+            title: .init(
+                title: "Ancient Ruins",
+                subtitle: "Lost in time",
+                largeSubtitle: "Lost in time"
+            )
         ),
-        // Inline large title with subtitle
+        // Inline large title
         .headerView(
-            view: makeImageView(assetName: "bikes"),
+            view: makeImageView(assetName: "ricefields"),
             configuration: .init(height: 300, largeTitleDisplayMode: .inline()),
-            title: .init(title: "Inline", largeSubtitle: "Overlay subtitle")
+            title: .init(
+                title: "Golden Fields",
+                subtitle: "Bali, Indonesia",
+                largeSubtitle: "Bali, Indonesia"
+            )
         ),
         // Multiline large title
         .headerView(
@@ -240,7 +256,24 @@ extension HeaderPickerController.ViewModel {
                 height: 300,
                 largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
             ),
-            title: .init(title: "Multiline Title", largeSubtitle: "Also with subtitle")
+            title: .init(
+                title: "The Ring of Fire",
+                subtitle: "Nature's raw power",
+                largeSubtitle: "Nature's raw power"
+            )
+        ),
+        // Inline with gradient dimming
+        .headerView(
+            view: makeImageView(assetName: "temple"),
+            configuration: .init(
+                height: 300,
+                largeTitleDisplayMode: .inline(.init(dimming: .gradient))
+            ),
+            title: .init(
+                title: "Sacred Temple",
+                subtitle: "Kyoto, Japan",
+                largeSubtitle: "Kyoto, Japan"
+            )
         ),
     ]
 
@@ -272,12 +305,20 @@ extension HeroHeader.Style {
 
     /// Subtitle shown in the collection view cell (describes the style configuration)
     var cellSubtitle: String? {
+        var lines: [String] = []
+
         switch self {
         case let .opaque(_, _, _, prefersLargeTitles, _):
-            return prefersLargeTitles ? "Large Title" : nil
+            lines.append(prefersLargeTitles ? "Large Title" : "Small Title")
         case let .headerView(_, configuration, _):
-            return configuration.description
+            lines.append(configuration.description)
         }
+
+        if let titleConfig = titleConfiguration, !titleConfig.description.isEmpty {
+            lines.append(titleConfig.description)
+        }
+
+        return lines.isEmpty ? nil : lines.joined(separator: "\n")
     }
 
     private static func colorImage(
