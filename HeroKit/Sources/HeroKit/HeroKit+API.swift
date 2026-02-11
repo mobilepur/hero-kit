@@ -297,8 +297,15 @@ extension UIViewController {
                 // Create transparent header with inline title for dark mode
                 let headerView = UIView()
                 headerView.backgroundColor = .clear
+                let resolvedSubtitle = titleConfig.largeSubtitle ?? titleConfig.subtitle
+                let largeTitleHeight = measureInlineTitleHeight(
+                    title: resolvedTitle!,
+                    subtitle: resolvedSubtitle,
+                    foregroundColor: .label
+                )
+                let contentHeight = navigationBarHeight + largeTitleHeight
                 let configuration = HeroHeader.HeaderViewConfiguration(
-                    height: navigationbarHeightExtended,
+                    height: contentHeight,
                     minHeight: navigationBarHeight,
                     stretches: true,
                     largeTitleDisplayMode: .inline()
@@ -336,7 +343,7 @@ extension UIViewController {
         }
     }
 
-    /*
+    /**
      iOS 26 workaround to replicate pre liquid glass behaviour
      */
     private func setupLargeTitleOpaqueHeaderCompatibleMode(
@@ -351,8 +358,18 @@ extension UIViewController {
             backgroundColor: backgroundColor
         )
 
+        let resolvedTitle = titleConfig.largeTitle ?? titleConfig.title
+            ?? navigationItem.title ?? title ?? ""
+        let resolvedSubtitle = titleConfig.largeSubtitle ?? titleConfig.subtitle
+        let largeTitleHeight = measureInlineTitleHeight(
+            title: resolvedTitle,
+            subtitle: resolvedSubtitle,
+            foregroundColor: foregroundColor ?? .label
+        )
+        let contentHeight = navigationBarHeight + largeTitleHeight
+
         let configuration = HeroHeader.HeaderViewConfiguration(
-            height: navigationbarHeightExtended,
+            height: contentHeight,
             minHeight: navigationBarHeight,
             stretches: true,
             largeTitleDisplayMode: .inline()
@@ -382,8 +399,26 @@ extension UIViewController {
         return navigationController?.navigationBar.frame.maxY ?? 88
     }
 
-    private var navigationbarHeightExtended: CGFloat {
-        return navigationBarHeight + 59
+    private func measureInlineTitleHeight(
+        title: String,
+        subtitle: String?,
+        foregroundColor: UIColor
+    ) -> CGFloat {
+        let titleView = LargeTitleView(
+            title: title,
+            subtitle: subtitle,
+            foregroundColor: foregroundColor,
+            fog: false
+        )
+        let targetSize = CGSize(
+            width: view.bounds.width,
+            height: UIView.layoutFittingCompressedSize.height
+        )
+        return titleView.systemLayoutSizeFitting(
+            targetSize,
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        ).height
     }
 
 }
