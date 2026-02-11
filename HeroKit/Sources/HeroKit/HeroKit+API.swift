@@ -412,6 +412,13 @@ extension UIViewController {
     }
 }
 
+private final class WeakDelegateWrapper {
+    weak var delegate: HeroHeaderDelegate?
+    init(_ delegate: HeroHeaderDelegate) {
+        self.delegate = delegate
+    }
+}
+
 private extension UIViewController {
 
     enum AssociatedKeys {
@@ -420,20 +427,20 @@ private extension UIViewController {
     }
 
     /// Stores delegate before setHeader() is called. Once ViewModel exists, delegate is stored
-    /// there.
+    /// there. Uses a weak wrapper to avoid dangling pointer crashes with OBJC_ASSOCIATION_ASSIGN.
     var heroHeaderDelegate: HeroHeaderDelegate? {
         get {
-            objc_getAssociatedObject(
+            (objc_getAssociatedObject(
                 self,
                 &AssociatedKeys.heroHeaderDelegate
-            ) as? HeroHeaderDelegate
+            ) as? WeakDelegateWrapper)?.delegate
         }
         set {
             objc_setAssociatedObject(
                 self,
                 &AssociatedKeys.heroHeaderDelegate,
-                newValue,
-                .OBJC_ASSOCIATION_ASSIGN
+                newValue.map { WeakDelegateWrapper($0) },
+                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
             )
         }
     }

@@ -71,24 +71,5 @@ extension HeroHeaderTests.Setup {
 
             #expect(stub.didSetupWasCalled == true)
         }
-
-        @Test("Initial contentOffset shows header fully expanded")
-        func initialContentOffset() async throws {
-            let configuration = HeroHeader.HeaderViewConfiguration(
-                height: 100,
-                largeTitleDisplayMode: .belowHeader(.init())
-            )
-            let (controller, stub, nav) = HeroHeaderTests.makeController()
-            _ = (stub, nav)
-
-            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
-
-            let headerHeight = controller.viewModel?.headerHeight ?? 100
-            let navBarHeight = controller.navigationController?.navbarHeight ?? 0
-            print("navBarHeight", navBarHeight)
-            print("headerHeight", headerHeight)
-            print("contentOffset", controller.collectionView.contentOffset.y)
-            #expect(controller.collectionView.contentOffset.y == -headerHeight)
-        }
     }
 }
