@@ -34,7 +34,7 @@ public class LargeTitleView: UIView {
             stack.addArrangedSubview(subtitleLabel)
         }
         stack.axis = .vertical
-        stack.spacing = 2
+        stack.spacing = 0
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }()
@@ -78,7 +78,7 @@ public class LargeTitleView: UIView {
         NSLayoutConstraint.activate([
             labelStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
             labelStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-            labelStack.topAnchor.constraint(equalTo: topAnchor, constant: 8),
+            labelStack.topAnchor.constraint(equalTo: topAnchor, constant: 6),
             labelStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8),
         ])
 
