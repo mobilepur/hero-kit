@@ -26,11 +26,17 @@ HeroKit lets you add image headers, colored bars, or custom views that collapse 
 
 ### Swift Package Manager
 
-Add HeroKit as a local package dependency, or point to the repository URL:
+Add HeroKit via **File > Add Package Dependencies...** in Xcode with:
+
+```
+https://github.com/mobilepur/hero-kit
+```
+
+Or in your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(path: "path/to/HeroKit")
+    .package(url: "https://github.com/mobilepur/hero-kit", from: "0.1.0")
 ]
 ```
 
