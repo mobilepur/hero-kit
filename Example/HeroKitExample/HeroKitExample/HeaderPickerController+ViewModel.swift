@@ -143,8 +143,6 @@ extension HeaderPickerController {
 // MARK: - Static Data
 
 extension HeaderPickerController.ViewModel {
-    static let headerViewAssets = ["bikes", "temple", "bikes", "vulcano"]
-
     static let colorStyles: [HeroHeader.Style] = [
         // Light background, dark text
         .opaque(

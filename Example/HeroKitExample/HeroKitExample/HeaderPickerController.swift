@@ -2,7 +2,7 @@ import Combine
 import HeroKit
 import UIKit
 
-protocol HeaderPickerControllerDelegate {
+protocol HeaderPickerControllerDelegate: AnyObject {
     func headerPicker(
         _ controller: HeaderPickerController,
         didPickCellWithTitle title: String,
@@ -12,7 +12,7 @@ protocol HeaderPickerControllerDelegate {
 
 class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHeaderDelegate {
 
-    var delegate: HeaderPickerControllerDelegate?
+    weak var delegate: HeaderPickerControllerDelegate?
 
     private let viewModel: ViewModel
     private var cancellables = Set<AnyCancellable>()
@@ -405,60 +405,6 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         }
     }
 
-    // MARK: - HeroHeaderDelegate
-
-    /*
-     func heroHeader(_: UIViewController, didShowLargeTitle _: HeroHeaderView) {
-         print("didShowLargeTitle")
-     }
-
-     func heroHeader(_: UIViewController, didShowSmallTitle _: HeroHeaderView) {
-         print("didShowSmallTitle")
-     }
-
-     func heroHeader(_: UIViewController, didUpdateTitle _: HeroHeaderView, title: String) {
-         print("didUpdateTitle: \(title)")
-     }
-      */
-
-    /*
-     func heroHeader(_: UIViewController, didSetup headerView: HeroHeaderView) {
-         print("didSetup: \(headerView.frame.height)")
-     }
-
-     func heroHeader(_: UIViewController, didScroll _: HeroHeaderView, offset: CGFloat) {
-          print("didScroll: offset=\(offset)")
-     }
-     */
-    /*
-     func heroHeader(_: UIViewController, didCollapse _: HeroHeaderView) {
-         print("didCollapse")
-     }
-
-     func heroHeader(_: UIViewController, didBecameVisible _: HeroHeaderView) {
-         print("didBecameVisible")
-     }
-
-     func heroHeader(_: UIViewController, didExpandFully _: HeroHeaderView) {
-         print("didExpandFully")
-     }
-
-     func heroHeader(_: UIViewController, didStretch _: HeroHeaderView) {
-         print("didStretch")
-     }
-
-     func heroHeader(_: UIViewController, didUnstretch _: HeroHeaderView) {
-         print("didUnstretch")
-     }
-
-     func heroHeader(_: UIViewController, didCollapseHeaderContent _: HeroHeaderView) {
-         print("didCollapseHeaderContent")
-     }
-
-     func heroHeader(_: UIViewController, headerContentDidBecameVisible _: HeroHeaderView) {
-         print("headerContentDidBecameVisible")
-     }
-     */
 }
 
 // MARK: - Section
