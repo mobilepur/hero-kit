@@ -32,6 +32,7 @@ Older versions:
 ## Issues:
 - Navigating back to opaque-header wont show colors
 - Tests are crashing when exectuted all at once
+- Switch to "Light Mode only" will make header disappear
 
 ## Long List
 - Gradient in Headers

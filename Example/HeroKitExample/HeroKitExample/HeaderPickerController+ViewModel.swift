@@ -130,7 +130,7 @@ extension HeaderPickerController {
             )
         ) -> HeroHeader.Style {
             .opaque(
-                title: .init(title: initialStyle?.titleConfiguration?.title),
+                title: initialStyle?.titleConfiguration ?? .init(),
                 backgroundColor: opaqueStyle.backgroundColor,
                 foregroundColor: opaqueStyle.foregroundColor,
                 prefersLargeTitles: opaqueStyle.prefersLargeTitles,
@@ -193,26 +193,26 @@ extension HeaderPickerController.ViewModel {
             configuration: .init(height: 300),
             title: .init(title: "Bikes")
         ),
-        // Single line large title
+        // Large title below header
         .headerView(
             view: makeImageView(assetName: "temple"),
             configuration: .init(height: 300, largeTitleDisplayMode: .belowHeader()),
-            title: .init(title: "Below Header")
+            title: .init(title: "Below Header", largeSubtitle: "With a subtitle")
         ),
-        // Inline large title
+        // Inline large title with subtitle
         .headerView(
             view: makeImageView(assetName: "bikes"),
             configuration: .init(height: 300, largeTitleDisplayMode: .inline()),
-            title: .init(title: "Inline")
+            title: .init(title: "Inline", largeSubtitle: "Overlay subtitle")
         ),
-        // Two line large title
+        // Multiline large title
         .headerView(
             view: makeImageView(assetName: "vulcano"),
             configuration: .init(
                 height: 300,
                 largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
             ),
-            title: .init(title: "Multiline", subtitle: "Subtitle")
+            title: .init(title: "Multiline Title", largeSubtitle: "Also with subtitle")
         ),
     ]
 

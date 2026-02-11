@@ -3,6 +3,7 @@ import UIKit
 public class LargeTitleView: UIView {
 
     private let title: String
+    private let subtitle: String?
     private let allowsLineWrap: Bool
     private let foregroundColor: UIColor
     private let fog: Bool
@@ -15,8 +16,27 @@ public class LargeTitleView: UIView {
         label.font = UIView.largeTitleFont
         label.textColor = foregroundColor
         label.numberOfLines = allowsLineWrap ? 2 : 1
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+
+    private lazy var subtitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = subtitle
+        label.font = .preferredFont(forTextStyle: .subheadline)
+        label.textColor = foregroundColor.withAlphaComponent(0.8)
+        label.numberOfLines = 1
+        return label
+    }()
+
+    private lazy var labelStack: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [titleLabel])
+        if subtitle != nil {
+            stack.addArrangedSubview(subtitleLabel)
+        }
+        stack.axis = .vertical
+        stack.spacing = 2
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
     }()
 
     private lazy var gradientLayer: CAGradientLayer = {
@@ -34,12 +54,16 @@ public class LargeTitleView: UIView {
         return view
     }()
 
-    public init(title: String, allowsLineWrap: Bool = false,
-                foregroundColor: UIColor = .label,
-                fog: Bool = true,
-                fogColor: UIColor = .systemBackground)
-    {
+    public init(
+        title: String,
+        subtitle: String? = nil,
+        allowsLineWrap: Bool = false,
+        foregroundColor: UIColor = .label,
+        fog: Bool = true,
+        fogColor: UIColor = .systemBackground
+    ) {
         self.title = title
+        self.subtitle = subtitle
         self.allowsLineWrap = allowsLineWrap
         self.foregroundColor = foregroundColor
         self.fog = fog
@@ -48,14 +72,14 @@ public class LargeTitleView: UIView {
         backgroundColor = .clear
         clipsToBounds = true
 
-        addSubview(titleLabel)
+        addSubview(labelStack)
         if fog { addSubview(fogView) }
 
         NSLayoutConstraint.activate([
-            titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-            titleLabel.topAnchor.constraint(equalTo: topAnchor, constant: 8),
-            titleLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8),
+            labelStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
+            labelStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
+            labelStack.topAnchor.constraint(equalTo: topAnchor, constant: 8),
+            labelStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8),
         ])
 
         if fog {

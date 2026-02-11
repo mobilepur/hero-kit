@@ -84,7 +84,7 @@ extension UIViewController {
             contentView: contentView,
             configuration: configuration,
             title: style.largeTitle,
-            subtite: style.largeSubtitle,
+            subtitle: style.largeSubtitle,
             foregroundColor: foregroundColor ?? style.foregroundColor
         )
 
@@ -112,7 +112,7 @@ extension UIViewController {
         contentView: UIView,
         configuration: HeroHeader.HeaderViewConfiguration,
         title: String?,
-        subtite: String?,
+        subtitle: String?,
         foregroundColor: UIColor?
     ) -> (headerView: HeroHeaderView, contentConstraint: NSLayoutConstraint) {
         // contentView with height constraint (adjusted during stretch)
@@ -128,7 +128,7 @@ extension UIViewController {
         {
             largeTitleView = UIView.largeTitleLabel(
                 title: title,
-                subtitle: subtite,
+                subtitle: subtitle,
                 allowsLineWrap: titleConfig.allowsLineWrap
             )
         }
@@ -136,10 +136,11 @@ extension UIViewController {
         let headerView = HeroHeaderView(contentView: contentView, largeTitleView: largeTitleView)
 
         if case let .inline(inlineConfig) = configuration.largeTitleDisplayMode,
-           let title = navigationItem.title ?? title
+           let title
         {
             let inlineTitle = addInlineTitleLabel(
-                title,
+                title: title,
+                subtitle: subtitle,
                 foregroundColor: foregroundColor ?? .white,
                 dimming: inlineConfig.dimming,
                 to: contentView
@@ -152,7 +153,8 @@ extension UIViewController {
 
     @discardableResult
     private func addInlineTitleLabel(
-        _ title: String,
+        title: String,
+        subtitle: String?,
         foregroundColor: UIColor,
         dimming: HeroHeader.InlineTitleConfiguration.Dimming,
         to contentView: UIView
@@ -161,6 +163,7 @@ extension UIViewController {
         let fogColor = contentView.backgroundColor ?? .systemBackground
         let titleView = LargeTitleView(
             title: title,
+            subtitle: subtitle,
             foregroundColor: foregroundColor,
             fog: hasFog,
             fogColor: fogColor
@@ -215,9 +218,7 @@ extension UIViewController {
     }
 
     private func createOpaqueHeaderView(
-        title _: String,
-        backgroundColor: UIColor,
-        foregroundColor _: UIColor?
+        backgroundColor: UIColor
     ) -> UIView {
         let headerView = UIView()
         headerView.backgroundColor = backgroundColor
@@ -321,7 +322,6 @@ extension UIViewController {
                 throw HeroHeader.Error.titleNotFound
             }
             try setupLargeTitleOpaqueHeaderCompatibleMode(
-                title: title,
                 titleConfig: titleConfig,
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor
@@ -340,7 +340,6 @@ extension UIViewController {
      iOS 26 workaround to replicate pre liquid glass behaviour
      */
     private func setupLargeTitleOpaqueHeaderCompatibleMode(
-        title: String,
         titleConfig: HeroHeader.TitleConfiguration,
         backgroundColor: UIColor,
         foregroundColor: UIColor?
@@ -349,9 +348,7 @@ extension UIViewController {
             throw HeroHeader.Error.scrollViewNotFound
         }
         let headerView = createOpaqueHeaderView(
-            title: title,
-            backgroundColor: backgroundColor,
-            foregroundColor: foregroundColor
+            backgroundColor: backgroundColor
         )
 
         let configuration = HeroHeader.HeaderViewConfiguration(

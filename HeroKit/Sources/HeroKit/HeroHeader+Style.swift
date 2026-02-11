@@ -51,8 +51,8 @@ public enum HeroHeader {
                     return titleConfiguration.title
                 }
                 return nil
-            case .headerView:
-                return nil // TODO: implementation missing
+            case let .headerView(_, _, titleConfiguration):
+                return titleConfiguration?.largeTitle ?? titleConfiguration?.title
             }
         }
 
@@ -74,8 +74,8 @@ public enum HeroHeader {
                     return titleConfiguration.subtitle
                 }
                 return nil
-            case .headerView:
-                return nil // TODO: implementation missing
+            case let .headerView(_, _, titleConfiguration):
+                return titleConfiguration?.largeSubtitle ?? titleConfiguration?.subtitle
             }
         }
 
