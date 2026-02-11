@@ -24,15 +24,29 @@ We added a TitleConfiguration
 - Add a subtitle to the largeTitleView
 - Add a purple system warning in xcode when largeTitles or largeSubtitles are directly specified in the viewController
 
+
+
+
+
 For iOS 26:
 - set subtitle as small title if specified:
 Older versions:
 - we don't set a small title 
 
 ## Issues:
+- Make some headerViews self sizing
 - Navigating back to opaque-header wont show colors
 - Tests are crashing when exectuted all at once
 - Switch to "Light Mode only" will make header disappear
+
+### Self Sizing Issue:
+- ~~Opaque-Style with large title uses inline large titles -> the height of the header in that case should depend on the largeHeaderView.~~
+~~NavBar (fixed height) + largeHeaderView (depends on font, subtitle etc)~~ ✅ Done: measures LargeTitleView dynamically via `measureInlineTitleHeight`
+- HeaderView-Style - below large titles -> the headerView should have a fixed size, the largeHeaderView height should depend on the label/subtitles.
+- HeaderView-Style - inline large headers -> the height is predefined, the user has the responsible to give enought size, that the large title fits.
+
+
+
 
 ## Long List
 - Gradient in Headers

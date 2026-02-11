@@ -15,28 +15,54 @@ extension HeaderPickerController {
         private var headerImage: UIImage?
         private var baseConfiguration: HeroHeader.HeaderViewConfiguration?
 
-        // HeaderView options
-        var stretchEnabled: Bool = true { didSet { publishUpdatedStyle() } }
-        var largeTitleEnabled: Bool = false { didSet { publishUpdatedStyle() } }
-        var lineWrapEnabled: Bool = false { didSet { publishUpdatedStyle() } }
-        var smallTitleDisplayMode: HeroHeader
-            .SmallTitleDisplayMode = .system { didSet { publishUpdatedStyle() } }
-        var inlineEnabled: Bool = false { didSet { publishUpdatedStyle() } }
-        var dimmingMode: HeroHeader.InlineTitleConfiguration
-            .Dimming = .none { didSet { publishUpdatedStyle() } }
+        /// HeaderView options
+        var stretchEnabled: Bool = true {
+            didSet { publishUpdatedStyle() }
+        }
 
-        // Opaque options
+        var largeTitleEnabled: Bool = false {
+            didSet { publishUpdatedStyle() }
+        }
+
+        var lineWrapEnabled: Bool = false {
+            didSet { publishUpdatedStyle() }
+        }
+
+        var smallTitleDisplayMode: HeroHeader
+            .SmallTitleDisplayMode = .system
+        {
+            didSet { publishUpdatedStyle() }
+        }
+
+        var inlineEnabled: Bool = false {
+            didSet { publishUpdatedStyle() }
+        }
+
+        var dimmingMode: HeroHeader.InlineTitleConfiguration
+            .Dimming = .none
+        {
+            didSet { publishUpdatedStyle() }
+        }
+
+        /// Opaque options
         private var opaqueStyle: (
             backgroundColor: UIColor,
             foregroundColor: UIColor?,
             prefersLargeTitles: Bool
         )?
-        var lightModeOnlyEnabled: Bool = false { didSet { publishUpdatedStyle() } }
+        var lightModeOnlyEnabled: Bool = false {
+            didSet { publishUpdatedStyle() }
+        }
 
         // MARK: - Computed Properties
 
-        var isHeaderViewStyle: Bool { baseConfiguration != nil }
-        var isOpaqueStyle: Bool { opaqueStyle != nil }
+        var isHeaderViewStyle: Bool {
+            baseConfiguration != nil
+        }
+
+        var isOpaqueStyle: Bool {
+            opaqueStyle != nil
+        }
 
         // MARK: - Init
 
@@ -119,7 +145,11 @@ extension HeaderPickerController {
                 largeTitleDisplayMode: largeTitleDisplayMode
             )
 
-            return .headerView(view: imageView, configuration: configuration)
+            return .headerView(
+                view: imageView,
+                configuration: configuration,
+                title: initialStyle?.titleConfiguration
+            )
         }
 
         private func buildOpaqueStyle(
