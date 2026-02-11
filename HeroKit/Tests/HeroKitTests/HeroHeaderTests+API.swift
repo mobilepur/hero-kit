@@ -14,8 +14,8 @@ extension HeroHeaderTests.API {
         @Test("expandHeader sets state to fullyExpanded")
         func expandHeader() throws {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
-            let (controller, stub, nav) = HeroHeaderTests.makeController()
-            _ = nav
+            let (controller, stub, nav, window) = HeroHeaderTests.makeController()
+            _ = (nav, window)
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
             controller.viewModel?.didCompleteSetup()
@@ -35,8 +35,8 @@ extension HeroHeaderTests.API {
         @Test("collapseHeader sets contentOffset to zero")
         func collapseHeader() throws {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
-            let (controller, _, nav) = HeroHeaderTests.makeController()
-            _ = nav
+            let (controller, _, nav, window) = HeroHeaderTests.makeController()
+            _ = (nav, window)
 
             try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
@@ -51,10 +51,15 @@ extension HeroHeaderTests.API {
                 height: 100,
                 largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: false))
             )
-            let (controller, _, nav) = HeroHeaderTests.makeController(title: "Title")
-            _ = nav
+            let (controller, _, nav, window) = HeroHeaderTests.makeController(title: "Title")
+            _ = (nav, window)
 
-            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            let titleConfig = HeroHeader.TitleConfiguration(title: "Title")
+            try controller.setHeader(.headerView(
+                view: MockHeader(),
+                configuration: configuration,
+                title: titleConfig
+            ))
             let headerHeight = controller.viewModel?.headerHeight ?? 0
 
             controller.collapseHeaderContent(animated: false)

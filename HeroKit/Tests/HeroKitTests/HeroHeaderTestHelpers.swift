@@ -4,17 +4,19 @@ import UIKit
 enum HeroHeaderTests {
     @MainActor
     static func makeController(title: String? = nil)
-    -> (MockController, StubDelegate, UINavigationController) {
+    -> (MockController, StubDelegate, UINavigationController, UIWindow) {
         let stub = StubDelegate()
         let controller = MockController()
         controller.title = title
         controller.headerDelegate = stub
 
-        // Embed in NavigationController for realistic testing
+        // Embed in NavigationController and attach to a window for realistic layout
         let nav = UINavigationController(rootViewController: controller)
-        _ = nav.view
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        window.rootViewController = nav
+        window.makeKeyAndVisible()
 
-        return (controller, stub, nav)
+        return (controller, stub, nav, window)
     }
 }
 
