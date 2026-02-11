@@ -176,47 +176,47 @@ extension HeaderPickerController.ViewModel {
     static let colorStyles: [HeroHeader.Style] = [
         // Light background, dark text
         .opaque(
-            title: .init(title: "Mint + Large"),
+            title: .init(title: "Mint"),
             backgroundColor: .systemMint,
             foregroundColor: .black,
             prefersLargeTitles: true
         ),
         .opaque(
             title: .init(
-                title: "Yellow + Subtitle",
-                subtitle: "Bright and cheerful",
-                largeSubtitle: "Bright and cheerful"
+                title: "Yellow",
+                subtitle: "Yellow subtitle",
+                largeSubtitle: "Yellow subtitle"
             ),
             backgroundColor: .systemYellow,
             foregroundColor: .black,
             prefersLargeTitles: true
         ),
         .opaque(
-            title: .init(title: "Cyan Small"),
+            title: .init(title: "Cyan"),
             backgroundColor: .systemCyan,
             foregroundColor: .black,
             prefersLargeTitles: false
         ),
         // Dark background, light text
         .opaque(
-            title: .init(title: "Dark + Large"),
+            title: .init(title: "Indigo"),
             backgroundColor: .systemIndigo,
             foregroundColor: .white,
             prefersLargeTitles: true
         ),
         .opaque(
             title: .init(
-                title: "Dark + Subtitle",
-                subtitle: "Deep and bold",
-                largeSubtitle: "Deep and bold"
+                title: "Blue",
+                subtitle: "Blue subtitle",
+                largeSubtitle: "Blue subtitle"
             ),
             backgroundColor: .systemBlue,
             foregroundColor: .white,
             prefersLargeTitles: true
         ),
         .opaque(
-            title: .init(title: "Dark Small"),
-            backgroundColor: .systemIndigo,
+            title: .init(title: "Purple"),
+            backgroundColor: .systemPurple,
             foregroundColor: .white,
             prefersLargeTitles: false
         ),
