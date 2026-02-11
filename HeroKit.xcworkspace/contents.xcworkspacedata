@@ -5,9 +5,12 @@
       location = "group:Example/HeroKitExample/HeroKitExample.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:HeroKit">
+      location = "group:">
    </FileRef>
    <FileRef
       location = "group:docs">
+   </FileRef>
+   <FileRef
+      location = "group:README.md">
    </FileRef>
 </Workspace>

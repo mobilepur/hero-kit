@@ -31,7 +31,7 @@ public protocol HeroHeaderDelegate: AnyObject {
 
 }
 
-// Default implementations (all optional)
+/// Default implementations (all optional)
 public extension HeroHeaderDelegate {
     func heroHeader(_: UIViewController, didSetup _: HeroHeaderView) { }
     func heroHeader(_: UIViewController, didStretch _: HeroHeaderView) { }

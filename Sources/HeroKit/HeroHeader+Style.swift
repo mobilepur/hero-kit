@@ -165,7 +165,7 @@ public enum HeroHeader {
     public enum SmallTitleDisplayMode: Hashable, Sendable {
         case never
         case system // default behaviour: small title only displayed when large titles are not
-        // visible
+        /// visible
         case always
     }
 
