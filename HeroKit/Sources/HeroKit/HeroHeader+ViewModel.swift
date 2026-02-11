@@ -104,73 +104,92 @@ extension HeroHeader {
             guard let layout, let headerView, let headerViewConfiguration else { return }
 
             let invertedOffset = -offset
-            let totalHeight = layout.totalHeight
-            let effectiveMinHeight = headerViewConfiguration.minHeight ?? 0
+            updateConstraints(
+                invertedOffset: invertedOffset,
+                layout: layout,
+                headerView: headerView,
+                config: headerViewConfiguration
+            )
+            updateLargeTitleVisibility(
+                invertedOffset: invertedOffset,
+                layout: layout,
+                headerView: headerView,
+                config: headerViewConfiguration
+            )
 
-            if invertedOffset > totalHeight, headerViewConfiguration.stretches {
-                // Overscroll - stretch effect
+            let normalizedOffset = offset + layout.totalHeight
+            updateState(for: normalizedOffset)
+            applySmallTitleVisibility(offset: normalizedOffset)
+        }
+
+        private func updateConstraints(
+            invertedOffset: CGFloat,
+            layout: Layout,
+            headerView _: HeroHeaderView,
+            config: HeroHeader.HeaderViewConfiguration
+        ) {
+            let totalHeight = layout.totalHeight
+
+            if invertedOffset > totalHeight, config.stretches {
                 let stretchAmount = invertedOffset - totalHeight
                 layout.headerHeightConstraint.constant = invertedOffset
-                layout.contentHeightConstraint.constant = headerViewConfiguration
-                    .height + stretchAmount
+                layout.contentHeightConstraint.constant = config.height + stretchAmount
                 layout.headerTopConstraint.constant = 0
-                headerView.largeTitleView?.alpha = 1
             } else if invertedOffset < totalHeight {
-                // Header collapsing
-                let minOffset = max(effectiveMinHeight, invertedOffset)
+                let minOffset = max(config.minHeight ?? 0, invertedOffset)
                 layout.headerTopConstraint.constant = minOffset - totalHeight
                 layout.headerHeightConstraint.constant = totalHeight
-                layout.contentHeightConstraint.constant = headerViewConfiguration.height
-
-                let largeTitleHeight = totalHeight - headerViewConfiguration.height
-                let largeTitleTop = invertedOffset - largeTitleHeight
-
-                let navBarBottom = controller?.navigationController?.navigationBar.frame.maxY ?? 0
-                let statusBarBottom = controller?.view.window?.safeAreaInsets.top ?? 0
-
-                // For inline titles, the title sits at the bottom of the contentView,
-                // so it's hidden when the header height equals the nav bar height.
-                let hiddenThreshold: CGFloat
-                let fogThreshold: CGFloat
-
-                if case .inline = headerViewConfiguration.largeTitleDisplayMode {
-                    hiddenThreshold = navBarBottom
-                    fogThreshold = navBarBottom + 60
-                } else {
-                    hiddenThreshold = statusBarBottom
-                    fogThreshold = navBarBottom
-                }
-
-                if largeTitleTop <= hiddenThreshold {
-                    // Fully hidden
-                    (headerView.largeTitleView as? LargeTitleView)?.blurFraction(1)
-                    headerView.largeTitleView?.alpha = 0
-                } else if largeTitleTop < fogThreshold {
-                    // Fog gradually
-                    let fraction = 1 - (largeTitleTop - hiddenThreshold) /
-                        (fogThreshold - hiddenThreshold)
-                    (headerView.largeTitleView as? LargeTitleView)?.blurFraction(fraction)
-                    headerView.largeTitleView?.alpha = 1
-                } else {
-                    // Fully visible
-                    (headerView.largeTitleView as? LargeTitleView)?.blurFraction(0)
-                    headerView.largeTitleView?.alpha = 1
-                }
-
+                layout.contentHeightConstraint.constant = config.height
             } else {
-                // Normal expanded state
                 layout.headerTopConstraint.constant = 0
                 layout.headerHeightConstraint.constant = totalHeight
-                layout.contentHeightConstraint.constant = headerViewConfiguration.height
+                layout.contentHeightConstraint.constant = config.height
+            }
+        }
+
+        private func updateLargeTitleVisibility(
+            invertedOffset: CGFloat,
+            layout: Layout,
+            headerView: HeroHeaderView,
+            config: HeroHeader.HeaderViewConfiguration
+        ) {
+            let totalHeight = layout.totalHeight
+
+            guard invertedOffset < totalHeight else {
                 headerView.largeTitleView?.alpha = 1
+                (headerView.largeTitleView as? LargeTitleView)?.blurFraction(0)
+                return
             }
 
-            // Update state and call delegates
-            let normalizedOffset = offset + totalHeight
-            updateState(for: normalizedOffset)
+            let largeTitleHeight = totalHeight - config.height
+            let largeTitleTop = invertedOffset - largeTitleHeight
 
-            // Update small title visibility
-            applySmallTitleVisibility(offset: normalizedOffset)
+            let navBarBottom = controller?.navigationController?.navigationBar.frame.maxY ?? 0
+            let statusBarBottom = controller?.view.window?.safeAreaInsets.top ?? 0
+
+            let hiddenThreshold: CGFloat
+            let fogThreshold: CGFloat
+
+            if case .inline = config.largeTitleDisplayMode {
+                hiddenThreshold = navBarBottom
+                fogThreshold = navBarBottom + 60
+            } else {
+                hiddenThreshold = statusBarBottom
+                fogThreshold = navBarBottom
+            }
+
+            if largeTitleTop <= hiddenThreshold {
+                (headerView.largeTitleView as? LargeTitleView)?.blurFraction(1)
+                headerView.largeTitleView?.alpha = 0
+            } else if largeTitleTop < fogThreshold {
+                let fraction = 1 - (largeTitleTop - hiddenThreshold) /
+                    (fogThreshold - hiddenThreshold)
+                (headerView.largeTitleView as? LargeTitleView)?.blurFraction(fraction)
+                headerView.largeTitleView?.alpha = 1
+            } else {
+                (headerView.largeTitleView as? LargeTitleView)?.blurFraction(0)
+                headerView.largeTitleView?.alpha = 1
+            }
         }
 
         private func applySmallTitleVisibility(offset _: CGFloat = 0) {

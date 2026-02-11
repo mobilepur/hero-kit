@@ -138,12 +138,11 @@ extension UIViewController {
         if case let .inline(inlineConfig) = configuration.largeTitleDisplayMode,
            let title
         {
-            let inlineTitle = addInlineTitleLabel(
+            let inlineTitle = contentView.addInlineTitleLabel(
                 title: title,
                 subtitle: subtitle,
                 foregroundColor: foregroundColor ?? .white,
-                dimming: inlineConfig.dimming,
-                to: contentView
+                dimming: inlineConfig.dimming
             )
             headerView.largeTitleView = inlineTitle
         }
@@ -151,16 +150,28 @@ extension UIViewController {
         return (headerView, contentConstraint)
     }
 
+    private func createOpaqueHeaderView(
+        backgroundColor: UIColor
+    ) -> UIView {
+        let headerView = UIView()
+        headerView.backgroundColor = backgroundColor
+        return headerView
+    }
+}
+
+// MARK: - Inline Title / Dimming
+
+private extension UIView {
+
     @discardableResult
-    private func addInlineTitleLabel(
+    func addInlineTitleLabel(
         title: String,
         subtitle: String?,
         foregroundColor: UIColor,
-        dimming: HeroHeader.InlineTitleConfiguration.Dimming,
-        to contentView: UIView
+        dimming: HeroHeader.InlineTitleConfiguration.Dimming
     ) -> LargeTitleView {
-        let hasFog = contentView.backgroundColor != nil
-        let fogColor = contentView.backgroundColor ?? .systemBackground
+        let hasFog = backgroundColor != nil
+        let fogColor = backgroundColor ?? .systemBackground
         let titleView = LargeTitleView(
             title: title,
             subtitle: subtitle,
@@ -170,30 +181,22 @@ extension UIViewController {
         )
         titleView.translatesAutoresizingMaskIntoConstraints = false
 
-        // Add dimming overlay for readability on bright images
-        switch dimming {
-        case .none:
-            break
-        case .complete:
-            let dimmingView = createDimmingView(gradient: false)
-            contentView.addSubview(dimmingView)
-            pinToEdges(dimmingView, in: contentView)
-        case .gradient:
-            let dimmingView = createDimmingView(gradient: true)
-            contentView.addSubview(dimmingView)
-            pinToEdges(dimmingView, in: contentView)
+        if dimming != .none {
+            let dimmingView = Self.createDimmingView(gradient: dimming == .gradient)
+            addSubview(dimmingView)
+            dimmingView.pinToEdges(of: self)
         }
 
-        contentView.addSubview(titleView)
+        addSubview(titleView)
         NSLayoutConstraint.activate([
-            titleView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            titleView.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor),
-            titleView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+            titleView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            titleView.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
+            titleView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8),
         ])
         return titleView
     }
 
-    private func createDimmingView(gradient: Bool) -> UIView {
+    static func createDimmingView(gradient: Bool) -> UIView {
         if gradient {
             let dimmingView = GradientDimmingView()
             dimmingView.translatesAutoresizingMaskIntoConstraints = false
@@ -208,21 +211,13 @@ extension UIViewController {
         }
     }
 
-    private func pinToEdges(_ subview: UIView, in parent: UIView) {
+    func pinToEdges(of parent: UIView) {
         NSLayoutConstraint.activate([
-            subview.topAnchor.constraint(equalTo: parent.topAnchor),
-            subview.leadingAnchor.constraint(equalTo: parent.leadingAnchor),
-            subview.trailingAnchor.constraint(equalTo: parent.trailingAnchor),
-            subview.bottomAnchor.constraint(equalTo: parent.bottomAnchor),
+            topAnchor.constraint(equalTo: parent.topAnchor),
+            leadingAnchor.constraint(equalTo: parent.leadingAnchor),
+            trailingAnchor.constraint(equalTo: parent.trailingAnchor),
+            bottomAnchor.constraint(equalTo: parent.bottomAnchor),
         ])
-    }
-
-    private func createOpaqueHeaderView(
-        backgroundColor: UIColor
-    ) -> UIView {
-        let headerView = UIView()
-        headerView.backgroundColor = backgroundColor
-        return headerView
     }
 }
 
@@ -280,44 +275,15 @@ extension UIViewController {
     ) throws {
         guard let navigationController else { throw HeroHeader.Error.navigationControllerNotFound }
 
-        // Resolve title from config, falling back to navigationItem.title or self.title
-        let resolvedTitle = titleConfig.largeTitle ?? titleConfig.title ?? navigationItem
-            .title ?? title
-
-        // In dark mode with lightModeOnly, use default system appearance
         if lightModeOnly, isDarkMode {
-            // On iOS 26+, native large titles don't work, so we still need our headerView
             if #available(iOS 26, *), prefersLargeTitles {
-                guard let _ = resolvedTitle else {
-                    throw HeroHeader.Error.titleNotFound
-                }
-                guard let scrollView = findScrollView() else {
-                    throw HeroHeader.Error.scrollViewNotFound
-                }
-                // Create transparent header with inline title for dark mode
-                let headerView = UIView()
-                headerView.backgroundColor = .clear
-                let resolvedSubtitle = titleConfig.largeSubtitle ?? titleConfig.subtitle
-                let largeTitleHeight = measureInlineTitleHeight(
-                    title: resolvedTitle!,
-                    subtitle: resolvedSubtitle,
-                    foregroundColor: .label
+                // iOS 26+: native large titles don't work, use transparent headerView
+                try setupLargeTitleOpaqueHeaderCompatibleMode(
+                    titleConfig: titleConfig,
+                    backgroundColor: .clear,
+                    foregroundColor: nil
                 )
-                let contentHeight = navigationBarHeight + largeTitleHeight
-                let configuration = HeroHeader.HeaderViewConfiguration(
-                    height: contentHeight,
-                    minHeight: navigationBarHeight,
-                    stretches: true,
-                    largeTitleDisplayMode: .inline()
-                )
-                let style = HeroHeader.Style.headerView(
-                    view: headerView,
-                    configuration: configuration,
-                    title: titleConfig
-                )
-                setupHeaderView(headerView, style: style, scrollView: scrollView)
             } else {
-                // Pre-iOS 26: system large titles work fine
                 configureDefaultNavigationBar()
                 navigationController.navigationBar.prefersLargeTitles = prefersLargeTitles
             }
@@ -325,16 +291,12 @@ extension UIViewController {
         }
 
         if #available(iOS 26, *), prefersLargeTitles {
-            guard let title = resolvedTitle else {
-                throw HeroHeader.Error.titleNotFound
-            }
             try setupLargeTitleOpaqueHeaderCompatibleMode(
                 titleConfig: titleConfig,
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor
             )
         } else {
-            // Pre-iOS 26: use standard large title API
             navigationController.navigationBar.prefersLargeTitles = prefersLargeTitles
             configureOpaqueNavigationBar(
                 backgroundColor: backgroundColor,
@@ -351,6 +313,9 @@ extension UIViewController {
         backgroundColor: UIColor,
         foregroundColor: UIColor?
     ) throws {
+        guard let resolvedTitle = resolveTitle(from: titleConfig) else {
+            throw HeroHeader.Error.titleNotFound
+        }
         guard let scrollView = findScrollView() else {
             throw HeroHeader.Error.scrollViewNotFound
         }
@@ -358,8 +323,6 @@ extension UIViewController {
             backgroundColor: backgroundColor
         )
 
-        let resolvedTitle = titleConfig.largeTitle ?? titleConfig.title
-            ?? navigationItem.title ?? title ?? ""
         let resolvedSubtitle = titleConfig.largeSubtitle ?? titleConfig.subtitle
         let largeTitleHeight = measureInlineTitleHeight(
             title: resolvedTitle,
@@ -393,6 +356,10 @@ extension UIViewController {
             setNavigationBarTitleColor(foregroundColor)
             setNavigationBarSubtitleColor(foregroundColor.withAlphaComponent(0.75))
         }
+    }
+
+    private func resolveTitle(from titleConfig: HeroHeader.TitleConfiguration) -> String? {
+        titleConfig.largeTitle ?? titleConfig.title ?? navigationItem.title ?? title
     }
 
     private var navigationBarHeight: CGFloat {
