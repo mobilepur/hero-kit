@@ -11,17 +11,19 @@ class AppComposer {
         self.window = window
     }
 
+    private let launcherBaseStyle: HeroHeader.Style = .opaque(
+        title: .init(title: "Launcher"),
+        backgroundColor: .red,
+        foregroundColor: .white,
+        prefersLargeTitles: true
+    )
+
     func start() {
         let pickerController = HeaderPickerController(
             title: "Style Picker",
-            navbarStyle: .opaque(
-                title: .init(title: "Launcher"),
-                backgroundColor: .red,
-                foregroundColor: .white,
-                prefersLargeTitles: true,
-                lightModeOnly: model.settings.lightModeOnly
-            )
+            navbarStyle: applySettings(to: launcherBaseStyle)
         )
+        pickerController.baseStyle = launcherBaseStyle
         pickerController.delegate = self
 
         let nav = UINavigationController(rootViewController: pickerController)
@@ -55,6 +57,7 @@ extension AppComposer: HeaderPickerControllerDelegate {
             title: title,
             navbarStyle: resolvedStyle
         )
+        nextController.baseStyle = style
         nextController.delegate = self
         controller.navigationController?.pushViewController(nextController, animated: true)
     }
@@ -127,6 +130,16 @@ extension AppComposer: HeaderPickerControllerDelegate {
 extension AppComposer: SettingsControllerDelegate {
     func settingsControllerDidUpdate(_ controller: SettingsController) {
         model.settings = controller.settings
+        updateVisibleController()
+    }
+
+    private func updateVisibleController() {
+        guard let topController = navigationController?
+            .topViewController as? HeaderPickerController,
+            let baseStyle = topController.baseStyle
+        else { return }
+        let resolvedStyle = applySettings(to: baseStyle)
+        try? topController.setHeader(resolvedStyle)
     }
 }
 

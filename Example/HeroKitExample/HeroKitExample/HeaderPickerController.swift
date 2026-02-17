@@ -15,6 +15,9 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
     weak var delegate: HeaderPickerControllerDelegate?
 
+    /// The raw style before settings are applied. Used by AppComposer to re-apply settings.
+    var baseStyle: HeroHeader.Style?
+
     private let viewModel: ViewModel
     private var cancellables = Set<AnyCancellable>()
 
