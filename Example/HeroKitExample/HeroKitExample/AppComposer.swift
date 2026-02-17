@@ -36,7 +36,7 @@ class AppComposer {
         settingsController.delegate = self
         let nav = UINavigationController(rootViewController: settingsController)
         if let sheet = nav.sheetPresentationController {
-            sheet.detents = [.medium()]
+            sheet.detents = [.medium(), .large()]
         }
         presenter.present(nav, animated: true)
     }
@@ -67,26 +67,57 @@ extension AppComposer: HeaderPickerControllerDelegate {
         switch style {
         case let .opaque(title, backgroundColor, foregroundColor, prefersLargeTitles, _):
             return .opaque(
-                title: title,
+                title: applyTitleLength(to: title),
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor,
                 prefersLargeTitles: prefersLargeTitles,
                 lightModeOnly: model.settings.lightModeOnly
             )
-        case .headerView:
-            return style
+        case let .headerView(view, configuration, title):
+            let largeTitleDisplayMode: HeroHeader
+                .LargeTitleDisplayMode = if case .inline = configuration.largeTitleDisplayMode
+            {
+                .inline(.init(dimming: model.settings.dimming))
+            } else if model.settings.largeTitle {
+                .belowHeader(.init(
+                    allowsLineWrap: model.settings.lineWrap,
+                    smallTitleDisplayMode: model.settings.smallTitleDisplayMode
+                ))
+            } else {
+                .none
+            }
+            let newConfiguration = HeroHeader.HeaderViewConfiguration(
+                height: configuration.height,
+                minHeight: configuration.minHeight,
+                stretches: model.settings.stretch,
+                largeTitleDisplayMode: largeTitleDisplayMode
+            )
+            return .headerView(
+                view: view,
+                configuration: newConfiguration,
+                title: title.map { applyTitleLength(to: $0) }
+            )
         }
+    }
+
+    private func applyTitleLength(
+        to title: HeroHeader.TitleConfiguration
+    ) -> HeroHeader.TitleConfiguration {
+        guard model.settings.titleLength == .long else { return title }
+        return .init(
+            title: title.title.map { "\($0) – An Unforgettable Journey" },
+            subtitle: title.subtitle,
+            largeTitle: title.largeTitle.map { "\($0) – An Unforgettable Journey" },
+            largeSubtitle: title.largeSubtitle
+        )
     }
 }
 
 // MARK: - SettingsControllerDelegate
 
 extension AppComposer: SettingsControllerDelegate {
-    func settingsController(
-        _: SettingsController,
-        didChangeLightModeOnly value: Bool
-    ) {
-        model.settings.lightModeOnly = value
+    func settingsControllerDidUpdate(_ controller: SettingsController) {
+        model.settings = controller.settings
     }
 }
 
@@ -99,5 +130,23 @@ extension AppComposer {
 
     struct AppSettings {
         var lightModeOnly: Bool = false
+        var stretch: Bool = true
+        var largeTitle: Bool = false
+        var lineWrap: Bool = false
+        var smallTitleDisplayMode: HeroHeader.SmallTitleDisplayMode = .system
+        var dimming: HeroHeader.InlineTitleConfiguration.Dimming = .none
+        var titleLength: TitleLength = .normal
+    }
+
+    enum TitleLength: Hashable, Sendable, CaseIterable {
+        case normal
+        case long
+
+        var displayName: String {
+            switch self {
+            case .normal: "Normal"
+            case .long: "Long"
+            }
+        }
     }
 }
