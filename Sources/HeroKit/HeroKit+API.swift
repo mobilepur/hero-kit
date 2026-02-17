@@ -68,6 +68,13 @@ extension UIViewController {
                 style: style,
                 scrollView: scrollView
             )
+        case let .image(url, loadingType, _, _):
+            let imageView = AsyncHeaderImageView(url: url, loadingType: loadingType)
+            setupHeaderView(
+                imageView,
+                style: style,
+                scrollView: scrollView
+            )
         }
     }
 

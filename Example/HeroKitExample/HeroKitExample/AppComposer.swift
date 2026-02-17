@@ -97,6 +97,13 @@ extension AppComposer: HeaderPickerControllerDelegate {
                 configuration: newConfiguration,
                 title: title.map { applyTitleLength(to: $0) }
             )
+        case let .image(url, loadingType, configuration, title):
+            return .image(
+                url: url,
+                loadingType: loadingType,
+                configuration: configuration,
+                title: title.map { applyTitleLength(to: $0) }
+            )
         }
     }
 
