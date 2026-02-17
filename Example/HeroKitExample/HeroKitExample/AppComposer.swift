@@ -11,17 +11,19 @@ class AppComposer {
         self.window = window
     }
 
+    private let launcherBaseStyle: HeroHeader.Style = .opaque(
+        title: .init(title: "Launcher"),
+        backgroundColor: .red,
+        foregroundColor: .white,
+        prefersLargeTitles: true
+    )
+
     func start() {
         let pickerController = HeaderPickerController(
             title: "Style Picker",
-            navbarStyle: .opaque(
-                title: .init(title: "Launcher"),
-                backgroundColor: .red,
-                foregroundColor: .white,
-                prefersLargeTitles: true,
-                lightModeOnly: model.settings.lightModeOnly
-            )
+            navbarStyle: applySettings(to: launcherBaseStyle)
         )
+        pickerController.baseStyle = launcherBaseStyle
         pickerController.delegate = self
 
         let nav = UINavigationController(rootViewController: pickerController)
@@ -55,6 +57,7 @@ extension AppComposer: HeaderPickerControllerDelegate {
             title: title,
             navbarStyle: resolvedStyle
         )
+        nextController.baseStyle = style
         nextController.delegate = self
         controller.navigationController?.pushViewController(nextController, animated: true)
     }
@@ -97,6 +100,15 @@ extension AppComposer: HeaderPickerControllerDelegate {
                 configuration: newConfiguration,
                 title: title.map { applyTitleLength(to: $0) }
             )
+        case let .image(url, _, _, loadingType, configuration, title):
+            return .image(
+                url: url,
+                contentMode: model.settings.imageContentMode.contentMode,
+                backgroundColor: model.settings.imageBackgroundColor.color,
+                loadingType: loadingType,
+                configuration: configuration,
+                title: title.map { applyTitleLength(to: $0) }
+            )
         }
     }
 
@@ -118,6 +130,16 @@ extension AppComposer: HeaderPickerControllerDelegate {
 extension AppComposer: SettingsControllerDelegate {
     func settingsControllerDidUpdate(_ controller: SettingsController) {
         model.settings = controller.settings
+        updateVisibleController()
+    }
+
+    private func updateVisibleController() {
+        guard let topController = navigationController?
+            .topViewController as? HeaderPickerController,
+            let baseStyle = topController.baseStyle
+        else { return }
+        let resolvedStyle = applySettings(to: baseStyle)
+        try? topController.setHeader(resolvedStyle)
     }
 }
 
@@ -134,8 +156,11 @@ extension AppComposer {
         var largeTitle: Bool = false
         var lineWrap: Bool = false
         var smallTitleDisplayMode: HeroHeader.SmallTitleDisplayMode = .system
+        var inline: Bool = false
         var dimming: HeroHeader.InlineTitleConfiguration.Dimming = .none
         var titleLength: TitleLength = .normal
+        var imageContentMode: ImageContentMode = .aspectFill
+        var imageBackgroundColor: ImageBackgroundColor = .none
     }
 
     enum TitleLength: Hashable, Sendable, CaseIterable {
@@ -146,6 +171,56 @@ extension AppComposer {
             switch self {
             case .normal: "Normal"
             case .long: "Long"
+            }
+        }
+    }
+
+    enum ImageContentMode: Hashable, Sendable, CaseIterable {
+        case aspectFill
+        case aspectFit
+        case scaleToFill
+
+        var displayName: String {
+            switch self {
+            case .aspectFill: "Aspect Fill"
+            case .aspectFit: "Aspect Fit"
+            case .scaleToFill: "Scale to Fill"
+            }
+        }
+
+        var contentMode: UIView.ContentMode {
+            switch self {
+            case .aspectFill: .scaleAspectFill
+            case .aspectFit: .scaleAspectFit
+            case .scaleToFill: .scaleToFill
+            }
+        }
+    }
+
+    enum ImageBackgroundColor: Hashable, Sendable, CaseIterable {
+        case none
+        case systemBackground
+        case secondarySystemBackground
+        case black
+        case white
+
+        var displayName: String {
+            switch self {
+            case .none: "None"
+            case .systemBackground: "System Background"
+            case .secondarySystemBackground: "Secondary"
+            case .black: "Black"
+            case .white: "White"
+            }
+        }
+
+        var color: UIColor? {
+            switch self {
+            case .none: nil
+            case .systemBackground: .systemBackground
+            case .secondarySystemBackground: .secondarySystemBackground
+            case .black: .black
+            case .white: .white
             }
         }
     }

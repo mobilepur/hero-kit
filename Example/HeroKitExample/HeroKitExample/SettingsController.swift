@@ -56,7 +56,8 @@ class SettingsController: UIViewController {
                     toggle.isOn = settings.largeTitle
                 case .lineWrap:
                     toggle.isOn = settings.lineWrap
-                case .titleLength, .smallTitleDisplayMode, .dimming:
+                case .titleLength, .smallTitleDisplayMode, .dimming,
+                     .imageContentMode, .imageBackgroundColor:
                     return
                 }
                 toggle.addTarget(self, action: #selector(toggleChanged(_:)), for: .valueChanged)
@@ -173,6 +174,76 @@ class SettingsController: UIViewController {
                 ))]
             }
 
+            // Image content mode menu registration
+            let contentModeMenuRegistration = UICollectionView.CellRegistration<
+                UICollectionViewListCell,
+                SettingsItem
+            > { [weak self] cell, _, item in
+                guard let self else { return }
+                var content = cell.defaultContentConfiguration()
+                content.text = item.title
+                cell.contentConfiguration = content
+
+                let button = UIButton(type: .system)
+                button.showsMenuAsPrimaryAction = true
+                button.changesSelectionAsPrimaryAction = true
+
+                let actions = AppComposer.ImageContentMode.allCases.map { [weak self] mode in
+                    UIAction(
+                        title: mode.displayName,
+                        state: self?.settings.imageContentMode == mode ? .on : .off
+                    ) { [weak self] _ in
+                        guard let self else { return }
+                        settings.imageContentMode = mode
+                        delegate?.settingsControllerDidUpdate(self)
+                        reconfigureItem(.imageContentMode)
+                    }
+                }
+
+                button.menu = UIMenu(children: actions)
+                button.setTitle(settings.imageContentMode.displayName, for: .normal)
+
+                cell.accessories = [.customView(configuration: .init(
+                    customView: button,
+                    placement: .trailing()
+                ))]
+            }
+
+            // Image background color menu registration
+            let bgColorMenuRegistration = UICollectionView.CellRegistration<
+                UICollectionViewListCell,
+                SettingsItem
+            > { [weak self] cell, _, item in
+                guard let self else { return }
+                var content = cell.defaultContentConfiguration()
+                content.text = item.title
+                cell.contentConfiguration = content
+
+                let button = UIButton(type: .system)
+                button.showsMenuAsPrimaryAction = true
+                button.changesSelectionAsPrimaryAction = true
+
+                let actions = AppComposer.ImageBackgroundColor.allCases.map { [weak self] bgColor in
+                    UIAction(
+                        title: bgColor.displayName,
+                        state: self?.settings.imageBackgroundColor == bgColor ? .on : .off
+                    ) { [weak self] _ in
+                        guard let self else { return }
+                        settings.imageBackgroundColor = bgColor
+                        delegate?.settingsControllerDidUpdate(self)
+                        reconfigureItem(.imageBackgroundColor)
+                    }
+                }
+
+                button.menu = UIMenu(children: actions)
+                button.setTitle(settings.imageBackgroundColor.displayName, for: .normal)
+
+                cell.accessories = [.customView(configuration: .init(
+                    customView: button,
+                    placement: .trailing()
+                ))]
+            }
+
             let headerRegistration = UICollectionView
                 .SupplementaryRegistration<UICollectionViewListCell>(
                     elementKind: UICollectionView.elementKindSectionHeader
@@ -201,6 +272,18 @@ class SettingsController: UIViewController {
                 case .titleLength:
                     return collectionView.dequeueConfiguredReusableCell(
                         using: titleLengthMenuRegistration,
+                        for: indexPath,
+                        item: item
+                    )
+                case .imageContentMode:
+                    return collectionView.dequeueConfiguredReusableCell(
+                        using: contentModeMenuRegistration,
+                        for: indexPath,
+                        item: item
+                    )
+                case .imageBackgroundColor:
+                    return collectionView.dequeueConfiguredReusableCell(
+                        using: bgColorMenuRegistration,
                         for: indexPath,
                         item: item
                     )
@@ -253,12 +336,16 @@ class SettingsController: UIViewController {
 
     private func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<SettingsSection, SettingsItem>()
-        snapshot.appendSections([.global, .opaque, .headerView])
+        snapshot.appendSections([.global, .opaque, .headerView, .image])
         snapshot.appendItems([.titleLength], toSection: .global)
         snapshot.appendItems([.lightModeOnly], toSection: .opaque)
         snapshot.appendItems(
             [.stretch, .largeTitle, .lineWrap, .smallTitleDisplayMode, .dimming],
             toSection: .headerView
+        )
+        snapshot.appendItems(
+            [.imageContentMode, .imageBackgroundColor],
+            toSection: .image
         )
         dataSource.apply(snapshot, animatingDifferences: false)
     }
@@ -280,7 +367,8 @@ class SettingsController: UIViewController {
             settings.largeTitle = sender.isOn
         case .lineWrap:
             settings.lineWrap = sender.isOn
-        case .titleLength, .smallTitleDisplayMode, .dimming:
+        case .titleLength, .smallTitleDisplayMode, .dimming,
+             .imageContentMode, .imageBackgroundColor:
             break
         }
         delegate?.settingsControllerDidUpdate(self)
@@ -293,12 +381,14 @@ nonisolated enum SettingsSection: Hashable, Sendable, CaseIterable {
     case global
     case opaque
     case headerView
+    case image
 
     var title: String {
         switch self {
         case .global: "Global"
         case .opaque: "Opaque"
         case .headerView: "Header View"
+        case .image: "Image"
         }
     }
 }
@@ -311,6 +401,8 @@ nonisolated enum SettingsItem: Hashable, Sendable {
     case lineWrap
     case smallTitleDisplayMode
     case dimming
+    case imageContentMode
+    case imageBackgroundColor
 
     var title: String {
         switch self {
@@ -321,6 +413,8 @@ nonisolated enum SettingsItem: Hashable, Sendable {
         case .lineWrap: "Line Wrap"
         case .smallTitleDisplayMode: "Small Title"
         case .dimming: "Dimming"
+        case .imageContentMode: "Content Mode"
+        case .imageBackgroundColor: "Background Color"
         }
     }
 
@@ -333,6 +427,8 @@ nonisolated enum SettingsItem: Hashable, Sendable {
         case .lineWrap: 4
         case .smallTitleDisplayMode: 5
         case .dimming: 6
+        case .imageContentMode: 7
+        case .imageBackgroundColor: 8
         }
     }
 
@@ -345,6 +441,8 @@ nonisolated enum SettingsItem: Hashable, Sendable {
         case 4: self = .lineWrap
         case 5: self = .smallTitleDisplayMode
         case 6: self = .dimming
+        case 7: self = .imageContentMode
+        case 8: self = .imageBackgroundColor
         default: return nil
         }
     }

@@ -7,6 +7,7 @@ HeroKit lets you add image headers, colored bars, or custom views that collapse 
 ## Features
 
 - **Image headers** — full-bleed photos that shrink into the navigation bar on scroll
+- **Remote image headers** — load images from URLs with a loading spinner
 - **Colored opaque headers** — solid-color bars with large title support (pre-iOS 26 style)
 - **Custom view headers** — any `UIView` as a collapsible header
 - **Large titles** — below the header or inline (overlaid on the header image)
@@ -86,6 +87,18 @@ try setHeader(.headerView(
         largeTitleDisplayMode: .inline(.init(dimming: .gradient))
     ),
     title: .init(title: "Sacred Temple", largeSubtitle: "Kyoto, Japan")
+))
+```
+
+### Remote Image Header
+
+```swift
+try setHeader(.image(
+    url: URL(string: "https://example.com/photo.jpg")!,
+    contentMode: .scaleAspectFit,
+    backgroundColor: .secondarySystemBackground,
+    configuration: .init(height: 300),
+    title: .init(title: "Remote Landscape")
 ))
 ```
 

@@ -15,6 +15,9 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
     weak var delegate: HeaderPickerControllerDelegate?
 
+    /// The raw style before settings are applied. Used by AppComposer to re-apply settings.
+    var baseStyle: HeroHeader.Style?
+
     private let viewModel: ViewModel
     private var cancellables = Set<AnyCancellable>()
 
@@ -52,6 +55,35 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             cell.contentConfiguration = content
         }
 
+        let imageCellRegistration = UICollectionView.CellRegistration<
+            UICollectionViewListCell,
+            HeroHeader.Style
+        > { cell, _, style in
+            var content = cell.defaultContentConfiguration()
+            content.text = style.displayName
+            content.secondaryText = style.cellSubtitle
+            content.image = UIImage(systemName: "photo")
+            content.imageProperties.maximumSize = CGSize(width: 40, height: 40)
+            content.imageProperties.cornerRadius = 6
+            content.imageProperties.tintColor = .secondaryLabel
+            cell.contentConfiguration = content
+
+            if case let .image(url, _, _, _, _, _) = style {
+                Task {
+                    guard let (data, _) = try? await URLSession.shared.data(from: url),
+                          let image = UIImage(data: data)
+                    else { return }
+                    var updated = cell.defaultContentConfiguration()
+                    updated.text = style.displayName
+                    updated.secondaryText = style.cellSubtitle
+                    updated.image = image
+                    updated.imageProperties.maximumSize = CGSize(width: 40, height: 40)
+                    updated.imageProperties.cornerRadius = 6
+                    cell.contentConfiguration = updated
+                }
+            }
+        }
+
         let headerRegistration = UICollectionView
             .SupplementaryRegistration<UICollectionViewListCell>(
                 elementKind: UICollectionView.elementKindSectionHeader
@@ -78,6 +110,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                 let style = ViewModel.headerViewStyles[index]
                 return collectionView.dequeueConfiguredReusableCell(
                     using: styleCellRegistration,
+                    for: indexPath,
+                    item: style
+                )
+            case let .imageStyle(index):
+                let style = ViewModel.imageStyles[index]
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: imageCellRegistration,
                     for: indexPath,
                     item: style
                 )
@@ -181,6 +220,8 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             ViewModel.colorStyles[index]
         case let .headerViewStyle(index):
             ViewModel.headerViewStyles[index]
+        case let .imageStyle(index):
+            ViewModel.imageStyles[index]
         }
 
         delegate?.headerPicker(
@@ -192,7 +233,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
     private func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
-        snapshot.appendSections([Section.colors, Section.views])
+        snapshot.appendSections([Section.colors, Section.views, Section.images])
         snapshot.appendItems(
             ViewModel.colorStyles.indices.map { Item.colorStyle($0) },
             toSection: Section.colors
@@ -200,6 +241,10 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         snapshot.appendItems(
             ViewModel.headerViewStyles.indices.map { Item.headerViewStyle($0) },
             toSection: Section.views
+        )
+        snapshot.appendItems(
+            ViewModel.imageStyles.indices.map { Item.imageStyle($0) },
+            toSection: Section.images
         )
         dataSource.apply(snapshot, animatingDifferences: false)
     }
@@ -210,11 +255,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 nonisolated enum Section: Hashable, Sendable {
     case colors
     case views
+    case images
 
     var title: String {
         switch self {
         case .colors: "Colors"
         case .views: "Views"
+        case .images: "Image URLs"
         }
     }
 }
@@ -224,6 +271,32 @@ nonisolated enum Section: Hashable, Sendable {
 nonisolated enum Item: Hashable, Sendable {
     case colorStyle(Int)
     case headerViewStyle(Int)
+    case imageStyle(Int)
+}
+
+// MARK: - ContentMode helpers
+
+extension UIView.ContentMode {
+    var displayName: String {
+        switch self {
+        case .scaleAspectFill: "Aspect Fill"
+        case .scaleAspectFit: "Aspect Fit"
+        case .scaleToFill: "Scale to Fill"
+        default: "Other"
+        }
+    }
+}
+
+// MARK: - LargeTitleDisplayMode helpers
+
+extension HeroHeader.LargeTitleDisplayMode {
+    var displayName: String {
+        switch self {
+        case .none: "None"
+        case .belowHeader: "Below Header"
+        case .inline: "Inline"
+        }
+    }
 }
 
 // MARK: - SmallTitleDisplayMode helpers

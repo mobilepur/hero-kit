@@ -95,6 +95,9 @@ extension HeaderPickerController {
                 opaqueStyle = (backgroundColor, foregroundColor, prefersLargeTitles)
                 lightModeOnlyEnabled = lightModeOnly
 
+            case let .image(_, _, _, _, configuration, _):
+                baseConfiguration = configuration
+
             case .none:
                 break
             }
@@ -174,34 +177,10 @@ extension HeaderPickerController {
 
 extension HeaderPickerController.ViewModel {
     static let colorStyles: [HeroHeader.Style] = [
-        // Light background, dark text
         .opaque(
             title: .init(title: "Mint"),
             backgroundColor: .systemMint,
             foregroundColor: .black,
-            prefersLargeTitles: true
-        ),
-        .opaque(
-            title: .init(
-                title: "Yellow",
-                subtitle: "Yellow subtitle",
-                largeSubtitle: "Yellow subtitle"
-            ),
-            backgroundColor: .systemYellow,
-            foregroundColor: .black,
-            prefersLargeTitles: true
-        ),
-        .opaque(
-            title: .init(title: "Cyan"),
-            backgroundColor: .systemCyan,
-            foregroundColor: .black,
-            prefersLargeTitles: false
-        ),
-        // Dark background, light text
-        .opaque(
-            title: .init(title: "Indigo"),
-            backgroundColor: .systemIndigo,
-            foregroundColor: .white,
             prefersLargeTitles: true
         ),
         .opaque(
@@ -223,13 +202,11 @@ extension HeaderPickerController.ViewModel {
     ]
 
     static let headerViewStyles: [HeroHeader.Style] = [
-        // No large title
         .headerView(
             view: makeImageView(assetName: "bikes"),
             configuration: .init(height: 300),
             title: .init(title: "City Ride")
         ),
-        // Large title below header
         .headerView(
             view: makeImageView(assetName: "temple"),
             configuration: .init(height: 300, largeTitleDisplayMode: .belowHeader()),
@@ -239,40 +216,52 @@ extension HeaderPickerController.ViewModel {
                 largeSubtitle: "Lost in time"
             )
         ),
-        // Inline large title
         .headerView(
             view: makeImageView(assetName: "ricefields"),
-            configuration: .init(height: 300, largeTitleDisplayMode: .inline()),
+            configuration: .init(
+                height: 300,
+                largeTitleDisplayMode: .inline(.init(dimming: .gradient))
+            ),
             title: .init(
                 title: "Golden Fields",
                 subtitle: "Bali, Indonesia",
                 largeSubtitle: "Bali, Indonesia"
             )
         ),
-        // Multiline large title
-        .headerView(
-            view: makeImageView(assetName: "vulcano"),
+    ]
+
+    static let imageStyles: [HeroHeader.Style] = [
+        .image(
+            url: URL(string: "https://picsum.photos/id/10/800/600")!,
+            contentMode: .scaleAspectFill,
+            configuration: .init(height: 300),
+            title: .init(title: "Remote Landscape")
+        ),
+        .image(
+            url: URL(string: "https://picsum.photos/id/29/800/600")!,
+            contentMode: .scaleAspectFit,
+            backgroundColor: .secondarySystemBackground,
             configuration: .init(
                 height: 300,
-                largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: true))
+                largeTitleDisplayMode: .belowHeader()
             ),
             title: .init(
-                title: "The Ring of Fire",
-                subtitle: "Nature's raw power",
-                largeSubtitle: "Nature's raw power"
+                title: "Mountain View",
+                subtitle: "From the web",
+                largeSubtitle: "From the web"
             )
         ),
-        // Inline with gradient dimming
-        .headerView(
-            view: makeImageView(assetName: "temple"),
+        .image(
+            url: URL(string: "https://picsum.photos/id/65/800/600")!,
+            contentMode: .scaleAspectFill,
             configuration: .init(
                 height: 300,
                 largeTitleDisplayMode: .inline(.init(dimming: .gradient))
             ),
             title: .init(
-                title: "Sacred Temple",
-                subtitle: "Kyoto, Japan",
-                largeSubtitle: "Kyoto, Japan"
+                title: "Desert Road",
+                subtitle: "Endless horizon",
+                largeSubtitle: "Endless horizon"
             )
         ),
     ]
@@ -300,25 +289,26 @@ extension HeroHeader.Style {
             return Self.colorImage(for: backgroundColor)
         case let .headerView(view, _, _):
             return (view as? UIImageView)?.image
+        case .image:
+            return UIImage(systemName: "photo")
         }
     }
 
-    /// Subtitle shown in the collection view cell (describes the style configuration)
+    /// Subtitle shown in the collection view cell
     var cellSubtitle: String? {
-        var lines: [String] = []
-
         switch self {
-        case let .opaque(_, _, _, prefersLargeTitles, _):
-            lines.append(prefersLargeTitles ? "Large Title" : "Small Title")
+        case .opaque:
+            return nil
         case let .headerView(_, configuration, _):
-            lines.append(configuration.description)
+            return configuration.largeTitleDisplayMode.displayName
+        case let .image(_, contentMode, backgroundColor, _, configuration, _):
+            var lines = [contentMode.displayName]
+            if backgroundColor != nil {
+                lines.append("Custom Background")
+            }
+            lines.append(configuration.largeTitleDisplayMode.displayName)
+            return lines.joined(separator: ", ")
         }
-
-        if let titleConfig = titleConfiguration, !titleConfig.description.isEmpty {
-            lines.append(titleConfig.description)
-        }
-
-        return lines.isEmpty ? nil : lines.joined(separator: "\n")
     }
 
     private static func colorImage(
