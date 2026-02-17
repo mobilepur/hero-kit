@@ -23,12 +23,6 @@ class AppComposer {
             )
         )
         pickerController.delegate = self
-        pickerController.navigationItem.rightBarButtonItem = UIBarButtonItem(
-            image: UIImage(systemName: "gear"),
-            primaryAction: UIAction { [weak self] _ in
-                self?.presentSettings()
-            }
-        )
 
         let nav = UINavigationController(rootViewController: pickerController)
         navigationController = nav
@@ -37,14 +31,14 @@ class AppComposer {
         window.makeKeyAndVisible()
     }
 
-    private func presentSettings() {
+    private func presentSettings(from presenter: UIViewController) {
         let settingsController = SettingsController(settings: model.settings)
         settingsController.delegate = self
         let nav = UINavigationController(rootViewController: settingsController)
         if let sheet = nav.sheetPresentationController {
             sheet.detents = [.medium()]
         }
-        navigationController?.present(nav, animated: true)
+        presenter.present(nav, animated: true)
     }
 }
 
@@ -63,6 +57,10 @@ extension AppComposer: HeaderPickerControllerDelegate {
         )
         nextController.delegate = self
         controller.navigationController?.pushViewController(nextController, animated: true)
+    }
+
+    func headerPicker(_ controller: HeaderPickerController, showSettings _: Void) {
+        presentSettings(from: controller)
     }
 
     private func applySettings(to style: HeroHeader.Style) -> HeroHeader.Style {

@@ -8,6 +8,7 @@ protocol HeaderPickerControllerDelegate: AnyObject {
         didPickCellWithTitle title: String,
         style: HeroHeader.Style
     )
+    func headerPicker(_ controller: HeaderPickerController, showSettings: Void)
 }
 
 class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHeaderDelegate {
@@ -279,8 +280,18 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     }
 
     private func setupNavigationBar() {
-        // Only show menu for headerView styles (APIs don't work for color style)
-        guard viewModel.isHeaderViewStyle else { return }
+        let settingsButton = UIBarButtonItem(
+            image: UIImage(systemName: "gear"),
+            primaryAction: UIAction { [weak self] _ in
+                guard let self else { return }
+                delegate?.headerPicker(self, showSettings: ())
+            }
+        )
+
+        guard viewModel.isHeaderViewStyle else {
+            navigationItem.rightBarButtonItem = settingsButton
+            return
+        }
 
         let menu = UIMenu(children: [
             UIAction(
@@ -302,10 +313,12 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             },
         ])
 
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
+        let menuButton = UIBarButtonItem(
             image: UIImage(systemName: "ellipsis.circle"),
             menu: menu
         )
+
+        navigationItem.rightBarButtonItems = [settingsButton, menuButton]
     }
 
     private func setupCollectionView() {
