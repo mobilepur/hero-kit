@@ -211,11 +211,35 @@ extension UIViewController {
         prefersLargeTitles: Bool,
         lightModeOnly: Bool
     ) throws {
+        try applyOpaqueAppearance(
+            titleConfig: titleConfig,
+            backgroundColor: backgroundColor,
+            foregroundColor: foregroundColor,
+            prefersLargeTitles: prefersLargeTitles,
+            lightModeOnly: lightModeOnly
+        )
+
+        if lightModeOnly {
+            registerOpaqueStyleTraitObserver(
+                titleConfig: titleConfig,
+                backgroundColor: backgroundColor,
+                foregroundColor: foregroundColor,
+                prefersLargeTitles: prefersLargeTitles
+            )
+        }
+    }
+
+    private func applyOpaqueAppearance(
+        titleConfig: HeroHeader.TitleConfiguration,
+        backgroundColor: UIColor,
+        foregroundColor: UIColor?,
+        prefersLargeTitles: Bool,
+        lightModeOnly: Bool
+    ) throws {
         guard let navigationController else { throw HeroHeader.Error.navigationControllerNotFound }
 
         if lightModeOnly, isDarkMode {
             if #available(iOS 26, *), prefersLargeTitles {
-                // iOS 26+: native large titles don't work, use transparent headerView
                 try setupLargeTitleOpaqueHeaderCompatibleMode(
                     titleConfig: titleConfig,
                     backgroundColor: .clear,
@@ -225,10 +249,7 @@ extension UIViewController {
                 configureDefaultNavigationBar()
                 navigationController.navigationBar.prefersLargeTitles = prefersLargeTitles
             }
-            return
-        }
-
-        if #available(iOS 26, *), prefersLargeTitles {
+        } else if #available(iOS 26, *), prefersLargeTitles {
             try setupLargeTitleOpaqueHeaderCompatibleMode(
                 titleConfig: titleConfig,
                 backgroundColor: backgroundColor,
@@ -240,6 +261,38 @@ extension UIViewController {
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor
             )
+        }
+    }
+
+    private func registerOpaqueStyleTraitObserver(
+        titleConfig: HeroHeader.TitleConfiguration,
+        backgroundColor: UIColor,
+        foregroundColor: UIColor?,
+        prefersLargeTitles: Bool
+    ) {
+        if let existing = traitRegistration {
+            unregisterForTraitChanges(existing)
+        }
+
+        traitRegistration = registerForTraitChanges(
+            [UITraitUserInterfaceStyle.self]
+        ) { (vc: UIViewController, _: UITraitCollection) in
+            vc.viewModel?.headerView?.removeFromSuperview()
+            vc.scrollCancellable = nil
+            vc.viewModel = nil
+
+            try? vc.applyOpaqueAppearance(
+                titleConfig: titleConfig,
+                backgroundColor: backgroundColor,
+                foregroundColor: foregroundColor,
+                prefersLargeTitles: prefersLargeTitles,
+                lightModeOnly: true
+            )
+
+            // Re-subscribe to scroll if headerView was created (iOS 26+ path)
+            if vc.viewModel != nil, let scrollView = vc.findScrollView() {
+                vc.subscribeToScrollOffset(of: scrollView)
+            }
         }
     }
 
@@ -362,6 +415,7 @@ private extension UIViewController {
     enum AssociatedKeys {
         nonisolated(unsafe) static var scrollCancellable: Void?
         nonisolated(unsafe) static var heroHeaderDelegate: Void?
+        nonisolated(unsafe) static var traitRegistration: Void?
     }
 
     /// Stores delegate before setHeader() is called. Once ViewModel exists, delegate is stored
@@ -393,6 +447,20 @@ private extension UIViewController {
         ) }
     }
 
+    var traitRegistration: UITraitChangeRegistration? {
+        get {
+            objc_getAssociatedObject(self,
+                                     &AssociatedKeys
+                                         .traitRegistration) as? UITraitChangeRegistration
+        }
+        set { objc_setAssociatedObject(
+            self,
+            &AssociatedKeys.traitRegistration,
+            newValue,
+            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+        ) }
+    }
+
     func subscribeToScrollOffset(of scrollView: UIScrollView) {
         scrollCancellable = scrollView.publisher(for: \.contentOffset)
             .sink { [weak self] offset in
@@ -409,6 +477,12 @@ private extension UIViewController {
 
         // Clear viewModel
         viewModel = nil
+
+        // Unregister trait observation
+        if let registration = traitRegistration {
+            unregisterForTraitChanges(registration)
+            traitRegistration = nil
+        }
     }
 
 }
