@@ -65,7 +65,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             content.imageProperties.tintColor = .secondaryLabel
             cell.contentConfiguration = content
 
-            if case let .image(url, _, _, _) = style {
+            if case let .image(url, _, _, _, _, _) = style {
                 Task {
                     guard let (data, _) = try? await URLSession.shared.data(from: url),
                           let image = UIImage(data: data)
@@ -269,6 +269,31 @@ nonisolated enum Item: Hashable, Sendable {
     case colorStyle(Int)
     case headerViewStyle(Int)
     case imageStyle(Int)
+}
+
+// MARK: - ContentMode helpers
+
+extension UIView.ContentMode {
+    var displayName: String {
+        switch self {
+        case .scaleAspectFill: "Aspect Fill"
+        case .scaleAspectFit: "Aspect Fit"
+        case .scaleToFill: "Scale to Fill"
+        default: "Other"
+        }
+    }
+}
+
+// MARK: - LargeTitleDisplayMode helpers
+
+extension HeroHeader.LargeTitleDisplayMode {
+    var displayName: String {
+        switch self {
+        case .none: "None"
+        case .belowHeader: "Below Header"
+        case .inline: "Inline"
+        }
+    }
 }
 
 // MARK: - SmallTitleDisplayMode helpers

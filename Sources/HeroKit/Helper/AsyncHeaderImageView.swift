@@ -3,15 +3,23 @@ import UIKit
 final class AsyncHeaderImageView: UIView {
 
     private let url: URL
+    private let imageContentMode: UIView.ContentMode
     private let loadingType: HeroHeader.LoadingType
     private let imageView = UIImageView()
     private var loadingView: UIView?
     private var loadTask: Task<Void, Never>?
 
-    init(url: URL, loadingType: HeroHeader.LoadingType) {
+    init(
+        url: URL,
+        contentMode: UIView.ContentMode,
+        backgroundColor: UIColor?,
+        loadingType: HeroHeader.LoadingType
+    ) {
         self.url = url
+        imageContentMode = contentMode
         self.loadingType = loadingType
         super.init(frame: .zero)
+        self.backgroundColor = backgroundColor
         setupImageView()
         showLoadingIndicator()
         startLoading()
@@ -29,7 +37,7 @@ final class AsyncHeaderImageView: UIView {
     // MARK: - Setup
 
     private func setupImageView() {
-        imageView.contentMode = .scaleAspectFill
+        imageView.contentMode = imageContentMode
         imageView.clipsToBounds = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(imageView)

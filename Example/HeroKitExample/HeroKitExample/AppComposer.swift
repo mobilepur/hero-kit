@@ -97,9 +97,11 @@ extension AppComposer: HeaderPickerControllerDelegate {
                 configuration: newConfiguration,
                 title: title.map { applyTitleLength(to: $0) }
             )
-        case let .image(url, loadingType, configuration, title):
+        case let .image(url, _, _, loadingType, configuration, title):
             return .image(
                 url: url,
+                contentMode: model.settings.imageContentMode.contentMode,
+                backgroundColor: model.settings.imageBackgroundColor.color,
                 loadingType: loadingType,
                 configuration: configuration,
                 title: title.map { applyTitleLength(to: $0) }
@@ -141,8 +143,11 @@ extension AppComposer {
         var largeTitle: Bool = false
         var lineWrap: Bool = false
         var smallTitleDisplayMode: HeroHeader.SmallTitleDisplayMode = .system
+        var inline: Bool = false
         var dimming: HeroHeader.InlineTitleConfiguration.Dimming = .none
         var titleLength: TitleLength = .normal
+        var imageContentMode: ImageContentMode = .aspectFill
+        var imageBackgroundColor: ImageBackgroundColor = .none
     }
 
     enum TitleLength: Hashable, Sendable, CaseIterable {
@@ -153,6 +158,56 @@ extension AppComposer {
             switch self {
             case .normal: "Normal"
             case .long: "Long"
+            }
+        }
+    }
+
+    enum ImageContentMode: Hashable, Sendable, CaseIterable {
+        case aspectFill
+        case aspectFit
+        case scaleToFill
+
+        var displayName: String {
+            switch self {
+            case .aspectFill: "Aspect Fill"
+            case .aspectFit: "Aspect Fit"
+            case .scaleToFill: "Scale to Fill"
+            }
+        }
+
+        var contentMode: UIView.ContentMode {
+            switch self {
+            case .aspectFill: .scaleAspectFill
+            case .aspectFit: .scaleAspectFit
+            case .scaleToFill: .scaleToFill
+            }
+        }
+    }
+
+    enum ImageBackgroundColor: Hashable, Sendable, CaseIterable {
+        case none
+        case systemBackground
+        case secondarySystemBackground
+        case black
+        case white
+
+        var displayName: String {
+            switch self {
+            case .none: "None"
+            case .systemBackground: "System Background"
+            case .secondarySystemBackground: "Secondary"
+            case .black: "Black"
+            case .white: "White"
+            }
+        }
+
+        var color: UIColor? {
+            switch self {
+            case .none: nil
+            case .systemBackground: .systemBackground
+            case .secondarySystemBackground: .secondarySystemBackground
+            case .black: .black
+            case .white: .white
             }
         }
     }

@@ -95,7 +95,7 @@ extension HeaderPickerController {
                 opaqueStyle = (backgroundColor, foregroundColor, prefersLargeTitles)
                 lightModeOnlyEnabled = lightModeOnly
 
-            case let .image(_, _, configuration, _):
+            case let .image(_, _, _, _, configuration, _):
                 baseConfiguration = configuration
 
             case .none:
@@ -233,11 +233,14 @@ extension HeaderPickerController.ViewModel {
     static let imageStyles: [HeroHeader.Style] = [
         .image(
             url: URL(string: "https://picsum.photos/id/10/800/600")!,
+            contentMode: .scaleAspectFill,
             configuration: .init(height: 300),
             title: .init(title: "Remote Landscape")
         ),
         .image(
             url: URL(string: "https://picsum.photos/id/29/800/600")!,
+            contentMode: .scaleAspectFit,
+            backgroundColor: .secondarySystemBackground,
             configuration: .init(
                 height: 300,
                 largeTitleDisplayMode: .belowHeader()
@@ -250,6 +253,7 @@ extension HeaderPickerController.ViewModel {
         ),
         .image(
             url: URL(string: "https://picsum.photos/id/65/800/600")!,
+            contentMode: .scaleAspectFill,
             configuration: .init(
                 height: 300,
                 largeTitleDisplayMode: .inline(.init(dimming: .gradient))
@@ -290,24 +294,21 @@ extension HeroHeader.Style {
         }
     }
 
-    /// Subtitle shown in the collection view cell (describes the style configuration)
+    /// Subtitle shown in the collection view cell
     var cellSubtitle: String? {
-        var lines: [String] = []
-
         switch self {
-        case let .opaque(_, _, _, prefersLargeTitles, _):
-            lines.append(prefersLargeTitles ? "Large Title" : "Small Title")
+        case .opaque:
+            return nil
         case let .headerView(_, configuration, _):
-            lines.append(configuration.description)
-        case let .image(_, _, configuration, _):
-            lines.append("URL, h: \(Int(configuration.height))")
+            return configuration.largeTitleDisplayMode.displayName
+        case let .image(_, contentMode, backgroundColor, _, configuration, _):
+            var lines = [contentMode.displayName]
+            if backgroundColor != nil {
+                lines.append("Custom Background")
+            }
+            lines.append(configuration.largeTitleDisplayMode.displayName)
+            return lines.joined(separator: ", ")
         }
-
-        if let titleConfig = titleConfiguration, !titleConfig.description.isEmpty {
-            lines.append(titleConfig.description)
-        }
-
-        return lines.isEmpty ? nil : lines.joined(separator: "\n")
     }
 
     private static func colorImage(

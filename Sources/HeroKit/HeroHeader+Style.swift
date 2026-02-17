@@ -19,6 +19,8 @@ public enum HeroHeader {
 
         case image(
             url: URL,
+            contentMode: UIView.ContentMode = .scaleAspectFill,
+            backgroundColor: UIColor? = nil,
             loadingType: LoadingType = .spinner,
             configuration: HeaderViewConfiguration = .init(),
             title: TitleConfiguration? = nil
@@ -30,7 +32,7 @@ public enum HeroHeader {
                 return title
             case let .headerView(_, _, title):
                 return title
-            case let .image(_, _, _, title):
+            case let .image(_, _, _, _, _, title):
                 return title
             }
         }
@@ -41,7 +43,7 @@ public enum HeroHeader {
                 return nil
             case let .headerView(_, configuration, _):
                 return configuration
-            case let .image(_, _, configuration, _):
+            case let .image(_, _, _, _, configuration, _):
                 return configuration
             }
         }
@@ -64,7 +66,7 @@ public enum HeroHeader {
                 return nil
             case let .headerView(_, _, titleConfiguration):
                 return titleConfiguration?.largeTitle ?? titleConfiguration?.title
-            case let .image(_, _, _, titleConfiguration):
+            case let .image(_, _, _, _, _, titleConfiguration):
                 return titleConfiguration?.largeTitle ?? titleConfiguration?.title
             }
         }
@@ -89,7 +91,7 @@ public enum HeroHeader {
                 return nil
             case let .headerView(_, _, titleConfiguration):
                 return titleConfiguration?.largeSubtitle ?? titleConfiguration?.subtitle
-            case let .image(_, _, _, titleConfiguration):
+            case let .image(_, _, _, _, _, titleConfiguration):
                 return titleConfiguration?.largeSubtitle ?? titleConfiguration?.subtitle
             }
         }
