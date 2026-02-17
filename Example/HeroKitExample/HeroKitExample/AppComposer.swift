@@ -36,7 +36,7 @@ class AppComposer {
         settingsController.delegate = self
         let nav = UINavigationController(rootViewController: settingsController)
         if let sheet = nav.sheetPresentationController {
-            sheet.detents = [.medium()]
+            sheet.detents = [.medium(), .large()]
         }
         presenter.present(nav, animated: true)
     }
