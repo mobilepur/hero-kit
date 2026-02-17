@@ -122,7 +122,7 @@
 			mainGroup = 03464D912F29080000EE771F;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				03464DB52F29082C00EE771F /* XCLocalSwiftPackageReference "hero-kit" */,
+				03464DB52F29082C00EE771F /* XCLocalSwiftPackageReference "../.." */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 03464D9B2F29080000EE771F /* Products */;
@@ -364,16 +364,16 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		03464DB52F29082C00EE771F /* XCLocalSwiftPackageReference "hero-kit" */ = {
+		03464DB52F29082C00EE771F /* XCLocalSwiftPackageReference "../.." */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = "../..";
+			relativePath = ../..;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		03464DB32F29082C00EE771F /* HeroKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 03464DB52F29082C00EE771F /* XCLocalSwiftPackageReference "hero-kit" */;
+			package = 03464DB52F29082C00EE771F /* XCLocalSwiftPackageReference "../.." */;
 			productName = HeroKit;
 		};
 /* End XCSwiftPackageProductDependency section */

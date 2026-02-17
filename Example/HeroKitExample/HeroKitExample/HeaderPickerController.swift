@@ -369,12 +369,6 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             snapshot.appendItems(configItems, toSection: Section.configuration)
         }
 
-        // Show configuration section for opaque styles
-        if viewModel.isOpaqueStyle {
-            snapshot.appendSections([Section.configuration])
-            snapshot.appendItems([Item.config(.lightModeOnly)], toSection: Section.configuration)
-        }
-
         snapshot.appendSections([Section.colors, Section.views])
         snapshot.appendItems(
             ViewModel.colorStyles.indices.map { Item.colorStyle($0) },

@@ -1,9 +1,9 @@
-import HeroKit
 import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
+    private var composer: AppComposer?
 
     func scene(
         _ scene: UIScene,
@@ -11,31 +11,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         options _: UIScene.ConnectionOptions
     ) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
-        window = UIWindow(windowScene: windowScene)
+        let window = UIWindow(windowScene: windowScene)
+        self.window = window
 
-        let controller = HeaderPickerController(
-            title: "Style Picker",
-            navbarStyle: nil
-        )
-        controller.delegate = self
-
-        let nav = UINavigationController(rootViewController: controller)
-        window?.rootViewController = nav
-        window?.makeKeyAndVisible()
-    }
-}
-
-extension SceneDelegate: HeaderPickerControllerDelegate {
-    func headerPicker(
-        _ controller: HeaderPickerController,
-        didPickCellWithTitle title: String,
-        style: HeroHeader.Style
-    ) {
-        let nextController = HeaderPickerController(
-            title: title,
-            navbarStyle: style
-        )
-        nextController.delegate = self
-        controller.navigationController?.pushViewController(nextController, animated: true)
+        let composer = AppComposer(window: window)
+        self.composer = composer
+        composer.start()
     }
 }
