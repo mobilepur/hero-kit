@@ -6,8 +6,10 @@ final class GradientDimmingView: UIView {
         let layer = CAGradientLayer()
         layer.colors = [
             UIColor.black.withAlphaComponent(0).cgColor,
-            UIColor.black.withAlphaComponent(0.5).cgColor,
+            UIColor.black.withAlphaComponent(0).cgColor,
+            UIColor.black.withAlphaComponent(0.7).cgColor,
         ]
+        layer.locations = [0, 0.4, 1]
         layer.startPoint = CGPoint(x: 0.5, y: 0)
         layer.endPoint = CGPoint(x: 0.5, y: 1)
         return layer

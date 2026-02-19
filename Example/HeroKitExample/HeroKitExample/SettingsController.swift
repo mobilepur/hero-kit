@@ -387,7 +387,7 @@ nonisolated enum SettingsSection: Hashable, Sendable, CaseIterable {
         switch self {
         case .global: "Global"
         case .opaque: "Opaque"
-        case .headerView: "Header View"
+        case .headerView: "Header"
         case .image: "Image"
         }
     }

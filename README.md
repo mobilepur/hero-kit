@@ -56,15 +56,13 @@ class PhotoViewController: UICollectionViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let imageView = UIImageView(image: UIImage(named: "landscape"))
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-
-        try? setHeader(.headerView(
-            view: imageView,
-            configuration: .init(height: 300),
-            title: .init(title: "Explore", largeSubtitle: "Discover new places")
-        ))
+        try? setHeader(
+            .image(
+                url: URL(string: "https://example.com/photo.jpg")!,
+                configuration: .init(height: 300),
+                title: .init(title: "Explore", largeSubtitle: "Discover new places")
+            )
+        )
     }
 }
 ```
@@ -99,24 +97,28 @@ try setHeader(.headerView(
 ### Remote Image Header
 
 ```swift
-try setHeader(.image(
-    url: URL(string: "https://example.com/photo.jpg")!,
-    contentMode: .scaleAspectFit,
-    backgroundColor: .secondarySystemBackground,
-    configuration: .init(height: 300),
-    title: .init(title: "Remote Landscape")
-))
+try setHeader(
+    .image(
+        url: URL(string: "https://example.com/photo.jpg")!,
+        contentMode: .scaleAspectFit,
+        backgroundColor: .secondarySystemBackground,
+        configuration: .init(height: 300),
+        title: .init(title: "Remote Landscape")
+    )
+)
 ```
 
 ### Colored Opaque Header
 
 ```swift
-try setHeader(.opaque(
-    title: .init(title: "Settings"),
-    backgroundColor: .systemMint,
-    foregroundColor: .black,
-    prefersLargeTitles: true
-))
+try setHeader(
+    .opaque(
+        title: .init(title: "Settings"),
+        backgroundColor: .systemMint,
+        foregroundColor: .black,
+        prefersLargeTitles: true
+    )
+)
 ```
 
 ## Configuration
