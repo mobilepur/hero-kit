@@ -141,7 +141,8 @@ extension UIViewController {
             largeTitleView = UIView.largeTitleLabel(
                 title: title,
                 subtitle: subtitle,
-                allowsLineWrap: titleConfig.allowsLineWrap
+                allowsLineWrap: titleConfig.allowsLineWrap,
+                insets: titleConfig.insets
             )
         }
 
@@ -154,7 +155,8 @@ extension UIViewController {
                 title: title,
                 subtitle: subtitle,
                 foregroundColor: foregroundColor ?? .white,
-                dimming: inlineConfig.dimming
+                dimming: inlineConfig.dimming,
+                insets: inlineConfig.insets
             )
             headerView.largeTitleView = inlineTitle
         }

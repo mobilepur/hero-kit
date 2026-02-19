@@ -8,6 +8,7 @@ public class LargeTitleView: UIView {
     private let foregroundColor: UIColor
     private let fog: Bool
     private let fogColor: UIColor
+    private let titleInsets: (top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat)
     private var fogHeightConstraint: NSLayoutConstraint?
 
     private lazy var titleLabel: UILabel = {
@@ -60,7 +61,13 @@ public class LargeTitleView: UIView {
         allowsLineWrap: Bool = false,
         foregroundColor: UIColor = .label,
         fog: Bool = true,
-        fogColor: UIColor = .systemBackground
+        fogColor: UIColor = .systemBackground,
+        titleInsets: (top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat) = (
+            6,
+            16,
+            8,
+            16
+        )
     ) {
         self.title = title
         self.subtitle = subtitle
@@ -68,6 +75,7 @@ public class LargeTitleView: UIView {
         self.foregroundColor = foregroundColor
         self.fog = fog
         self.fogColor = fogColor
+        self.titleInsets = titleInsets
         super.init(frame: .zero)
         backgroundColor = .clear
         clipsToBounds = true
@@ -76,10 +84,19 @@ public class LargeTitleView: UIView {
         if fog { addSubview(fogView) }
 
         NSLayoutConstraint.activate([
-            labelStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
-            labelStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-            labelStack.topAnchor.constraint(equalTo: topAnchor, constant: 6),
-            labelStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8),
+            labelStack.leadingAnchor.constraint(
+                equalTo: leadingAnchor,
+                constant: titleInsets.leading
+            ),
+            labelStack.trailingAnchor.constraint(
+                equalTo: trailingAnchor,
+                constant: -titleInsets.trailing
+            ),
+            labelStack.topAnchor.constraint(equalTo: topAnchor, constant: titleInsets.top),
+            labelStack.bottomAnchor.constraint(
+                equalTo: bottomAnchor,
+                constant: -titleInsets.bottom
+            ),
         ])
 
         if fog {
@@ -103,7 +120,8 @@ public class LargeTitleView: UIView {
         super.layoutSubviews()
 
         // Required for multi-line labels to calculate intrinsic content size correctly
-        titleLabel.preferredMaxLayoutWidth = bounds.width - 32
+        titleLabel.preferredMaxLayoutWidth = bounds.width - titleInsets.leading - titleInsets
+            .trailing
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)

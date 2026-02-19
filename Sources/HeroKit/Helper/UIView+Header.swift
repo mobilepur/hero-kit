@@ -9,8 +9,15 @@ extension UIView {
         title: String,
         subtitle: String?,
         foregroundColor: UIColor,
-        dimming: HeroHeader.InlineTitleConfiguration.Dimming
+        dimming: HeroHeader.InlineTitleConfiguration.Dimming,
+        insets: HeroHeader.TitleInsets = .init()
     ) -> LargeTitleView {
+        let resolved = (
+            top: insets.top ?? 0,
+            leading: insets.leading ?? 16,
+            bottom: insets.bottom ?? 16,
+            trailing: insets.trailing ?? 16
+        )
         let hasFog = backgroundColor != nil
         let fogColor = backgroundColor ?? .systemBackground
         let titleView = LargeTitleView(
@@ -18,7 +25,8 @@ extension UIView {
             subtitle: subtitle,
             foregroundColor: foregroundColor,
             fog: hasFog,
-            fogColor: fogColor
+            fogColor: fogColor,
+            titleInsets: resolved
         )
         titleView.translatesAutoresizingMaskIntoConstraints = false
 
@@ -32,7 +40,7 @@ extension UIView {
         NSLayoutConstraint.activate([
             titleView.leadingAnchor.constraint(equalTo: leadingAnchor),
             titleView.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
-            titleView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8),
+            titleView.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
         return titleView
     }

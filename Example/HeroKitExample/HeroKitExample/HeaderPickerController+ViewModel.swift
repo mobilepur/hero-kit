@@ -44,6 +44,9 @@ extension HeaderPickerController {
             didSet { publishUpdatedStyle() }
         }
 
+        private var inlineInsets: HeroHeader.TitleInsets = .init()
+        private var belowHeaderInsets: HeroHeader.TitleInsets = .init()
+
         /// Opaque options
         private var opaqueStyle: (
             backgroundColor: UIColor,
@@ -81,11 +84,13 @@ extension HeaderPickerController {
                 stretchEnabled = configuration.stretches
 
                 if case let .belowHeader(largeTitleConfig) = configuration.largeTitleDisplayMode {
+                    belowHeaderInsets = largeTitleConfig.insets
                     largeTitleEnabled = true
                     lineWrapEnabled = largeTitleConfig.allowsLineWrap
                     smallTitleDisplayMode = largeTitleConfig.smallTitleDisplayMode
                 }
                 if case let .inline(inlineConfig) = configuration.largeTitleDisplayMode {
+                    inlineInsets = inlineConfig.insets
                     inlineEnabled = true
                     dimmingMode = inlineConfig.dimming
                 }
@@ -131,11 +136,12 @@ extension HeaderPickerController {
             imageView.clipsToBounds = true
 
             let largeTitleDisplayMode: HeroHeader.LargeTitleDisplayMode = if inlineEnabled {
-                .inline(.init(dimming: dimmingMode))
+                .inline(.init(dimming: dimmingMode, insets: inlineInsets))
             } else if largeTitleEnabled {
                 .belowHeader(.init(
                     allowsLineWrap: lineWrapEnabled,
-                    smallTitleDisplayMode: smallTitleDisplayMode
+                    smallTitleDisplayMode: smallTitleDisplayMode,
+                    insets: belowHeaderInsets
                 ))
             } else {
                 .none
