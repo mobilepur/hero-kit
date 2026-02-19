@@ -1,13 +1,8 @@
-import Combine
 import HeroKit
 import UIKit
 
 protocol HeaderPickerControllerDelegate: AnyObject {
-    func headerPicker(
-        _ controller: HeaderPickerController,
-        didPickCellWithTitle title: String,
-        style: HeroHeader.Style
-    )
+    func headerPicker(_ controller: HeaderPickerController, didSelect content: HeaderContent)
     func headerPicker(_ controller: HeaderPickerController, showSettings: Void)
 }
 
@@ -15,14 +10,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
     weak var delegate: HeaderPickerControllerDelegate?
 
-    /// The raw style before settings are applied. Used by AppComposer to re-apply settings.
-    var baseStyle: HeroHeader.Style?
+    /// The content descriptor used by AppComposer to rebuild the style when settings change.
+    var content: HeaderContent?
 
-    private let viewModel: ViewModel
-    private var cancellables = Set<AnyCancellable>()
+    private let initialStyle: HeroHeader.Style?
 
     init(title: String, navbarStyle: HeroHeader.Style?) {
-        viewModel = ViewModel(style: navbarStyle)
+        initialStyle = navbarStyle
         super.init(nibName: nil, bundle: nil)
         self.title = title
     }
@@ -42,40 +36,40 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     }()
 
     private lazy var dataSource: UICollectionViewDiffableDataSource<Section, Item> = {
-        let styleCellRegistration = UICollectionView.CellRegistration<
+        let contentCellRegistration = UICollectionView.CellRegistration<
             UICollectionViewListCell,
-            HeroHeader.Style
-        > { cell, _, style in
-            var content = cell.defaultContentConfiguration()
-            content.text = style.displayName
-            content.secondaryText = style.cellSubtitle
-            content.image = style.cellImage
-            content.imageProperties.maximumSize = CGSize(width: 40, height: 40)
-            content.imageProperties.cornerRadius = 6
-            cell.contentConfiguration = content
+            HeaderContent
+        > { cell, _, content in
+            var config = cell.defaultContentConfiguration()
+            config.text = content.displayName
+            config.secondaryText = content.cellSubtitle
+            config.image = content.cellImage
+            config.imageProperties.maximumSize = CGSize(width: 40, height: 40)
+            config.imageProperties.cornerRadius = 6
+            cell.contentConfiguration = config
         }
 
-        let imageCellRegistration = UICollectionView.CellRegistration<
+        let remoteCellRegistration = UICollectionView.CellRegistration<
             UICollectionViewListCell,
-            HeroHeader.Style
-        > { cell, _, style in
-            var content = cell.defaultContentConfiguration()
-            content.text = style.displayName
-            content.secondaryText = style.cellSubtitle
-            content.image = UIImage(systemName: "photo")
-            content.imageProperties.maximumSize = CGSize(width: 40, height: 40)
-            content.imageProperties.cornerRadius = 6
-            content.imageProperties.tintColor = .secondaryLabel
-            cell.contentConfiguration = content
+            HeaderContent
+        > { cell, _, content in
+            var config = cell.defaultContentConfiguration()
+            config.text = content.displayName
+            config.secondaryText = content.cellSubtitle
+            config.image = UIImage(systemName: "photo")
+            config.imageProperties.maximumSize = CGSize(width: 40, height: 40)
+            config.imageProperties.cornerRadius = 6
+            config.imageProperties.tintColor = .secondaryLabel
+            cell.contentConfiguration = config
 
-            if case let .image(url, _, _, _, _, _) = style {
+            if case let .remoteImage(_, _, url, _) = content {
                 Task {
                     guard let (data, _) = try? await URLSession.shared.data(from: url),
                           let image = UIImage(data: data)
                     else { return }
                     var updated = cell.defaultContentConfiguration()
-                    updated.text = style.displayName
-                    updated.secondaryText = style.cellSubtitle
+                    updated.text = content.displayName
+                    updated.secondaryText = content.cellSubtitle
                     updated.image = image
                     updated.imageProperties.maximumSize = CGSize(width: 40, height: 40)
                     updated.imageProperties.cornerRadius = 6
@@ -99,26 +93,26 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             collectionView: collectionView
         ) { collectionView, indexPath, item in
             switch item {
-            case let .colorStyle(index):
-                let style = ViewModel.colorStyles[index]
+            case let .colorItem(index):
+                let content = HeaderContent.colorItems[index]
                 return collectionView.dequeueConfiguredReusableCell(
-                    using: styleCellRegistration,
+                    using: contentCellRegistration,
                     for: indexPath,
-                    item: style
+                    item: content
                 )
-            case let .headerViewStyle(index):
-                let style = ViewModel.headerViewStyles[index]
+            case let .localImageItem(index):
+                let content = HeaderContent.localImageItems[index]
                 return collectionView.dequeueConfiguredReusableCell(
-                    using: styleCellRegistration,
+                    using: contentCellRegistration,
                     for: indexPath,
-                    item: style
+                    item: content
                 )
-            case let .imageStyle(index):
-                let style = ViewModel.imageStyles[index]
+            case let .remoteImageItem(index):
+                let content = HeaderContent.remoteImageItems[index]
                 return collectionView.dequeueConfiguredReusableCell(
-                    using: imageCellRegistration,
+                    using: remoteCellRegistration,
                     for: indexPath,
-                    item: style
+                    item: content
                 )
             }
         }
@@ -139,23 +133,10 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         setupCollectionView()
         setupNavigationBar()
         applySnapshot()
-        if let initialStyle = viewModel.styleSubject.value {
+        if let initialStyle {
             headerDelegate = self
             try? setHeader(initialStyle)
         }
-        setupSubscriptions()
-    }
-
-    private func setupSubscriptions() {
-        // Subscribe to updates only (skip initial value)
-        viewModel.styleSubject
-            .dropFirst()
-            .compactMap(\.self)
-            .sink { [weak self] style in
-                guard let self else { return }
-                try? setHeader(style)
-            }
-            .store(in: &cancellables)
     }
 
     private func setupNavigationBar() {
@@ -167,7 +148,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             }
         )
 
-        guard viewModel.isHeaderViewStyle else {
+        guard content?.isVisualHeader == true else {
             navigationItem.rightBarButtonItem = settingsButton
             return
         }
@@ -215,36 +196,32 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         collectionView.deselectItem(at: indexPath, animated: true)
         guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
 
-        let style: HeroHeader.Style = switch item {
-        case let .colorStyle(index):
-            ViewModel.colorStyles[index]
-        case let .headerViewStyle(index):
-            ViewModel.headerViewStyles[index]
-        case let .imageStyle(index):
-            ViewModel.imageStyles[index]
+        let selectedContent = switch item {
+        case let .colorItem(index):
+            HeaderContent.colorItems[index]
+        case let .localImageItem(index):
+            HeaderContent.localImageItems[index]
+        case let .remoteImageItem(index):
+            HeaderContent.remoteImageItems[index]
         }
 
-        delegate?.headerPicker(
-            self,
-            didPickCellWithTitle: style.displayName,
-            style: style
-        )
+        delegate?.headerPicker(self, didSelect: selectedContent)
     }
 
     private func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
-        snapshot.appendSections([Section.colors, Section.views, Section.images])
+        snapshot.appendSections([.colors, .localImages, .remoteImages])
         snapshot.appendItems(
-            ViewModel.colorStyles.indices.map { Item.colorStyle($0) },
-            toSection: Section.colors
+            HeaderContent.colorItems.indices.map { Item.colorItem($0) },
+            toSection: .colors
         )
         snapshot.appendItems(
-            ViewModel.headerViewStyles.indices.map { Item.headerViewStyle($0) },
-            toSection: Section.views
+            HeaderContent.localImageItems.indices.map { Item.localImageItem($0) },
+            toSection: .localImages
         )
         snapshot.appendItems(
-            ViewModel.imageStyles.indices.map { Item.imageStyle($0) },
-            toSection: Section.images
+            HeaderContent.remoteImageItems.indices.map { Item.remoteImageItem($0) },
+            toSection: .remoteImages
         )
         dataSource.apply(snapshot, animatingDifferences: false)
     }
@@ -254,14 +231,14 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
 nonisolated enum Section: Hashable, Sendable {
     case colors
-    case views
-    case images
+    case localImages
+    case remoteImages
 
     var title: String {
         switch self {
         case .colors: "Colors"
-        case .views: "Views"
-        case .images: "Image URLs"
+        case .localImages: "Views"
+        case .remoteImages: "Image URLs"
         }
     }
 }
@@ -269,64 +246,7 @@ nonisolated enum Section: Hashable, Sendable {
 // MARK: - Item
 
 nonisolated enum Item: Hashable, Sendable {
-    case colorStyle(Int)
-    case headerViewStyle(Int)
-    case imageStyle(Int)
-}
-
-// MARK: - ContentMode helpers
-
-extension UIView.ContentMode {
-    var displayName: String {
-        switch self {
-        case .scaleAspectFill: "Aspect Fill"
-        case .scaleAspectFit: "Aspect Fit"
-        case .scaleToFill: "Scale to Fill"
-        default: "Other"
-        }
-    }
-}
-
-// MARK: - LargeTitleDisplayMode helpers
-
-extension HeroHeader.LargeTitleDisplayMode {
-    var displayName: String {
-        switch self {
-        case .none: "None"
-        case .belowHeader: "Below Header"
-        case .inline: "Inline"
-        }
-    }
-}
-
-// MARK: - SmallTitleDisplayMode helpers
-
-extension HeroHeader.SmallTitleDisplayMode {
-    static var allCases: [HeroHeader.SmallTitleDisplayMode] {
-        [.never, .system, .always]
-    }
-
-    var displayName: String {
-        switch self {
-        case .never: "Never"
-        case .system: "System"
-        case .always: "Always"
-        }
-    }
-}
-
-// MARK: - Dimming helpers
-
-extension HeroHeader.InlineTitleConfiguration.Dimming {
-    static var allCases: [HeroHeader.InlineTitleConfiguration.Dimming] {
-        [.none, .complete, .gradient]
-    }
-
-    var displayName: String {
-        switch self {
-        case .none: "None"
-        case .complete: "Complete"
-        case .gradient: "Gradient"
-        }
-    }
+    case colorItem(Int)
+    case localImageItem(Int)
+    case remoteImageItem(Int)
 }

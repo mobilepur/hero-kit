@@ -11,19 +11,18 @@ class AppComposer {
         self.window = window
     }
 
-    private let launcherBaseStyle: HeroHeader.Style = .opaque(
-        title: .init(title: "Launcher"),
+    private let launcherContent: HeaderContent = .color(
+        title: "Launcher",
         backgroundColor: .red,
-        foregroundColor: .white,
-        prefersLargeTitles: true
+        foregroundColor: .white
     )
 
     func start() {
         let pickerController = HeaderPickerController(
             title: "Style Picker",
-            navbarStyle: applySettings(to: launcherBaseStyle)
+            navbarStyle: buildStyle(from: launcherContent)
         )
-        pickerController.baseStyle = launcherBaseStyle
+        pickerController.content = launcherContent
         pickerController.delegate = self
 
         let nav = UINavigationController(rootViewController: pickerController)
@@ -44,110 +43,82 @@ class AppComposer {
     }
 }
 
-// MARK: - HeaderPickerControllerDelegate
+// MARK: - Style Building
 
-extension AppComposer: HeaderPickerControllerDelegate {
-    func headerPicker(
-        _ controller: HeaderPickerController,
-        didPickCellWithTitle title: String,
-        style: HeroHeader.Style
-    ) {
-        let resolvedStyle = applySettings(to: style)
-        let nextController = HeaderPickerController(
-            title: title,
-            navbarStyle: resolvedStyle
-        )
-        nextController.baseStyle = style
-        nextController.delegate = self
-        controller.navigationController?.pushViewController(nextController, animated: true)
-    }
+extension AppComposer {
 
-    func headerPicker(_ controller: HeaderPickerController, showSettings _: Void) {
-        presentSettings(from: controller)
-    }
-
-    private func applySettings(to style: HeroHeader.Style) -> HeroHeader.Style {
-        switch style {
-        case let .opaque(title, backgroundColor, foregroundColor, prefersLargeTitles, _):
+    private func buildStyle(from content: HeaderContent) -> HeroHeader.Style {
+        let settings = model.settings
+        switch content {
+        case let .color(title, subtitle, backgroundColor, foregroundColor):
+            let titleConfig = makeTitleConfig(title: title, subtitle: subtitle)
             return .opaque(
-                title: applyTitleLength(to: title),
+                title: applyTitleLength(to: titleConfig),
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor,
-                prefersLargeTitles: prefersLargeTitles,
-                lightModeOnly: model.settings.lightModeOnly
+                prefersLargeTitles: settings.largeTitle,
+                lightModeOnly: settings.lightModeOnly
             )
-        case let .headerView(view, configuration, title):
-            let accessories = model.settings.accessoryMode.accessories
-            let existingBelowConfig: HeroHeader.LargeTitleConfiguration? =
-                if case let .belowHeader(c) = configuration.largeTitleDisplayMode { c } else { nil }
-            let largeTitleDisplayMode: HeroHeader
-                .LargeTitleDisplayMode = if case let .inline(inlineConfig) = configuration
-                .largeTitleDisplayMode
-            {
-                .inline(.init(
-                    dimming: model.settings.dimming,
-                    insets: inlineConfig.insets,
-                    accessories: accessories
-                ))
-            } else if model.settings.largeTitle {
-                .belowHeader(.init(
-                    allowsLineWrap: model.settings.lineWrap,
-                    smallTitleDisplayMode: model.settings.smallTitleDisplayMode,
-                    insets: existingBelowConfig?.insets ?? .init(),
-                    accessories: accessories
-                ))
-            } else {
-                .none
-            }
-            let newConfiguration = HeroHeader.HeaderViewConfiguration(
-                height: configuration.height,
-                minHeight: configuration.minHeight,
-                stretches: model.settings.stretch,
-                largeTitleDisplayMode: largeTitleDisplayMode
-            )
+
+        case let .localImage(title, subtitle, assetName, height):
+            let imageView = UIImageView(image: UIImage(named: assetName))
+            imageView.contentMode = .scaleAspectFill
+            imageView.clipsToBounds = true
+            let titleConfig = makeTitleConfig(title: title, subtitle: subtitle)
+            let configuration = makeHeaderViewConfiguration(height: height)
             return .headerView(
-                view: view,
-                configuration: newConfiguration,
-                title: title.map { applyTitleLength(to: $0) }
+                view: imageView,
+                configuration: configuration,
+                title: applyTitleLength(to: titleConfig)
             )
-        case let .image(url, _, _, loadingType, configuration, title):
-            let accessories = model.settings.accessoryMode.accessories
-            let existingBelowConfig: HeroHeader.LargeTitleConfiguration? =
-                if case let .belowHeader(c) = configuration.largeTitleDisplayMode { c } else { nil }
-            let largeTitleDisplayMode: HeroHeader
-                .LargeTitleDisplayMode = if case let .inline(inlineConfig) = configuration
-                .largeTitleDisplayMode
-            {
-                .inline(.init(
-                    dimming: model.settings.dimming,
-                    insets: inlineConfig.insets,
-                    accessories: accessories
-                ))
-            } else if model.settings.largeTitle {
-                .belowHeader(.init(
-                    allowsLineWrap: model.settings.lineWrap,
-                    smallTitleDisplayMode: model.settings.smallTitleDisplayMode,
-                    insets: existingBelowConfig?.insets ?? .init(),
-                    accessories: accessories
-                ))
-            } else {
-                .none
-            }
-            let newConfiguration = HeroHeader.HeaderViewConfiguration(
-                height: configuration.height,
-                minHeight: configuration.minHeight,
-                stretches: model.settings.stretch,
-                largeTitleDisplayMode: largeTitleDisplayMode
-            )
+
+        case let .remoteImage(title, subtitle, url, height):
+            let titleConfig = makeTitleConfig(title: title, subtitle: subtitle)
+            let configuration = makeHeaderViewConfiguration(height: height)
             return .image(
                 url: url,
-                contentMode: model.settings.imageContentMode.contentMode,
-                backgroundColor: model.settings.imageBackgroundColor.color,
-                loadingType: loadingType,
-                configuration: newConfiguration,
-                title: title.map { applyTitleLength(to: $0) }
+                contentMode: settings.imageContentMode.contentMode,
+                backgroundColor: settings.imageBackgroundColor.color,
+                configuration: configuration,
+                title: applyTitleLength(to: titleConfig)
             )
         }
+    }
+
+    private func makeTitleConfig(
+        title: String,
+        subtitle: String?
+    ) -> HeroHeader.TitleConfiguration {
+        .init(title: title, subtitle: subtitle, largeSubtitle: subtitle)
+    }
+
+    private func makeHeaderViewConfiguration(
+        height: CGFloat
+    ) -> HeroHeader.HeaderViewConfiguration {
+        let settings = model.settings
+        let accessories = settings.accessoryMode.accessories
+
+        let largeTitleDisplayMode: HeroHeader.LargeTitleDisplayMode =
+            if settings.inline {
+                .inline(.init(
+                    dimming: settings.dimming,
+                    accessories: accessories
+                ))
+            } else if settings.largeTitle {
+                .belowHeader(.init(
+                    allowsLineWrap: settings.lineWrap,
+                    smallTitleDisplayMode: settings.smallTitleDisplayMode,
+                    accessories: accessories
+                ))
+            } else {
+                .none
+            }
+
+        return HeroHeader.HeaderViewConfiguration(
+            height: height,
+            stretches: settings.stretch,
+            largeTitleDisplayMode: largeTitleDisplayMode
+        )
     }
 
     private func applyTitleLength(
@@ -163,6 +134,29 @@ extension AppComposer: HeaderPickerControllerDelegate {
     }
 }
 
+// MARK: - HeaderPickerControllerDelegate
+
+extension AppComposer: HeaderPickerControllerDelegate {
+
+    func headerPicker(
+        _ controller: HeaderPickerController,
+        didSelect content: HeaderContent
+    ) {
+        let resolvedStyle = buildStyle(from: content)
+        let nextController = HeaderPickerController(
+            title: content.displayName,
+            navbarStyle: resolvedStyle
+        )
+        nextController.content = content
+        nextController.delegate = self
+        controller.navigationController?.pushViewController(nextController, animated: true)
+    }
+
+    func headerPicker(_ controller: HeaderPickerController, showSettings _: Void) {
+        presentSettings(from: controller)
+    }
+}
+
 // MARK: - SettingsControllerDelegate
 
 extension AppComposer: SettingsControllerDelegate {
@@ -174,9 +168,9 @@ extension AppComposer: SettingsControllerDelegate {
     private func updateVisibleController() {
         guard let topController = navigationController?
             .topViewController as? HeaderPickerController,
-            let baseStyle = topController.baseStyle
+            let content = topController.content
         else { return }
-        let resolvedStyle = applySettings(to: baseStyle)
+        let resolvedStyle = buildStyle(from: content)
         try? topController.setHeader(resolvedStyle)
     }
 }

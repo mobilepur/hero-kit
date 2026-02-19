@@ -56,6 +56,8 @@ class SettingsController: UIViewController {
                     toggle.isOn = settings.largeTitle
                 case .lineWrap:
                     toggle.isOn = settings.lineWrap
+                case .inline:
+                    toggle.isOn = settings.inline
                 case .titleLength, .smallTitleDisplayMode, .dimming, .accessoryMode,
                      .imageContentMode, .imageBackgroundColor:
                     return
@@ -381,7 +383,15 @@ class SettingsController: UIViewController {
         snapshot.appendItems([.titleLength], toSection: .global)
         snapshot.appendItems([.lightModeOnly], toSection: .opaque)
         snapshot.appendItems(
-            [.stretch, .largeTitle, .lineWrap, .smallTitleDisplayMode, .dimming, .accessoryMode],
+            [
+                .stretch,
+                .largeTitle,
+                .lineWrap,
+                .smallTitleDisplayMode,
+                .inline,
+                .dimming,
+                .accessoryMode,
+            ],
             toSection: .headerView
         )
         snapshot.appendItems(
@@ -408,6 +418,8 @@ class SettingsController: UIViewController {
             settings.largeTitle = sender.isOn
         case .lineWrap:
             settings.lineWrap = sender.isOn
+        case .inline:
+            settings.inline = sender.isOn
         case .titleLength, .smallTitleDisplayMode, .dimming, .accessoryMode,
              .imageContentMode, .imageBackgroundColor:
             break
@@ -441,6 +453,7 @@ nonisolated enum SettingsItem: Hashable, Sendable {
     case largeTitle
     case lineWrap
     case smallTitleDisplayMode
+    case inline
     case dimming
     case accessoryMode
     case imageContentMode
@@ -454,6 +467,7 @@ nonisolated enum SettingsItem: Hashable, Sendable {
         case .largeTitle: "Large Title"
         case .lineWrap: "Line Wrap"
         case .smallTitleDisplayMode: "Small Title"
+        case .inline: "Inline"
         case .dimming: "Dimming"
         case .accessoryMode: "Accessory"
         case .imageContentMode: "Content Mode"
@@ -469,10 +483,11 @@ nonisolated enum SettingsItem: Hashable, Sendable {
         case .largeTitle: 3
         case .lineWrap: 4
         case .smallTitleDisplayMode: 5
-        case .dimming: 6
-        case .accessoryMode: 7
-        case .imageContentMode: 8
-        case .imageBackgroundColor: 9
+        case .inline: 6
+        case .dimming: 7
+        case .accessoryMode: 8
+        case .imageContentMode: 9
+        case .imageBackgroundColor: 10
         }
     }
 
@@ -484,10 +499,11 @@ nonisolated enum SettingsItem: Hashable, Sendable {
         case 3: self = .largeTitle
         case 4: self = .lineWrap
         case 5: self = .smallTitleDisplayMode
-        case 6: self = .dimming
-        case 7: self = .accessoryMode
-        case 8: self = .imageContentMode
-        case 9: self = .imageBackgroundColor
+        case 6: self = .inline
+        case 7: self = .dimming
+        case 8: self = .accessoryMode
+        case 9: self = .imageContentMode
+        case 10: self = .imageBackgroundColor
         default: return nil
         }
     }
