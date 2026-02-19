@@ -101,12 +101,30 @@ extension AppComposer: HeaderPickerControllerDelegate {
                 title: title.map { applyTitleLength(to: $0) }
             )
         case let .image(url, _, _, loadingType, configuration, title):
+            let largeTitleDisplayMode: HeroHeader
+                .LargeTitleDisplayMode = if case .inline = configuration.largeTitleDisplayMode
+            {
+                .inline(.init(dimming: model.settings.dimming))
+            } else if model.settings.largeTitle {
+                .belowHeader(.init(
+                    allowsLineWrap: model.settings.lineWrap,
+                    smallTitleDisplayMode: model.settings.smallTitleDisplayMode
+                ))
+            } else {
+                .none
+            }
+            let newConfiguration = HeroHeader.HeaderViewConfiguration(
+                height: configuration.height,
+                minHeight: configuration.minHeight,
+                stretches: model.settings.stretch,
+                largeTitleDisplayMode: largeTitleDisplayMode
+            )
             return .image(
                 url: url,
                 contentMode: model.settings.imageContentMode.contentMode,
                 backgroundColor: model.settings.imageBackgroundColor.color,
                 loadingType: loadingType,
-                configuration: configuration,
+                configuration: newConfiguration,
                 title: title.map { applyTitleLength(to: $0) }
             )
         }
@@ -153,7 +171,7 @@ extension AppComposer {
     struct AppSettings {
         var lightModeOnly: Bool = false
         var stretch: Bool = true
-        var largeTitle: Bool = false
+        var largeTitle: Bool = true
         var lineWrap: Bool = false
         var smallTitleDisplayMode: HeroHeader.SmallTitleDisplayMode = .system
         var inline: Bool = false
