@@ -9,6 +9,7 @@ public class LargeTitleView: UIView {
     private let fog: Bool
     private let fogColor: UIColor
     private let titleInsets: (top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat)
+    private let accessories: [HeroHeader.Accessory]
     private var fogHeightConstraint: NSLayoutConstraint?
 
     private lazy var titleLabel: UILabel = {
@@ -36,7 +37,33 @@ public class LargeTitleView: UIView {
         }
         stack.axis = .vertical
         stack.spacing = 0
+        return stack
+    }()
+
+    private lazy var contentStack: UIStackView = {
+        let trailingAccessories = accessories
+            .filter { $0.position == .trailing }
+            .map { createAccessoryView(from: $0) }
+        let hasTrailingAccessories = !trailingAccessories.isEmpty
+
+        var views: [UIView] = []
+        for accessory in accessories where accessory.position == .leading {
+            views.append(createAccessoryView(from: accessory))
+        }
+        views.append(labelStack)
+        if hasTrailingAccessories {
+            views.append(UIStackView.spacer())
+            views.append(contentsOf: trailingAccessories)
+        }
+
+        let stack = UIStackView(arrangedSubviews: views)
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 12
         stack.translatesAutoresizingMaskIntoConstraints = false
+
+        labelStack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
         return stack
     }()
 
@@ -67,7 +94,8 @@ public class LargeTitleView: UIView {
             16,
             8,
             16
-        )
+        ),
+        accessories: [HeroHeader.Accessory] = []
     ) {
         self.title = title
         self.subtitle = subtitle
@@ -76,24 +104,25 @@ public class LargeTitleView: UIView {
         self.fog = fog
         self.fogColor = fogColor
         self.titleInsets = titleInsets
+        self.accessories = accessories
         super.init(frame: .zero)
         backgroundColor = .clear
         clipsToBounds = true
 
-        addSubview(labelStack)
+        addSubview(contentStack)
         if fog { addSubview(fogView) }
 
         NSLayoutConstraint.activate([
-            labelStack.leadingAnchor.constraint(
+            contentStack.leadingAnchor.constraint(
                 equalTo: leadingAnchor,
                 constant: titleInsets.leading
             ),
-            labelStack.trailingAnchor.constraint(
+            contentStack.trailingAnchor.constraint(
                 equalTo: trailingAnchor,
                 constant: -titleInsets.trailing
             ),
-            labelStack.topAnchor.constraint(equalTo: topAnchor, constant: titleInsets.top),
-            labelStack.bottomAnchor.constraint(
+            contentStack.topAnchor.constraint(equalTo: topAnchor, constant: titleInsets.top),
+            contentStack.bottomAnchor.constraint(
                 equalTo: bottomAnchor,
                 constant: -titleInsets.bottom
             ),
@@ -120,8 +149,15 @@ public class LargeTitleView: UIView {
         super.layoutSubviews()
 
         // Required for multi-line labels to calculate intrinsic content size correctly
+        let accessoryWidth = contentStack.arrangedSubviews
+            .filter { $0 !== labelStack }
+            .reduce(CGFloat(0)) { $0 + $1.intrinsicContentSize.width }
+        let spacingWidth = contentStack.spacing * CGFloat(max(
+            0,
+            contentStack.arrangedSubviews.count - 1
+        ))
         titleLabel.preferredMaxLayoutWidth = bounds.width - titleInsets.leading - titleInsets
-            .trailing
+            .trailing - accessoryWidth - spacingWidth
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -139,5 +175,14 @@ public class LargeTitleView: UIView {
     /// Updates the displayed title text.
     func updateTitle(_ newTitle: String) {
         titleLabel.text = newTitle
+    }
+
+    private func createAccessoryView(from accessory: HeroHeader.Accessory) -> UIView {
+        switch accessory.type {
+        case let .view(view):
+            return view
+        case let .button(configuration, action):
+            return UIButton(configuration: configuration, primaryAction: action)
+        }
     }
 }

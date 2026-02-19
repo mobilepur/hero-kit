@@ -10,7 +10,8 @@ public extension UIView {
         title: String,
         subtitle: String?,
         allowsLineWrap: Bool = false,
-        insets: HeroHeader.TitleInsets = .init()
+        insets: HeroHeader.TitleInsets = .init(),
+        accessories: [HeroHeader.Accessory] = []
     ) -> LargeTitleView {
         let resolved = (
             top: insets.top ?? 6,
@@ -22,7 +23,8 @@ public extension UIView {
             title: title,
             subtitle: subtitle,
             allowsLineWrap: allowsLineWrap,
-            titleInsets: resolved
+            titleInsets: resolved,
+            accessories: accessories
         )
     }
 }

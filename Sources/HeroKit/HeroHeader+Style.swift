@@ -146,7 +146,27 @@ public enum HeroHeader {
         }
     }
 
-    public enum LargeTitleDisplayMode: Hashable, Sendable {
+    public struct Accessory {
+        public let type: AccessoryType
+        public let position: Position
+
+        public init(_ type: AccessoryType, position: Position = .trailing) {
+            self.type = type
+            self.position = position
+        }
+
+        public enum Position {
+            case leading
+            case trailing
+        }
+
+        public enum AccessoryType {
+            case view(UIView)
+            case button(configuration: UIButton.Configuration, action: UIAction)
+        }
+    }
+
+    public enum LargeTitleDisplayMode {
         case none
         case belowHeader(LargeTitleConfiguration = .init())
         case inline(InlineTitleConfiguration = .init())
@@ -181,13 +201,19 @@ public enum HeroHeader {
         }
     }
 
-    public struct InlineTitleConfiguration: Hashable, Sendable {
+    public struct InlineTitleConfiguration {
         public let dimming: Dimming
         public let insets: TitleInsets
+        public let accessories: [Accessory]
 
-        public init(dimming: Dimming = .none, insets: TitleInsets = .init()) {
+        public init(
+            dimming: Dimming = .none,
+            insets: TitleInsets = .init(),
+            accessories: [Accessory] = []
+        ) {
             self.dimming = dimming
             self.insets = insets
+            self.accessories = accessories
         }
 
         public enum Dimming: Hashable, Sendable {
@@ -197,19 +223,22 @@ public enum HeroHeader {
         }
     }
 
-    public struct LargeTitleConfiguration: Hashable, Sendable {
+    public struct LargeTitleConfiguration {
         public let allowsLineWrap: Bool
         public let smallTitleDisplayMode: SmallTitleDisplayMode
         public let insets: TitleInsets
+        public let accessories: [Accessory]
 
         public init(
             allowsLineWrap: Bool = false,
             smallTitleDisplayMode: SmallTitleDisplayMode = .system,
-            insets: TitleInsets = .init()
+            insets: TitleInsets = .init(),
+            accessories: [Accessory] = []
         ) {
             self.allowsLineWrap = allowsLineWrap
             self.smallTitleDisplayMode = smallTitleDisplayMode
             self.insets = insets
+            self.accessories = accessories
         }
     }
 

@@ -10,7 +10,8 @@ extension UIView {
         subtitle: String?,
         foregroundColor: UIColor,
         dimming: HeroHeader.InlineTitleConfiguration.Dimming,
-        insets: HeroHeader.TitleInsets = .init()
+        insets: HeroHeader.TitleInsets = .init(),
+        accessories: [HeroHeader.Accessory] = []
     ) -> LargeTitleView {
         let resolved = (
             top: insets.top ?? 0,
@@ -26,7 +27,8 @@ extension UIView {
             foregroundColor: foregroundColor,
             fog: hasFog,
             fogColor: fogColor,
-            titleInsets: resolved
+            titleInsets: resolved,
+            accessories: accessories
         )
         titleView.translatesAutoresizingMaskIntoConstraints = false
 
@@ -39,7 +41,7 @@ extension UIView {
         addSubview(titleView)
         NSLayoutConstraint.activate([
             titleView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            titleView.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
+            titleView.trailingAnchor.constraint(equalTo: trailingAnchor),
             titleView.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
         return titleView

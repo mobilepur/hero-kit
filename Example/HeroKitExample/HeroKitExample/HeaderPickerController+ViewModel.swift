@@ -46,6 +46,7 @@ extension HeaderPickerController {
 
         private var inlineInsets: HeroHeader.TitleInsets = .init()
         private var belowHeaderInsets: HeroHeader.TitleInsets = .init()
+        private var accessories: [HeroHeader.Accessory] = []
 
         /// Opaque options
         private var opaqueStyle: (
@@ -85,12 +86,14 @@ extension HeaderPickerController {
 
                 if case let .belowHeader(largeTitleConfig) = configuration.largeTitleDisplayMode {
                     belowHeaderInsets = largeTitleConfig.insets
+                    accessories = largeTitleConfig.accessories
                     largeTitleEnabled = true
                     lineWrapEnabled = largeTitleConfig.allowsLineWrap
                     smallTitleDisplayMode = largeTitleConfig.smallTitleDisplayMode
                 }
                 if case let .inline(inlineConfig) = configuration.largeTitleDisplayMode {
                     inlineInsets = inlineConfig.insets
+                    accessories = inlineConfig.accessories
                     inlineEnabled = true
                     dimmingMode = inlineConfig.dimming
                 }
@@ -136,12 +139,13 @@ extension HeaderPickerController {
             imageView.clipsToBounds = true
 
             let largeTitleDisplayMode: HeroHeader.LargeTitleDisplayMode = if inlineEnabled {
-                .inline(.init(dimming: dimmingMode, insets: inlineInsets))
+                .inline(.init(dimming: dimmingMode, insets: inlineInsets, accessories: accessories))
             } else if largeTitleEnabled {
                 .belowHeader(.init(
                     allowsLineWrap: lineWrapEnabled,
                     smallTitleDisplayMode: smallTitleDisplayMode,
-                    insets: belowHeaderInsets
+                    insets: belowHeaderInsets,
+                    accessories: accessories
                 ))
             } else {
                 .none
@@ -215,7 +219,17 @@ extension HeaderPickerController.ViewModel {
         ),
         .headerView(
             view: makeImageView(assetName: "temple"),
-            configuration: .init(height: 300, largeTitleDisplayMode: .belowHeader()),
+            configuration: .init(
+                height: 300,
+                largeTitleDisplayMode: .belowHeader(.init(
+                    accessories: [
+                        .init(.button(
+                            configuration: .plain().withHeartImage(),
+                            action: UIAction { _ in }
+                        )),
+                    ]
+                ))
+            ),
             title: .init(
                 title: "Ancient Ruins",
                 subtitle: "Lost in time",
@@ -226,7 +240,15 @@ extension HeaderPickerController.ViewModel {
             view: makeImageView(assetName: "ricefields"),
             configuration: .init(
                 height: 300,
-                largeTitleDisplayMode: .inline(.init(dimming: .gradient))
+                largeTitleDisplayMode: .inline(.init(
+                    dimming: .gradient,
+                    accessories: [
+                        .init(.button(
+                            configuration: .plain().withBookmarkImage(tintColor: .white),
+                            action: UIAction { _ in }
+                        )),
+                    ]
+                ))
             ),
             title: .init(
                 title: "Golden Fields",
@@ -277,6 +299,24 @@ extension HeaderPickerController.ViewModel {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         return imageView
+    }
+}
+
+// MARK: - Button Configuration Helpers
+
+private extension UIButton.Configuration {
+    func withHeartImage() -> UIButton.Configuration {
+        var config = self
+        config.image = UIImage(systemName: "heart")
+        config.baseForegroundColor = .label
+        return config
+    }
+
+    func withBookmarkImage(tintColor: UIColor) -> UIButton.Configuration {
+        var config = self
+        config.image = UIImage(systemName: "bookmark")
+        config.baseForegroundColor = tintColor
+        return config
     }
 }
 

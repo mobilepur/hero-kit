@@ -142,7 +142,8 @@ extension UIViewController {
                 title: title,
                 subtitle: subtitle,
                 allowsLineWrap: titleConfig.allowsLineWrap,
-                insets: titleConfig.insets
+                insets: titleConfig.insets,
+                accessories: titleConfig.accessories
             )
         }
 
@@ -156,7 +157,8 @@ extension UIViewController {
                 subtitle: subtitle,
                 foregroundColor: foregroundColor ?? .white,
                 dimming: inlineConfig.dimming,
-                insets: inlineConfig.insets
+                insets: inlineConfig.insets,
+                accessories: inlineConfig.accessories
             )
             headerView.largeTitleView = inlineTitle
         }

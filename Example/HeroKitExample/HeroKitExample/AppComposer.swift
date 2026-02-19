@@ -77,14 +77,24 @@ extension AppComposer: HeaderPickerControllerDelegate {
                 lightModeOnly: model.settings.lightModeOnly
             )
         case let .headerView(view, configuration, title):
+            let accessories = model.settings.accessoryMode.accessories
+            let existingBelowConfig: HeroHeader.LargeTitleConfiguration? =
+                if case let .belowHeader(c) = configuration.largeTitleDisplayMode { c } else { nil }
             let largeTitleDisplayMode: HeroHeader
-                .LargeTitleDisplayMode = if case .inline = configuration.largeTitleDisplayMode
+                .LargeTitleDisplayMode = if case let .inline(inlineConfig) = configuration
+                .largeTitleDisplayMode
             {
-                .inline(.init(dimming: model.settings.dimming))
+                .inline(.init(
+                    dimming: model.settings.dimming,
+                    insets: inlineConfig.insets,
+                    accessories: accessories
+                ))
             } else if model.settings.largeTitle {
                 .belowHeader(.init(
                     allowsLineWrap: model.settings.lineWrap,
-                    smallTitleDisplayMode: model.settings.smallTitleDisplayMode
+                    smallTitleDisplayMode: model.settings.smallTitleDisplayMode,
+                    insets: existingBelowConfig?.insets ?? .init(),
+                    accessories: accessories
                 ))
             } else {
                 .none
@@ -101,14 +111,24 @@ extension AppComposer: HeaderPickerControllerDelegate {
                 title: title.map { applyTitleLength(to: $0) }
             )
         case let .image(url, _, _, loadingType, configuration, title):
+            let accessories = model.settings.accessoryMode.accessories
+            let existingBelowConfig: HeroHeader.LargeTitleConfiguration? =
+                if case let .belowHeader(c) = configuration.largeTitleDisplayMode { c } else { nil }
             let largeTitleDisplayMode: HeroHeader
-                .LargeTitleDisplayMode = if case .inline = configuration.largeTitleDisplayMode
+                .LargeTitleDisplayMode = if case let .inline(inlineConfig) = configuration
+                .largeTitleDisplayMode
             {
-                .inline(.init(dimming: model.settings.dimming))
+                .inline(.init(
+                    dimming: model.settings.dimming,
+                    insets: inlineConfig.insets,
+                    accessories: accessories
+                ))
             } else if model.settings.largeTitle {
                 .belowHeader(.init(
                     allowsLineWrap: model.settings.lineWrap,
-                    smallTitleDisplayMode: model.settings.smallTitleDisplayMode
+                    smallTitleDisplayMode: model.settings.smallTitleDisplayMode,
+                    insets: existingBelowConfig?.insets ?? .init(),
+                    accessories: accessories
                 ))
             } else {
                 .none
@@ -177,6 +197,7 @@ extension AppComposer {
         var inline: Bool = false
         var dimming: HeroHeader.InlineTitleConfiguration.Dimming = .none
         var titleLength: TitleLength = .normal
+        var accessoryMode: AccessoryMode = .none
         var imageContentMode: ImageContentMode = .aspectFill
         var imageBackgroundColor: ImageBackgroundColor = .none
     }
@@ -211,6 +232,29 @@ extension AppComposer {
             case .aspectFill: .scaleAspectFill
             case .aspectFit: .scaleAspectFit
             case .scaleToFill: .scaleToFill
+            }
+        }
+    }
+
+    enum AccessoryMode: Hashable, Sendable, CaseIterable {
+        case none
+        case favorite
+
+        var displayName: String {
+            switch self {
+            case .none: "None"
+            case .favorite: "Favorite"
+            }
+        }
+
+        var accessories: [HeroHeader.Accessory] {
+            switch self {
+            case .none: return []
+            case .favorite:
+                var config = UIButton.Configuration.plain()
+                config.image = UIImage(systemName: "heart")
+                config.baseForegroundColor = .label
+                return [.init(.button(configuration: config, action: UIAction { _ in }))]
             }
         }
     }
