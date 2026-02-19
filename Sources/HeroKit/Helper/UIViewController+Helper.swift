@@ -36,11 +36,6 @@ extension UIViewController {
 
 extension UIViewController {
 
-    /// Applies a single appearance to all navigation bar appearance properties
-    func applyNavigationBarAppearance(_ appearance: UINavigationBarAppearance) {
-        navigationController?.applyAppearance(appearance)
-    }
-
     /// Configures navigation bar with transparent background
     func configureTransparentNavigationBar() {
         navigationController?.configureTransparentAppearance()
@@ -70,17 +65,4 @@ extension UIViewController {
             navigationController?.setSubtitleColor(color)
         }
     }
-}
-
-// MARK: - UIView Helpers
-
-extension UIView {
-
-    func traverseSubviews(apply: ((UIView) -> Void)?) {
-        apply?(self)
-        for subview in subviews {
-            subview.traverseSubviews(apply: apply)
-        }
-    }
-
 }

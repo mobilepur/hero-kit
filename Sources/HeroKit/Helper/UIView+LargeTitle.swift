@@ -25,16 +25,4 @@ public extension UIView {
             titleInsets: resolved
         )
     }
-
-    /// Creates an inline large title label for overlay on header content (bottom-left)
-    static func inlineTitleLabel(_ title: String, foregroundColor: UIColor = .white) -> UIView {
-        let titleLabel = UILabel()
-        titleLabel.text = title
-        titleLabel.font = largeTitleFont
-        titleLabel.textColor = foregroundColor
-        titleLabel.numberOfLines = 1
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-
-        return titleLabel
-    }
 }
