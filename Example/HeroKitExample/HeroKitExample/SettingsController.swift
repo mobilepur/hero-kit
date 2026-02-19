@@ -9,9 +9,9 @@ class SettingsController: UIViewController {
 
     weak var delegate: SettingsControllerDelegate?
 
-    private(set) var settings: AppComposer.AppSettings
+    private(set) var settings: AppSettings
 
-    init(settings: AppComposer.AppSettings) {
+    init(settings: AppSettings) {
         self.settings = settings
         super.init(nibName: nil, bundle: nil)
         title = "Settings"
@@ -119,7 +119,7 @@ class SettingsController: UIViewController {
                 button.showsMenuAsPrimaryAction = true
                 button.changesSelectionAsPrimaryAction = true
 
-                let actions = AppComposer.TitleLength.allCases.map { [weak self] length in
+                let actions = TitleLength.allCases.map { [weak self] length in
                     UIAction(
                         title: length.displayName,
                         state: self?.settings.titleLength == length ? .on : .off
@@ -190,7 +190,7 @@ class SettingsController: UIViewController {
                 button.showsMenuAsPrimaryAction = true
                 button.changesSelectionAsPrimaryAction = true
 
-                let actions = AppComposer.AccessoryMode.allCases.map { [weak self] mode in
+                let actions = AccessoryMode.allCases.map { [weak self] mode in
                     UIAction(
                         title: mode.displayName,
                         state: self?.settings.accessoryMode == mode ? .on : .off
@@ -225,7 +225,7 @@ class SettingsController: UIViewController {
                 button.showsMenuAsPrimaryAction = true
                 button.changesSelectionAsPrimaryAction = true
 
-                let actions = AppComposer.ImageContentMode.allCases.map { [weak self] mode in
+                let actions = ImageContentMode.allCases.map { [weak self] mode in
                     UIAction(
                         title: mode.displayName,
                         state: self?.settings.imageContentMode == mode ? .on : .off
@@ -260,7 +260,7 @@ class SettingsController: UIViewController {
                 button.showsMenuAsPrimaryAction = true
                 button.changesSelectionAsPrimaryAction = true
 
-                let actions = AppComposer.ImageBackgroundColor.allCases.map { [weak self] bgColor in
+                let actions = ImageBackgroundColor.allCases.map { [weak self] bgColor in
                     UIAction(
                         title: bgColor.displayName,
                         state: self?.settings.imageBackgroundColor == bgColor ? .on : .off
