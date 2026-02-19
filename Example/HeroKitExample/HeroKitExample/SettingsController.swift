@@ -9,9 +9,9 @@ class SettingsController: UIViewController {
 
     weak var delegate: SettingsControllerDelegate?
 
-    private(set) var settings: AppComposer.AppSettings
+    private(set) var settings: AppSettings
 
-    init(settings: AppComposer.AppSettings) {
+    init(settings: AppSettings) {
         self.settings = settings
         super.init(nibName: nil, bundle: nil)
         title = "Settings"
@@ -56,7 +56,9 @@ class SettingsController: UIViewController {
                     toggle.isOn = settings.largeTitle
                 case .lineWrap:
                     toggle.isOn = settings.lineWrap
-                case .titleLength, .smallTitleDisplayMode, .dimming,
+                case .inline:
+                    toggle.isOn = settings.inline
+                case .titleLength, .smallTitleDisplayMode, .dimming, .accessoryMode,
                      .imageContentMode, .imageBackgroundColor:
                     return
                 }
@@ -117,7 +119,7 @@ class SettingsController: UIViewController {
                 button.showsMenuAsPrimaryAction = true
                 button.changesSelectionAsPrimaryAction = true
 
-                let actions = AppComposer.TitleLength.allCases.map { [weak self] length in
+                let actions = TitleLength.allCases.map { [weak self] length in
                     UIAction(
                         title: length.displayName,
                         state: self?.settings.titleLength == length ? .on : .off
@@ -174,6 +176,41 @@ class SettingsController: UIViewController {
                 ))]
             }
 
+            // Accessory mode menu registration
+            let accessoryMenuRegistration = UICollectionView.CellRegistration<
+                UICollectionViewListCell,
+                SettingsItem
+            > { [weak self] cell, _, item in
+                guard let self else { return }
+                var content = cell.defaultContentConfiguration()
+                content.text = item.title
+                cell.contentConfiguration = content
+
+                let button = UIButton(type: .system)
+                button.showsMenuAsPrimaryAction = true
+                button.changesSelectionAsPrimaryAction = true
+
+                let actions = AccessoryMode.allCases.map { [weak self] mode in
+                    UIAction(
+                        title: mode.displayName,
+                        state: self?.settings.accessoryMode == mode ? .on : .off
+                    ) { [weak self] _ in
+                        guard let self else { return }
+                        settings.accessoryMode = mode
+                        delegate?.settingsControllerDidUpdate(self)
+                        reconfigureItem(.accessoryMode)
+                    }
+                }
+
+                button.menu = UIMenu(children: actions)
+                button.setTitle(settings.accessoryMode.displayName, for: .normal)
+
+                cell.accessories = [.customView(configuration: .init(
+                    customView: button,
+                    placement: .trailing()
+                ))]
+            }
+
             // Image content mode menu registration
             let contentModeMenuRegistration = UICollectionView.CellRegistration<
                 UICollectionViewListCell,
@@ -188,7 +225,7 @@ class SettingsController: UIViewController {
                 button.showsMenuAsPrimaryAction = true
                 button.changesSelectionAsPrimaryAction = true
 
-                let actions = AppComposer.ImageContentMode.allCases.map { [weak self] mode in
+                let actions = ImageContentMode.allCases.map { [weak self] mode in
                     UIAction(
                         title: mode.displayName,
                         state: self?.settings.imageContentMode == mode ? .on : .off
@@ -223,7 +260,7 @@ class SettingsController: UIViewController {
                 button.showsMenuAsPrimaryAction = true
                 button.changesSelectionAsPrimaryAction = true
 
-                let actions = AppComposer.ImageBackgroundColor.allCases.map { [weak self] bgColor in
+                let actions = ImageBackgroundColor.allCases.map { [weak self] bgColor in
                     UIAction(
                         title: bgColor.displayName,
                         state: self?.settings.imageBackgroundColor == bgColor ? .on : .off
@@ -272,6 +309,12 @@ class SettingsController: UIViewController {
                 case .titleLength:
                     return collectionView.dequeueConfiguredReusableCell(
                         using: titleLengthMenuRegistration,
+                        for: indexPath,
+                        item: item
+                    )
+                case .accessoryMode:
+                    return collectionView.dequeueConfiguredReusableCell(
+                        using: accessoryMenuRegistration,
                         for: indexPath,
                         item: item
                     )
@@ -340,7 +383,15 @@ class SettingsController: UIViewController {
         snapshot.appendItems([.titleLength], toSection: .global)
         snapshot.appendItems([.lightModeOnly], toSection: .opaque)
         snapshot.appendItems(
-            [.stretch, .largeTitle, .lineWrap, .smallTitleDisplayMode, .dimming],
+            [
+                .stretch,
+                .largeTitle,
+                .lineWrap,
+                .smallTitleDisplayMode,
+                .inline,
+                .dimming,
+                .accessoryMode,
+            ],
             toSection: .headerView
         )
         snapshot.appendItems(
@@ -367,7 +418,9 @@ class SettingsController: UIViewController {
             settings.largeTitle = sender.isOn
         case .lineWrap:
             settings.lineWrap = sender.isOn
-        case .titleLength, .smallTitleDisplayMode, .dimming,
+        case .inline:
+            settings.inline = sender.isOn
+        case .titleLength, .smallTitleDisplayMode, .dimming, .accessoryMode,
              .imageContentMode, .imageBackgroundColor:
             break
         }
@@ -400,7 +453,9 @@ nonisolated enum SettingsItem: Hashable, Sendable {
     case largeTitle
     case lineWrap
     case smallTitleDisplayMode
+    case inline
     case dimming
+    case accessoryMode
     case imageContentMode
     case imageBackgroundColor
 
@@ -412,7 +467,9 @@ nonisolated enum SettingsItem: Hashable, Sendable {
         case .largeTitle: "Large Title"
         case .lineWrap: "Line Wrap"
         case .smallTitleDisplayMode: "Small Title"
+        case .inline: "Inline"
         case .dimming: "Dimming"
+        case .accessoryMode: "Accessory"
         case .imageContentMode: "Content Mode"
         case .imageBackgroundColor: "Background Color"
         }
@@ -426,9 +483,11 @@ nonisolated enum SettingsItem: Hashable, Sendable {
         case .largeTitle: 3
         case .lineWrap: 4
         case .smallTitleDisplayMode: 5
-        case .dimming: 6
-        case .imageContentMode: 7
-        case .imageBackgroundColor: 8
+        case .inline: 6
+        case .dimming: 7
+        case .accessoryMode: 8
+        case .imageContentMode: 9
+        case .imageBackgroundColor: 10
         }
     }
 
@@ -440,9 +499,11 @@ nonisolated enum SettingsItem: Hashable, Sendable {
         case 3: self = .largeTitle
         case 4: self = .lineWrap
         case 5: self = .smallTitleDisplayMode
-        case 6: self = .dimming
-        case 7: self = .imageContentMode
-        case 8: self = .imageBackgroundColor
+        case 6: self = .inline
+        case 7: self = .dimming
+        case 8: self = .accessoryMode
+        case 9: self = .imageContentMode
+        case 10: self = .imageBackgroundColor
         default: return nil
         }
     }

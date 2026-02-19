@@ -28,20 +28,17 @@ extension HeroHeader.HeaderViewConfiguration {
         case .none:
             break
         case let .belowHeader(config):
-            parts.append(config.allowsLineWrap ? "large title (wrap)" : "large title")
+            parts.append("below header")
             switch config.smallTitleDisplayMode {
             case .never:
-                parts.append("small: never")
+                break
             case .always:
-                parts.append("small: always")
+                break
             case .system:
                 break // default, don't show
             }
         case let .inline(config):
             parts.append("inline title")
-            if config.dimming != .none {
-                parts.append("dimming: \(config.dimming)")
-            }
         }
         return parts.joined(separator: ", ")
     }

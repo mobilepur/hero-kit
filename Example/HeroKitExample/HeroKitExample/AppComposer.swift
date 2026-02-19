@@ -11,19 +11,18 @@ class AppComposer {
         self.window = window
     }
 
-    private let launcherBaseStyle: HeroHeader.Style = .opaque(
-        title: .init(title: "Launcher"),
+    private let launcherContent: HeaderContent = .color(
+        title: "Launcher",
         backgroundColor: .red,
-        foregroundColor: .white,
-        prefersLargeTitles: true
+        foregroundColor: .white
     )
 
     func start() {
         let pickerController = HeaderPickerController(
             title: "Style Picker",
-            navbarStyle: applySettings(to: launcherBaseStyle)
+            navbarStyle: model.buildStyle(from: launcherContent)
         )
-        pickerController.baseStyle = launcherBaseStyle
+        pickerController.content = launcherContent
         pickerController.delegate = self
 
         let nav = UINavigationController(rootViewController: pickerController)
@@ -47,99 +46,23 @@ class AppComposer {
 // MARK: - HeaderPickerControllerDelegate
 
 extension AppComposer: HeaderPickerControllerDelegate {
+
     func headerPicker(
         _ controller: HeaderPickerController,
-        didPickCellWithTitle title: String,
-        style: HeroHeader.Style
+        didSelect content: HeaderContent
     ) {
-        let resolvedStyle = applySettings(to: style)
+        let resolvedStyle = model.buildStyle(from: content)
         let nextController = HeaderPickerController(
-            title: title,
+            title: content.displayName,
             navbarStyle: resolvedStyle
         )
-        nextController.baseStyle = style
+        nextController.content = content
         nextController.delegate = self
         controller.navigationController?.pushViewController(nextController, animated: true)
     }
 
     func headerPicker(_ controller: HeaderPickerController, showSettings _: Void) {
         presentSettings(from: controller)
-    }
-
-    private func applySettings(to style: HeroHeader.Style) -> HeroHeader.Style {
-        switch style {
-        case let .opaque(title, backgroundColor, foregroundColor, prefersLargeTitles, _):
-            return .opaque(
-                title: applyTitleLength(to: title),
-                backgroundColor: backgroundColor,
-                foregroundColor: foregroundColor,
-                prefersLargeTitles: prefersLargeTitles,
-                lightModeOnly: model.settings.lightModeOnly
-            )
-        case let .headerView(view, configuration, title):
-            let largeTitleDisplayMode: HeroHeader
-                .LargeTitleDisplayMode = if case .inline = configuration.largeTitleDisplayMode
-            {
-                .inline(.init(dimming: model.settings.dimming))
-            } else if model.settings.largeTitle {
-                .belowHeader(.init(
-                    allowsLineWrap: model.settings.lineWrap,
-                    smallTitleDisplayMode: model.settings.smallTitleDisplayMode
-                ))
-            } else {
-                .none
-            }
-            let newConfiguration = HeroHeader.HeaderViewConfiguration(
-                height: configuration.height,
-                minHeight: configuration.minHeight,
-                stretches: model.settings.stretch,
-                largeTitleDisplayMode: largeTitleDisplayMode
-            )
-            return .headerView(
-                view: view,
-                configuration: newConfiguration,
-                title: title.map { applyTitleLength(to: $0) }
-            )
-        case let .image(url, _, _, loadingType, configuration, title):
-            let largeTitleDisplayMode: HeroHeader
-                .LargeTitleDisplayMode = if case .inline = configuration.largeTitleDisplayMode
-            {
-                .inline(.init(dimming: model.settings.dimming))
-            } else if model.settings.largeTitle {
-                .belowHeader(.init(
-                    allowsLineWrap: model.settings.lineWrap,
-                    smallTitleDisplayMode: model.settings.smallTitleDisplayMode
-                ))
-            } else {
-                .none
-            }
-            let newConfiguration = HeroHeader.HeaderViewConfiguration(
-                height: configuration.height,
-                minHeight: configuration.minHeight,
-                stretches: model.settings.stretch,
-                largeTitleDisplayMode: largeTitleDisplayMode
-            )
-            return .image(
-                url: url,
-                contentMode: model.settings.imageContentMode.contentMode,
-                backgroundColor: model.settings.imageBackgroundColor.color,
-                loadingType: loadingType,
-                configuration: newConfiguration,
-                title: title.map { applyTitleLength(to: $0) }
-            )
-        }
-    }
-
-    private func applyTitleLength(
-        to title: HeroHeader.TitleConfiguration
-    ) -> HeroHeader.TitleConfiguration {
-        guard model.settings.titleLength == .long else { return title }
-        return .init(
-            title: title.title.map { "\($0) – An Unforgettable Journey" },
-            subtitle: title.subtitle,
-            largeTitle: title.largeTitle.map { "\($0) – An Unforgettable Journey" },
-            largeSubtitle: title.largeSubtitle
-        )
     }
 }
 
@@ -154,92 +77,9 @@ extension AppComposer: SettingsControllerDelegate {
     private func updateVisibleController() {
         guard let topController = navigationController?
             .topViewController as? HeaderPickerController,
-            let baseStyle = topController.baseStyle
+            let content = topController.content
         else { return }
-        let resolvedStyle = applySettings(to: baseStyle)
+        let resolvedStyle = model.buildStyle(from: content)
         try? topController.setHeader(resolvedStyle)
-    }
-}
-
-// MARK: - Model
-
-extension AppComposer {
-    class Model {
-        var settings = AppSettings()
-    }
-
-    struct AppSettings {
-        var lightModeOnly: Bool = false
-        var stretch: Bool = true
-        var largeTitle: Bool = true
-        var lineWrap: Bool = false
-        var smallTitleDisplayMode: HeroHeader.SmallTitleDisplayMode = .system
-        var inline: Bool = false
-        var dimming: HeroHeader.InlineTitleConfiguration.Dimming = .none
-        var titleLength: TitleLength = .normal
-        var imageContentMode: ImageContentMode = .aspectFill
-        var imageBackgroundColor: ImageBackgroundColor = .none
-    }
-
-    enum TitleLength: Hashable, Sendable, CaseIterable {
-        case normal
-        case long
-
-        var displayName: String {
-            switch self {
-            case .normal: "Normal"
-            case .long: "Long"
-            }
-        }
-    }
-
-    enum ImageContentMode: Hashable, Sendable, CaseIterable {
-        case aspectFill
-        case aspectFit
-        case scaleToFill
-
-        var displayName: String {
-            switch self {
-            case .aspectFill: "Aspect Fill"
-            case .aspectFit: "Aspect Fit"
-            case .scaleToFill: "Scale to Fill"
-            }
-        }
-
-        var contentMode: UIView.ContentMode {
-            switch self {
-            case .aspectFill: .scaleAspectFill
-            case .aspectFit: .scaleAspectFit
-            case .scaleToFill: .scaleToFill
-            }
-        }
-    }
-
-    enum ImageBackgroundColor: Hashable, Sendable, CaseIterable {
-        case none
-        case systemBackground
-        case secondarySystemBackground
-        case black
-        case white
-
-        var displayName: String {
-            switch self {
-            case .none: "None"
-            case .systemBackground: "System Background"
-            case .secondarySystemBackground: "Secondary"
-            case .black: "Black"
-            case .white: "White"
-            }
-        }
-
-        var color: UIColor? {
-            switch self {
-            case .none: nil
-            case .systemBackground: .systemBackground
-            case .secondarySystemBackground: .secondarySystemBackground
-            case .black: .black
-            case .white: .white
-            }
-        }
     }
 }
