@@ -4,6 +4,12 @@ A lightweight UIKit library for collapsible navigation headers on iOS.
 
 HeroKit lets you add image headers, colored bars, or custom views that collapse smoothly on scroll — filling the gap left by iOS 26, which removed support for colored navigation bars with large titles.
 
+<p>
+  <img src="docs/images/opaque.gif" width="250" alt="Opaque Header">
+  <img src="docs/images/below-header.gif" width="250" alt="Image Header with Large Title">
+  <img src="docs/images/inline-title.gif" width="250" alt="Inline Title with Dimming">
+</p>
+
 ## Features
 
 - **Image headers** — full-bleed photos that shrink into the navigation bar on scroll
