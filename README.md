@@ -56,12 +56,8 @@ class PhotoViewController: UICollectionViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let imageView = UIImageView(image: UIImage(named: "landscape"))
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-
-        try? setHeader(.headerView(
-            view: imageView,
+        try? setHeader(.image(
+            url: URL(string: "https://example.com/photo.jpg")!,
             configuration: .init(height: 300),
             title: .init(title: "Explore", largeSubtitle: "Discover new places")
         ))
