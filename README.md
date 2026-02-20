@@ -25,7 +25,7 @@ HeroKit lets you add image headers, colored bars, or custom views that collapse 
 
 ## Requirements
 
-- iOS 16+
+- iOS 17+
 - Swift 6.2+
 - No external dependencies
 
@@ -43,7 +43,7 @@ Or in your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/mobilepur/hero-kit", from: "0.1.0")
+    .package(url: "https://github.com/mobilepur/hero-kit", from: "0.1.1")
 ]
 ```
 
@@ -56,9 +56,10 @@ class PhotoViewController: UICollectionViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // Or use the convenience method: try? setImageHeader(url:configuration:title:)
         try? setHeader(
             .image(
-                url: URL(string: "https://example.com/photo.jpg")!,
+                image: .init(url: URL(string: "https://example.com/photo.jpg")!),
                 configuration: .init(height: 300),
                 title: .init(title: "Explore", largeSubtitle: "Discover new places")
             )
@@ -72,7 +73,7 @@ class PhotoViewController: UICollectionViewController {
 ### Image / Custom View Header
 
 ```swift
-// Large title below the header image
+// Large title below the header image — or use: try setHeader(view:configuration:title:)
 try setHeader(.headerView(
     view: imageView,
     configuration: .init(
@@ -97,11 +98,14 @@ try setHeader(.headerView(
 ### Remote Image Header
 
 ```swift
+// Or use the convenience method: try setImageHeader(url:contentMode:backgroundColor:configuration:title:)
 try setHeader(
     .image(
-        url: URL(string: "https://example.com/photo.jpg")!,
-        contentMode: .scaleAspectFit,
-        backgroundColor: .secondarySystemBackground,
+        image: .init(
+            url: URL(string: "https://example.com/photo.jpg")!,
+            contentMode: .scaleAspectFit,
+            backgroundColor: .secondarySystemBackground
+        ),
         configuration: .init(height: 300),
         title: .init(title: "Remote Landscape")
     )
@@ -111,6 +115,7 @@ try setHeader(
 ### Colored Opaque Header
 
 ```swift
+// Or use the convenience method: try setOpaqueHeader(title:backgroundColor:foregroundColor:prefersLargeTitles:)
 try setHeader(
     .opaque(
         title: .init(title: "Settings"),
