@@ -10,6 +10,7 @@ public extension UIView {
         title: String,
         subtitle: String?,
         allowsLineWrap: Bool = false,
+        minimumScaleFactor: CGFloat? = nil,
         insets: HeroHeader.TitleInsets = .init(),
         accessories: [HeroHeader.Accessory] = []
     ) -> LargeTitleView {
@@ -23,6 +24,7 @@ public extension UIView {
             title: title,
             subtitle: subtitle,
             allowsLineWrap: allowsLineWrap,
+            minimumScaleFactor: minimumScaleFactor,
             titleInsets: resolved,
             accessories: accessories
         )

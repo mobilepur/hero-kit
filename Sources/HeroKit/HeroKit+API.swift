@@ -26,6 +26,55 @@ public extension UIViewController {
         subscribeToScrollOffset(of: targetScrollView)
     }
 
+    func setHeader(
+        view: UIView,
+        configuration: HeroHeader.HeaderViewConfiguration = .init(),
+        title: HeroHeader.TitleConfiguration? = nil,
+        scrollView: UIScrollView? = nil
+    ) throws {
+        try setHeader(
+            .headerView(view: view, configuration: configuration, title: title),
+            scrollView: scrollView
+        )
+    }
+
+    func setImageHeader(
+        url: URL,
+        contentMode: UIView.ContentMode = .scaleAspectFill,
+        backgroundColor: UIColor? = nil,
+        loadingType: HeroHeader.LoadingType = .spinner,
+        configuration: HeroHeader.HeaderViewConfiguration = .init(),
+        title: HeroHeader.TitleConfiguration? = nil,
+        scrollView: UIScrollView? = nil
+    ) throws {
+        let imageConfig = HeroHeader.ImageConfiguration(
+            url: url,
+            contentMode: contentMode,
+            backgroundColor: backgroundColor,
+            loadingType: loadingType
+        )
+        try setHeader(
+            .image(image: imageConfig, configuration: configuration, title: title),
+            scrollView: scrollView
+        )
+    }
+
+    func setOpaqueHeader(
+        title: HeroHeader.TitleConfiguration,
+        backgroundColor: UIColor,
+        foregroundColor: UIColor? = nil,
+        prefersLargeTitles: Bool = false,
+        lightModeOnly: Bool = false
+    ) throws {
+        try setHeader(.opaque(
+            title: title,
+            backgroundColor: backgroundColor,
+            foregroundColor: foregroundColor,
+            prefersLargeTitles: prefersLargeTitles,
+            lightModeOnly: lightModeOnly
+        ))
+    }
+
     /// Expands the header to fully visible state
     func expandHeader(animated: Bool = true) {
         viewModel?.expandHeader(animated: animated)
@@ -68,12 +117,12 @@ extension UIViewController {
                 style: style,
                 scrollView: scrollView
             )
-        case let .image(url, contentMode, backgroundColor, loadingType, _, _):
+        case let .image(image: imageConfig, _, _):
             let imageView = AsyncHeaderImageView(
-                url: url,
-                contentMode: contentMode,
-                backgroundColor: backgroundColor,
-                loadingType: loadingType
+                url: imageConfig.url,
+                contentMode: imageConfig.contentMode,
+                backgroundColor: imageConfig.backgroundColor,
+                loadingType: imageConfig.loadingType
             )
             setupHeaderView(
                 imageView,
@@ -142,6 +191,7 @@ extension UIViewController {
                 title: title,
                 subtitle: subtitle,
                 allowsLineWrap: titleConfig.allowsLineWrap,
+                minimumScaleFactor: titleConfig.minimumScaleFactor,
                 insets: titleConfig.insets,
                 accessories: titleConfig.accessories
             )
@@ -157,6 +207,7 @@ extension UIViewController {
                 subtitle: subtitle,
                 foregroundColor: foregroundColor ?? .white,
                 dimming: inlineConfig.dimming,
+                minimumScaleFactor: inlineConfig.minimumScaleFactor,
                 insets: inlineConfig.insets,
                 accessories: inlineConfig.accessories
             )
