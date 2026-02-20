@@ -10,6 +10,7 @@ extension UIView {
         subtitle: String?,
         foregroundColor: UIColor,
         dimming: HeroHeader.InlineTitleConfiguration.Dimming,
+        minimumScaleFactor: CGFloat? = nil,
         insets: HeroHeader.TitleInsets = .init(),
         accessories: [HeroHeader.Accessory] = []
     ) -> LargeTitleView {
@@ -24,6 +25,7 @@ extension UIView {
         let titleView = LargeTitleView(
             title: title,
             subtitle: subtitle,
+            minimumScaleFactor: minimumScaleFactor,
             foregroundColor: foregroundColor,
             fog: hasFog,
             fogColor: fogColor,

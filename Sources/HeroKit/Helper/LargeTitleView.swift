@@ -5,6 +5,7 @@ public class LargeTitleView: UIView {
     private let title: String
     private let subtitle: String?
     private let allowsLineWrap: Bool
+    private let minimumScaleFactor: CGFloat?
     private let foregroundColor: UIColor
     private let fog: Bool
     private let fogColor: UIColor
@@ -18,6 +19,10 @@ public class LargeTitleView: UIView {
         label.font = UIView.largeTitleFont
         label.textColor = foregroundColor
         label.numberOfLines = allowsLineWrap ? 2 : 1
+        if let minimumScaleFactor {
+            label.adjustsFontSizeToFitWidth = true
+            label.minimumScaleFactor = min(max(minimumScaleFactor, 0), 1)
+        }
         return label
     }()
 
@@ -86,6 +91,7 @@ public class LargeTitleView: UIView {
         title: String,
         subtitle: String? = nil,
         allowsLineWrap: Bool = false,
+        minimumScaleFactor: CGFloat? = nil,
         foregroundColor: UIColor = .label,
         fog: Bool = true,
         fogColor: UIColor = .systemBackground,
@@ -100,6 +106,7 @@ public class LargeTitleView: UIView {
         self.title = title
         self.subtitle = subtitle
         self.allowsLineWrap = allowsLineWrap
+        self.minimumScaleFactor = minimumScaleFactor
         self.foregroundColor = foregroundColor
         self.fog = fog
         self.fogColor = fogColor

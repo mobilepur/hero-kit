@@ -203,15 +203,18 @@ public enum HeroHeader {
 
     public struct InlineTitleConfiguration {
         public let dimming: Dimming
+        public let minimumScaleFactor: CGFloat?
         public let insets: TitleInsets
         public let accessories: [Accessory]
 
         public init(
             dimming: Dimming = .none,
+            minimumScaleFactor: CGFloat? = nil,
             insets: TitleInsets = .init(),
             accessories: [Accessory] = []
         ) {
             self.dimming = dimming
+            self.minimumScaleFactor = minimumScaleFactor
             self.insets = insets
             self.accessories = accessories
         }
@@ -225,17 +228,20 @@ public enum HeroHeader {
 
     public struct LargeTitleConfiguration {
         public let allowsLineWrap: Bool
+        public let minimumScaleFactor: CGFloat?
         public let smallTitleDisplayMode: SmallTitleDisplayMode
         public let insets: TitleInsets
         public let accessories: [Accessory]
 
         public init(
             allowsLineWrap: Bool = false,
+            minimumScaleFactor: CGFloat? = nil,
             smallTitleDisplayMode: SmallTitleDisplayMode = .system,
             insets: TitleInsets = .init(),
             accessories: [Accessory] = []
         ) {
             self.allowsLineWrap = allowsLineWrap
+            self.minimumScaleFactor = minimumScaleFactor
             self.smallTitleDisplayMode = smallTitleDisplayMode
             self.insets = insets
             self.accessories = accessories

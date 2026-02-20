@@ -142,6 +142,7 @@ extension UIViewController {
                 title: title,
                 subtitle: subtitle,
                 allowsLineWrap: titleConfig.allowsLineWrap,
+                minimumScaleFactor: titleConfig.minimumScaleFactor,
                 insets: titleConfig.insets,
                 accessories: titleConfig.accessories
             )
@@ -157,6 +158,7 @@ extension UIViewController {
                 subtitle: subtitle,
                 foregroundColor: foregroundColor ?? .white,
                 dimming: inlineConfig.dimming,
+                minimumScaleFactor: inlineConfig.minimumScaleFactor,
                 insets: inlineConfig.insets,
                 accessories: inlineConfig.accessories
             )
