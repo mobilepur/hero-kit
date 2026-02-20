@@ -32,10 +32,13 @@ extension AppComposer {
 
             case let .remoteImage(title, subtitle, url, height):
                 let titleConfig = makeTitleConfig(title: title, subtitle: subtitle)
-                return .image(
+                let imageConfig = HeroHeader.ImageConfiguration(
                     url: url,
                     contentMode: settings.imageContentMode.contentMode,
-                    backgroundColor: settings.imageBackgroundColor.color,
+                    backgroundColor: settings.imageBackgroundColor.color
+                )
+                return .image(
+                    image: imageConfig,
                     configuration: makeHeaderViewConfiguration(height: height),
                     title: applyTitleLength(to: titleConfig)
                 )
