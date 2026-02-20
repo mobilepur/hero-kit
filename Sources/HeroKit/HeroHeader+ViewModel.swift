@@ -22,6 +22,7 @@ extension HeroHeader {
         var storedTitle: String?
         private var titleCancellable: AnyCancellable?
         private var isInitialScrollComplete = false
+        private var isSmallTitleShowing = false
 
         func didCompleteSetup() {
             isInitialScrollComplete = true
@@ -212,10 +213,11 @@ extension HeroHeader {
                 headerView.isLargeTitleHidden
             }
 
-            let wasShowing = controller.navigationItem.title != nil
-            if shouldShow != wasShowing {
+            if shouldShow != isSmallTitleShowing {
+                isSmallTitleShowing = shouldShow
                 let newTitle = shouldShow ? storedTitle : nil
-                controller.navigationController?.setTitleAnimated(newTitle)
+                controller.navigationItem.title = newTitle
+                controller.navigationController?.animateNavigationBarTransition()
 
                 // iOS 26+: Set subtitle when small title is shown
                 if #available(iOS 26, *) {
