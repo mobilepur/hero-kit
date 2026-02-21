@@ -2,7 +2,11 @@ import HeroKit
 import UIKit
 
 protocol HeaderPickerControllerDelegate: AnyObject {
-    func headerPicker(_ controller: HeaderPickerController, didSelect content: HeaderContent)
+    func headerPicker(
+        _ controller: HeaderPickerController,
+        didSelect content: HeaderContent,
+        transitionSource: (any HeroTransitionSource)?
+    )
     func headerPicker(_ controller: HeaderPickerController, showSettings: Void)
 }
 
@@ -195,6 +199,15 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     }
 
     private func setupNavigationBar() {
+        if presentingViewController != nil {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(
+                systemItem: .close,
+                primaryAction: UIAction { [weak self] _ in
+                    self?.dismiss(animated: true)
+                }
+            )
+        }
+
         let settingsButton = UIBarButtonItem(
             image: UIImage(systemName: "gear"),
             primaryAction: UIAction { [weak self] _ in
@@ -262,7 +275,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             HeaderContent.transitionItems[index]
         }
 
-        delegate?.headerPicker(self, didSelect: selectedContent)
+        let transitionSource: (any HeroTransitionSource)? = if case .transitionItem = item {
+            collectionView.cellForItem(at: indexPath) as? TransitionImageCell
+        } else {
+            nil
+        }
+
+        delegate?.headerPicker(self, didSelect: selectedContent, transitionSource: transitionSource)
     }
 
     private func applySnapshot() {
@@ -371,5 +390,48 @@ final class TransitionImageCell: UICollectionViewCell {
         if case let .localImage(_, _, assetName, _) = content {
             heroImageView.image = UIImage(named: assetName)
         }
+    }
+}
+
+// MARK: - HeroTransitionSource
+
+extension TransitionImageCell: HeroTransitionSource {
+
+    func heroSourceImageView() -> UIImageView? {
+        heroImageView
+    }
+
+    func heroSourceFrame(in window: UIWindow) -> CGRect {
+        heroImageView.convert(heroImageView.bounds, to: window)
+    }
+
+    func heroSourceCornerRadius() -> CGFloat {
+        heroImageView.layer.cornerRadius
+    }
+}
+
+// MARK: - HeroTransitionDestination
+
+extension HeaderPickerController: HeroTransitionDestination {
+
+    func heroDestinationImageView() -> UIImageView? {
+        findHeroHeaderView(in: view)?.contentView as? UIImageView
+    }
+
+    func heroDestinationFrame(in window: UIWindow) -> CGRect {
+        guard let imageView = heroDestinationImageView() else { return .zero }
+        return imageView.convert(imageView.bounds, to: window)
+    }
+
+    func heroDestinationCornerRadius() -> CGFloat {
+        0
+    }
+
+    private func findHeroHeaderView(in view: UIView) -> HeroHeaderView? {
+        if let header = view as? HeroHeaderView { return header }
+        for subview in view.subviews {
+            if let found = findHeroHeaderView(in: subview) { return found }
+        }
+        return nil
     }
 }

@@ -49,7 +49,8 @@ extension AppComposer: HeaderPickerControllerDelegate {
 
     func headerPicker(
         _ controller: HeaderPickerController,
-        didSelect content: HeaderContent
+        didSelect content: HeaderContent,
+        transitionSource: (any HeroTransitionSource)?
     ) {
         let resolvedStyle = model.buildStyle(from: content)
         let nextController = HeaderPickerController(
@@ -58,7 +59,13 @@ extension AppComposer: HeaderPickerControllerDelegate {
         )
         nextController.content = content
         nextController.delegate = self
-        controller.navigationController?.pushViewController(nextController, animated: true)
+
+        if let transitionSource {
+            let nav = UINavigationController(rootViewController: nextController)
+            controller.heroPresent(nav, source: transitionSource)
+        } else {
+            controller.navigationController?.pushViewController(nextController, animated: true)
+        }
     }
 
     func headerPicker(_ controller: HeaderPickerController, showSettings _: Void) {
