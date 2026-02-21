@@ -275,9 +275,4 @@ public enum HeroHeader {
         case spinner
     }
 
-    public enum Error: Swift.Error {
-        case scrollViewNotFound
-        case navigationControllerNotFound
-        case titleNotFound
-    }
 }

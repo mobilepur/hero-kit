@@ -135,7 +135,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         applySnapshot()
         if let initialStyle {
             headerDelegate = self
-            try? setHeader(initialStyle)
+            setHeader(initialStyle)
         }
     }
 

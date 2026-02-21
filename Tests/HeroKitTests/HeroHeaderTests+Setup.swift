@@ -12,18 +12,18 @@ extension HeroHeaderTests.Setup {
     struct Integration {
 
         @Test("didSetup without LargeTitle")
-        func didSetup_height() throws {
+        func didSetup_height() {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
             let (controller, stub, nav, window) = HeroHeaderTests.makeController()
             _ = (nav, window)
 
-            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
             #expect(stub.setupHeaderHeight == configuration.height)
         }
 
         @Test("didSetup with LargeTitle but no title set")
-        func didSetup_height_withLargeTitle_noTitleSet() throws {
+        func didSetup_height_withLargeTitle_noTitleSet() {
             let configuration = HeroHeader.HeaderViewConfiguration(
                 height: 100,
                 largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: false))
@@ -31,13 +31,13 @@ extension HeroHeaderTests.Setup {
             let (controller, stub, nav, window) = HeroHeaderTests.makeController()
             _ = (nav, window)
 
-            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
             #expect(stub.setupHeaderHeight == configuration.height)
         }
 
         @Test("didSetup with LargeTitle and title")
-        func didSetup_height_withLargeTitle() throws {
+        func didSetup_height_withLargeTitle() {
             let configuration = HeroHeader.HeaderViewConfiguration(
                 height: 100,
                 largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: false))
@@ -46,7 +46,7 @@ extension HeroHeaderTests.Setup {
             _ = (nav, window)
 
             let titleConfig = HeroHeader.TitleConfiguration(title: "Title")
-            try controller.setHeader(.headerView(
+            controller.setHeader(.headerView(
                 view: MockHeader(),
                 configuration: configuration,
                 title: titleConfig
@@ -56,23 +56,23 @@ extension HeroHeaderTests.Setup {
         }
 
         @Test("ViewModel has correct headerHeight after setup")
-        func viewModel_headerHeight() throws {
+        func viewModel_headerHeight() {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
             let (controller, stub, nav, window) = HeroHeaderTests.makeController()
             _ = (stub, nav, window)
 
-            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
             #expect(controller.viewModel?.headerHeight == configuration.height)
         }
 
         @Test("didSetup delegate is called")
-        func didSetup_delegateCalled() throws {
+        func didSetup_delegateCalled() {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
             let (controller, stub, nav, window) = HeroHeaderTests.makeController()
             _ = (nav, window)
 
-            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
             #expect(stub.didSetupWasCalled == true)
         }

@@ -80,6 +80,6 @@ extension AppComposer: SettingsControllerDelegate {
             let content = topController.content
         else { return }
         let resolvedStyle = model.buildStyle(from: content)
-        try? topController.setHeader(resolvedStyle)
+        topController.setHeader(resolvedStyle)
     }
 }
