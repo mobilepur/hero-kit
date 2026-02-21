@@ -115,12 +115,18 @@ public class HeroMatchedTransition: NSObject, UIViewControllerAnimatedTransition
     private func animateDismissal(
         using transitionContext: any UIViewControllerContextTransitioning
     ) {
-        guard let fromVC = transitionContext.viewController(forKey: .from) else {
+        guard let fromVC = transitionContext.viewController(forKey: .from),
+              let toVC = transitionContext.viewController(forKey: .to)
+        else {
             transitionContext.completeTransition(false)
             return
         }
 
         let containerView = transitionContext.containerView
+
+        // Insert the presenting view behind the modal so it's visible during fade-out
+        toVC.view.frame = transitionContext.finalFrame(for: toVC)
+        containerView.insertSubview(toVC.view, at: 0)
 
         guard let source,
               let sourceImageView = source.heroSourceImageView(),
