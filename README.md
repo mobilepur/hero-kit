@@ -56,8 +56,8 @@ class PhotoViewController: UICollectionViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Or use the convenience method: try? setImageHeader(url:configuration:title:)
-        try? setHeader(
+        // Or use the convenience method: setImageHeader(url:configuration:title:)
+        setHeader(
             .image(
                 image: .init(url: URL(string: "https://example.com/photo.jpg")!),
                 configuration: .init(height: 300),
@@ -73,8 +73,8 @@ class PhotoViewController: UICollectionViewController {
 ### Image / Custom View Header
 
 ```swift
-// Large title below the header image — or use: try setHeader(view:configuration:title:)
-try setHeader(.headerView(
+// Large title below the header image — or use: setHeader(view:configuration:title:)
+setHeader(.headerView(
     view: imageView,
     configuration: .init(
         height: 300,
@@ -85,7 +85,7 @@ try setHeader(.headerView(
 ))
 
 // Inline title overlaid on the image with gradient dimming
-try setHeader(.headerView(
+setHeader(.headerView(
     view: imageView,
     configuration: .init(
         height: 300,
@@ -98,8 +98,8 @@ try setHeader(.headerView(
 ### Remote Image Header
 
 ```swift
-// Or use the convenience method: try setImageHeader(url:contentMode:backgroundColor:configuration:title:)
-try setHeader(
+// Or use the convenience method: setImageHeader(url:contentMode:backgroundColor:configuration:title:)
+setHeader(
     .image(
         image: .init(
             url: URL(string: "https://example.com/photo.jpg")!,
@@ -115,8 +115,8 @@ try setHeader(
 ### Colored Opaque Header
 
 ```swift
-// Or use the convenience method: try setOpaqueHeader(title:backgroundColor:foregroundColor:prefersLargeTitles:)
-try setHeader(
+// Or use the convenience method: setOpaqueHeader(title:backgroundColor:foregroundColor:prefersLargeTitles:)
+setHeader(
     .opaque(
         title: .init(title: "Settings"),
         backgroundColor: .systemMint,

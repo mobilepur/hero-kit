@@ -1,6 +1,18 @@
 import Combine
 import ObjectiveC
+import os
 import UIKit
+
+private func heroWarning(_ message: String) {
+    #if DEBUG
+    os_log(
+        .fault,
+        log: OSLog(subsystem: "com.apple.runtime-issues", category: "HeroKit"),
+        "%{public}s",
+        message
+    )
+    #endif
+}
 
 // MARK: - UIViewController Extension
 
@@ -14,15 +26,16 @@ public extension UIViewController {
         }
     }
 
-    func setHeader(_ style: HeroHeader.Style, scrollView: UIScrollView? = nil) throws {
+    func setHeader(_ style: HeroHeader.Style, scrollView: UIScrollView? = nil) {
         guard let targetScrollView = scrollView ?? findScrollView() else {
-            throw HeroHeader.Error.scrollViewNotFound
+            heroWarning("No UIScrollView found. Pass a scrollView parameter or ensure one exists in the view hierarchy.")
+            return
         }
 
         // Clean up existing header if present
         cleanupExistingHeader()
 
-        try setupHeader(style: style, scrollView: targetScrollView)
+        setupHeader(style: style, scrollView: targetScrollView)
         subscribeToScrollOffset(of: targetScrollView)
     }
 
@@ -31,8 +44,8 @@ public extension UIViewController {
         configuration: HeroHeader.HeaderViewConfiguration = .init(),
         title: HeroHeader.TitleConfiguration? = nil,
         scrollView: UIScrollView? = nil
-    ) throws {
-        try setHeader(
+    ) {
+        setHeader(
             .headerView(view: view, configuration: configuration, title: title),
             scrollView: scrollView
         )
@@ -46,14 +59,14 @@ public extension UIViewController {
         configuration: HeroHeader.HeaderViewConfiguration = .init(),
         title: HeroHeader.TitleConfiguration? = nil,
         scrollView: UIScrollView? = nil
-    ) throws {
+    ) {
         let imageConfig = HeroHeader.ImageConfiguration(
             url: url,
             contentMode: contentMode,
             backgroundColor: backgroundColor,
             loadingType: loadingType
         )
-        try setHeader(
+        setHeader(
             .image(image: imageConfig, configuration: configuration, title: title),
             scrollView: scrollView
         )
@@ -65,8 +78,8 @@ public extension UIViewController {
         foregroundColor: UIColor? = nil,
         prefersLargeTitles: Bool = false,
         lightModeOnly: Bool = false
-    ) throws {
-        try setHeader(.opaque(
+    ) {
+        setHeader(.opaque(
             title: title,
             backgroundColor: backgroundColor,
             foregroundColor: foregroundColor,
@@ -95,7 +108,7 @@ public extension UIViewController {
 
 extension UIViewController {
 
-    private func setupHeader(style: HeroHeader.Style, scrollView: UIScrollView) throws {
+    private func setupHeader(style: HeroHeader.Style, scrollView: UIScrollView) {
         switch style {
         case let .opaque(
             titleConfig,
@@ -104,7 +117,7 @@ extension UIViewController {
             prefersLargeTitles,
             lightModeOnly
         ):
-            try setupOpaqueHeader(
+            setupOpaqueHeader(
                 titleConfig: titleConfig,
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor,
@@ -277,8 +290,8 @@ extension UIViewController {
         foregroundColor: UIColor?,
         prefersLargeTitles: Bool,
         lightModeOnly: Bool
-    ) throws {
-        try applyOpaqueAppearance(
+    ) {
+        applyOpaqueAppearance(
             titleConfig: titleConfig,
             backgroundColor: backgroundColor,
             foregroundColor: foregroundColor,
@@ -302,12 +315,15 @@ extension UIViewController {
         foregroundColor: UIColor?,
         prefersLargeTitles: Bool,
         lightModeOnly: Bool
-    ) throws {
-        guard let navigationController else { throw HeroHeader.Error.navigationControllerNotFound }
+    ) {
+        guard let navigationController else {
+            heroWarning("No UINavigationController found. Opaque headers require a navigation controller.")
+            return
+        }
 
         if lightModeOnly, isDarkMode {
             if #available(iOS 26, *), prefersLargeTitles {
-                try setupLargeTitleOpaqueHeaderCompatibleMode(
+                setupLargeTitleOpaqueHeaderCompatibleMode(
                     titleConfig: titleConfig,
                     backgroundColor: .clear,
                     foregroundColor: nil
@@ -317,7 +333,7 @@ extension UIViewController {
                 navigationController.navigationBar.prefersLargeTitles = prefersLargeTitles
             }
         } else if #available(iOS 26, *), prefersLargeTitles {
-            try setupLargeTitleOpaqueHeaderCompatibleMode(
+            setupLargeTitleOpaqueHeaderCompatibleMode(
                 titleConfig: titleConfig,
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor
@@ -348,7 +364,7 @@ extension UIViewController {
             vc.scrollCancellable = nil
             vc.viewModel = nil
 
-            try? vc.applyOpaqueAppearance(
+            vc.applyOpaqueAppearance(
                 titleConfig: titleConfig,
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor,
@@ -370,12 +386,14 @@ extension UIViewController {
         titleConfig: HeroHeader.TitleConfiguration,
         backgroundColor: UIColor,
         foregroundColor: UIColor?
-    ) throws {
+    ) {
         guard let resolvedTitle = resolveTitle(from: titleConfig) else {
-            throw HeroHeader.Error.titleNotFound
+            heroWarning("No title found. Provide a title via TitleConfiguration or set navigationItem.title.")
+            return
         }
         guard let scrollView = findScrollView() else {
-            throw HeroHeader.Error.scrollViewNotFound
+            heroWarning("No UIScrollView found. Pass a scrollView parameter or ensure one exists in the view hierarchy.")
+            return
         }
         let headerView = createOpaqueHeaderView(
             backgroundColor: backgroundColor

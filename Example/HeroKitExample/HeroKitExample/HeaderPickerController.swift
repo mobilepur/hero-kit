@@ -2,7 +2,11 @@ import HeroKit
 import UIKit
 
 protocol HeaderPickerControllerDelegate: AnyObject {
-    func headerPicker(_ controller: HeaderPickerController, didSelect content: HeaderContent)
+    func headerPicker(
+        _ controller: HeaderPickerController,
+        didSelect content: HeaderContent,
+        transitionSource: (any HeroTransitionSource)?
+    )
     func headerPicker(_ controller: HeaderPickerController, showSettings: Void)
 }
 
@@ -27,9 +31,50 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
     }
 
     private lazy var collectionView: UICollectionView = {
-        var config = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
-        config.headerMode = .supplementary
-        let layout = UICollectionViewCompositionalLayout.list(using: config)
+        let layout = UICollectionViewCompositionalLayout { [weak self] sectionIndex, environment in
+            guard let section = self?.dataSource.sectionIdentifier(for: sectionIndex) else {
+                return nil
+            }
+
+            switch section {
+            case .transitions:
+                let itemSize = NSCollectionLayoutSize(
+                    widthDimension: .fractionalWidth(1.0),
+                    heightDimension: .estimated(220)
+                )
+                let item = NSCollectionLayoutItem(layoutSize: itemSize)
+
+                let groupSize = NSCollectionLayoutSize(
+                    widthDimension: .fractionalWidth(1.0),
+                    heightDimension: .estimated(220)
+                )
+                let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize, subitems: [item])
+
+                let section = NSCollectionLayoutSection(group: group)
+                section.interGroupSpacing = 12
+                section.contentInsets = NSDirectionalEdgeInsets(
+                    top: 8, leading: 20, bottom: 20, trailing: 20
+                )
+
+                let headerSize = NSCollectionLayoutSize(
+                    widthDimension: .fractionalWidth(1.0),
+                    heightDimension: .estimated(44)
+                )
+                let header = NSCollectionLayoutBoundarySupplementaryItem(
+                    layoutSize: headerSize,
+                    elementKind: UICollectionView.elementKindSectionHeader,
+                    alignment: .top
+                )
+                section.boundarySupplementaryItems = [header]
+                return section
+
+            default:
+                var config = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
+                config.headerMode = .supplementary
+                return NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
+            }
+        }
+
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         return collectionView
@@ -78,6 +123,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             }
         }
 
+        let transitionCellRegistration = UICollectionView.CellRegistration<
+            TransitionImageCell,
+            HeaderContent
+        > { cell, _, content in
+            cell.configure(with: content)
+        }
+
         let headerRegistration = UICollectionView
             .SupplementaryRegistration<UICollectionViewListCell>(
                 elementKind: UICollectionView.elementKindSectionHeader
@@ -114,6 +166,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                     for: indexPath,
                     item: content
                 )
+            case let .transitionItem(index):
+                let content = HeaderContent.transitionItems[index]
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: transitionCellRegistration,
+                    for: indexPath,
+                    item: content
+                )
             }
         }
 
@@ -135,11 +194,20 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         applySnapshot()
         if let initialStyle {
             headerDelegate = self
-            try? setHeader(initialStyle)
+            setHeader(initialStyle)
         }
     }
 
     private func setupNavigationBar() {
+        if presentingViewController != nil {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(
+                systemItem: .close,
+                primaryAction: UIAction { [weak self] _ in
+                    self?.dismiss(animated: true)
+                }
+            )
+        }
+
         let settingsButton = UIBarButtonItem(
             image: UIImage(systemName: "gear"),
             primaryAction: UIAction { [weak self] _ in
@@ -203,14 +271,22 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             HeaderContent.localImageItems[index]
         case let .remoteImageItem(index):
             HeaderContent.remoteImageItems[index]
+        case let .transitionItem(index):
+            HeaderContent.transitionItems[index]
         }
 
-        delegate?.headerPicker(self, didSelect: selectedContent)
+        let transitionSource: (any HeroTransitionSource)? = if case .transitionItem = item {
+            collectionView.cellForItem(at: indexPath) as? TransitionImageCell
+        } else {
+            nil
+        }
+
+        delegate?.headerPicker(self, didSelect: selectedContent, transitionSource: transitionSource)
     }
 
     private func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
-        snapshot.appendSections([.colors, .localImages, .remoteImages])
+        snapshot.appendSections([.colors, .localImages, .remoteImages, .transitions])
         snapshot.appendItems(
             HeaderContent.colorItems.indices.map { Item.colorItem($0) },
             toSection: .colors
@@ -223,6 +299,10 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
             HeaderContent.remoteImageItems.indices.map { Item.remoteImageItem($0) },
             toSection: .remoteImages
         )
+        snapshot.appendItems(
+            HeaderContent.transitionItems.indices.map { Item.transitionItem($0) },
+            toSection: .transitions
+        )
         dataSource.apply(snapshot, animatingDifferences: false)
     }
 }
@@ -233,12 +313,14 @@ nonisolated enum Section: Hashable, Sendable {
     case colors
     case localImages
     case remoteImages
+    case transitions
 
     var title: String {
         switch self {
         case .colors: "Colors"
         case .localImages: "Views"
         case .remoteImages: "Image URLs"
+        case .transitions: "Transitions"
         }
     }
 }
@@ -249,4 +331,107 @@ nonisolated enum Item: Hashable, Sendable {
     case colorItem(Int)
     case localImageItem(Int)
     case remoteImageItem(Int)
+    case transitionItem(Int)
+}
+
+// MARK: - TransitionImageCell
+
+final class TransitionImageCell: UICollectionViewCell {
+
+    let heroImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.layer.cornerRadius = 12
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = .preferredFont(forTextStyle: .headline)
+        label.textColor = .white
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.layer.shadowColor = UIColor.black.cgColor
+        label.layer.shadowOffset = CGSize(width: 0, height: 1)
+        label.layer.shadowOpacity = 0.6
+        label.layer.shadowRadius = 3
+        return label
+    }()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+
+        contentView.addSubview(heroImageView)
+        contentView.addSubview(titleLabel)
+
+        NSLayoutConstraint.activate([
+            heroImageView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            heroImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            heroImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            heroImageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            heroImageView.heightAnchor.constraint(equalToConstant: 200),
+
+            titleLabel.leadingAnchor.constraint(equalTo: heroImageView.leadingAnchor, constant: 12),
+            titleLabel.bottomAnchor.constraint(equalTo: heroImageView.bottomAnchor, constant: -12),
+            titleLabel.trailingAnchor.constraint(
+                lessThanOrEqualTo: heroImageView.trailingAnchor, constant: -12
+            ),
+        ])
+    }
+
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func configure(with content: HeaderContent) {
+        titleLabel.text = content.displayName
+        if case let .localImage(_, _, assetName, _) = content {
+            heroImageView.image = UIImage(named: assetName)
+        }
+    }
+}
+
+// MARK: - HeroTransitionSource
+
+extension TransitionImageCell: HeroTransitionSource {
+
+    func heroSourceImageView() -> UIImageView? {
+        heroImageView
+    }
+
+    func heroSourceFrame(in window: UIWindow) -> CGRect {
+        heroImageView.convert(heroImageView.bounds, to: window)
+    }
+
+    func heroSourceCornerRadius() -> CGFloat {
+        heroImageView.layer.cornerRadius
+    }
+}
+
+// MARK: - HeroTransitionDestination
+
+extension HeaderPickerController: HeroTransitionDestination {
+
+    func heroDestinationImageView() -> UIImageView? {
+        findHeroHeaderView(in: view)?.contentView as? UIImageView
+    }
+
+    func heroDestinationFrame(in window: UIWindow) -> CGRect {
+        guard let imageView = heroDestinationImageView() else { return .zero }
+        return imageView.convert(imageView.bounds, to: window)
+    }
+
+    func heroDestinationCornerRadius() -> CGFloat {
+        0
+    }
+
+    private func findHeroHeaderView(in view: UIView) -> HeroHeaderView? {
+        if let header = view as? HeroHeaderView { return header }
+        for subview in view.subviews {
+            if let found = findHeroHeaderView(in: subview) { return found }
+        }
+        return nil
+    }
 }

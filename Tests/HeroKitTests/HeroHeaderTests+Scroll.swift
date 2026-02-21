@@ -14,12 +14,12 @@ extension HeroHeaderTests.Scroll {
     struct Integration {
 
         @Test("didScroll delegate is called when scrolling")
-        func didScroll_delegateCalled() throws {
+        func didScroll_delegateCalled() {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
             let (controller, stub, nav, window) = HeroHeaderTests.makeController()
             _ = (nav, window)
 
-            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
             controller.viewModel?.didCompleteSetup()
 
             // Simulate scroll
@@ -29,12 +29,12 @@ extension HeroHeaderTests.Scroll {
         }
 
         @Test("didCollapse delegate is called when header collapses")
-        func didCollapse_delegateCalled() throws {
+        func didCollapse_delegateCalled() {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
             let (controller, stub, nav, window) = HeroHeaderTests.makeController()
             _ = (nav, window)
 
-            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
             controller.viewModel?.didCompleteSetup()
 
             // Scroll up until header is fully collapsed (offsetY >= 0)
@@ -44,12 +44,12 @@ extension HeroHeaderTests.Scroll {
         }
 
         @Test("Complete scroll round trip triggers all delegate callbacks")
-        func scrollRoundTrip_noLargeTitles() throws {
+        func scrollRoundTrip_noLargeTitles() {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100, stretches: true)
             let (controller, stub, nav, window) = HeroHeaderTests.makeController()
             _ = (nav, window)
 
-            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
             controller.viewModel?.didCompleteSetup()
             let headerHeight = controller.viewModel?.headerHeight ?? 100
 
@@ -87,7 +87,7 @@ extension HeroHeaderTests.Scroll {
         }
 
         @Test("Complete scroll round trip with large titles")
-        func scrollRoundTrip_withLargeTitles() throws {
+        func scrollRoundTrip_withLargeTitles() {
             let configuration = HeroHeader.HeaderViewConfiguration(
                 height: 100,
                 stretches: true,
@@ -97,7 +97,7 @@ extension HeroHeaderTests.Scroll {
             _ = (nav, window)
 
             let titleConfig = HeroHeader.TitleConfiguration(title: "Title")
-            try controller.setHeader(.headerView(
+            controller.setHeader(.headerView(
                 view: MockHeader(),
                 configuration: configuration,
                 title: titleConfig

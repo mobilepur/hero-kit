@@ -12,12 +12,12 @@ extension HeroHeaderTests.API {
     struct Integration {
 
         @Test("expandHeader sets state to fullyExpanded")
-        func expandHeader() throws {
+        func expandHeader() {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
             let (controller, stub, nav, window) = HeroHeaderTests.makeController()
             _ = (nav, window)
 
-            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
             controller.viewModel?.didCompleteSetup()
 
             // First collapse
@@ -33,12 +33,12 @@ extension HeroHeaderTests.API {
         }
 
         @Test("collapseHeader sets contentOffset to zero")
-        func collapseHeader() throws {
+        func collapseHeader() {
             let configuration = HeroHeader.HeaderViewConfiguration(height: 100)
             let (controller, _, nav, window) = HeroHeaderTests.makeController()
             _ = (nav, window)
 
-            try controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
+            controller.setHeader(.headerView(view: MockHeader(), configuration: configuration))
 
             controller.collapseHeader(animated: false)
 
@@ -46,7 +46,7 @@ extension HeroHeaderTests.API {
         }
 
         @Test("collapseHeaderContent sets contentOffset to hide content")
-        func collapseHeaderContent() throws {
+        func collapseHeaderContent() {
             let configuration = HeroHeader.HeaderViewConfiguration(
                 height: 100,
                 largeTitleDisplayMode: .belowHeader(.init(allowsLineWrap: false))
@@ -55,7 +55,7 @@ extension HeroHeaderTests.API {
             _ = (nav, window)
 
             let titleConfig = HeroHeader.TitleConfiguration(title: "Title")
-            try controller.setHeader(.headerView(
+            controller.setHeader(.headerView(
                 view: MockHeader(),
                 configuration: configuration,
                 title: titleConfig

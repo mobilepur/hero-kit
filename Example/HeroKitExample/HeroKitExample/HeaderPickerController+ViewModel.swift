@@ -95,6 +95,12 @@ extension HeaderContent {
         .localImage(title: "Golden Fields", subtitle: "Bali, Indonesia", assetName: "ricefields"),
     ]
 
+    static let transitionItems: [HeaderContent] = [
+        .localImage(title: "City Ride", assetName: "bikes"),
+        .localImage(title: "Ancient Ruins", subtitle: "Lost in time", assetName: "temple"),
+        .localImage(title: "Golden Fields", subtitle: "Bali, Indonesia", assetName: "ricefields"),
+    ]
+
     static let remoteImageItems: [HeaderContent] = [
         .remoteImage(
             title: "Remote Landscape",
