@@ -126,6 +126,18 @@ setHeader(
 )
 ```
 
+### Matched Transitions
+
+<img src="docs/images/matched-transition.gif" width="250" alt="Matched Transition">
+
+Present a view controller with a morph animation from a source element to the destination's header:
+
+```swift
+heroPresent(detailVC, source: selectedCell)
+```
+
+The source conforms to `HeroTransitionSource`. Dismiss reverses the animation automatically.
+
 ## Configuration
 
 ### HeaderViewConfiguration
