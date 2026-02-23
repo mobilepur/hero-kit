@@ -1,29 +1,9 @@
 import ObjectiveC
 import UIKit
 
-public extension UIViewController {
-
-    /// Presents the destination modally with a matched-element transition.
-    ///
-    /// The source view's image morphs into the destination's header image.
-    /// On dismiss, the animation reverses automatically.
-    func heroPresent(
-        _ destination: UIViewController,
-        source: any HeroTransitionSource,
-        animated: Bool = true,
-        completion: (() -> Void)? = nil
-    ) {
-        let transitionDelegate = HeroMatchedTransitionDelegate(source: source)
-        destination.heroTransitionDelegate = transitionDelegate
-        destination.transitioningDelegate = transitionDelegate
-        destination.modalPresentationStyle = .fullScreen
-        present(destination, animated: animated, completion: completion)
-    }
-}
-
 // MARK: - Associated Object Storage
 
-private extension UIViewController {
+extension UIViewController {
 
     enum HeroTransitionKeys {
         nonisolated(unsafe) static var transitionDelegate: Void?
