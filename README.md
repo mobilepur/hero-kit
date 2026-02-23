@@ -13,8 +13,13 @@ HeroKit lets you add image headers, colored bars, or custom views that collapse 
 
 ## Features
 
-- **Header Styles** — image, remote image, colored opaque, or custom `UIView`
-  - Large titles (below header or inline), subtitles, stretch & bounce, dimming
+- **Header Styles**
+  - Image headers
+  - Remote image headers
+  - Colored opaque headers
+  - Custom `UIView` headers
+  - Large titles (below header or inline)
+  - Subtitles, stretch & bounce, dimming
 - **Matched Transitions** — morph a source element into the destination's header
 - **Programmatic Control & Delegates** — expand, collapse, and respond to scroll events
 
