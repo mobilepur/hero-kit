@@ -5,12 +5,12 @@ import UIKit
 
 private func heroWarning(_ message: String) {
     #if DEBUG
-    os_log(
-        .fault,
-        log: OSLog(subsystem: "com.apple.runtime-issues", category: "HeroKit"),
-        "%{public}s",
-        message
-    )
+        os_log(
+            .fault,
+            log: OSLog(subsystem: "com.apple.runtime-issues", category: "HeroKit"),
+            "%{public}s",
+            message
+        )
     #endif
 }
 
@@ -49,7 +49,9 @@ public extension UIViewController {
         scrollView: UIScrollView? = nil
     ) {
         guard let targetScrollView = scrollView ?? findScrollView() else {
-            heroWarning("No UIScrollView found. Pass a scrollView parameter or ensure one exists in the view hierarchy.")
+            heroWarning(
+                "No UIScrollView found. Pass a scrollView parameter or ensure one exists in the view hierarchy."
+            )
             return
         }
 
@@ -225,9 +227,12 @@ extension UIViewController {
         foregroundColor: UIColor?
     ) -> (headerView: HeroHeaderView, contentConstraint: NSLayoutConstraint) {
         // contentView with height constraint (adjusted during stretch)
+        // Priority below required so it doesn't conflict with the stack view's
+        // UIView-Encapsulated-Layout-Height during layout passes.
         contentView.translatesAutoresizingMaskIntoConstraints = false
         let contentConstraint = contentView.heightAnchor
             .constraint(equalToConstant: configuration.height)
+        contentConstraint.priority = .defaultHigh
         contentConstraint.isActive = true
 
         // Optional: Create large title view
@@ -352,7 +357,9 @@ extension UIViewController {
         lightModeOnly: Bool
     ) {
         guard let navigationController else {
-            heroWarning("No UINavigationController found. Opaque headers require a navigation controller.")
+            heroWarning(
+                "No UINavigationController found. Opaque headers require a navigation controller."
+            )
             return
         }
 
@@ -423,11 +430,15 @@ extension UIViewController {
         foregroundColor: UIColor?
     ) {
         guard let resolvedTitle = resolveTitle(from: titleConfig) else {
-            heroWarning("No title found. Provide a title via TitleConfiguration or set navigationItem.title.")
+            heroWarning(
+                "No title found. Provide a title via TitleConfiguration or set navigationItem.title."
+            )
             return
         }
         guard let scrollView = findScrollView() else {
-            heroWarning("No UIScrollView found. Pass a scrollView parameter or ensure one exists in the view hierarchy.")
+            heroWarning(
+                "No UIScrollView found. Pass a scrollView parameter or ensure one exists in the view hierarchy."
+            )
             return
         }
         let headerView = createOpaqueHeaderView(
