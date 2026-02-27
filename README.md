@@ -77,6 +77,10 @@ heroPresent(detailVC, source: selectedCell)
 
 The source conforms to `HeroTransitionSource`. Dismiss reverses the animation automatically.
 
+## Documentation
+
+See [docs/HeroKit.md](docs/HeroKit.md) for the full API reference — header styles, configuration options, delegates, programmatic control, and navigation bar restoration.
+
 ## License
 
 MIT
