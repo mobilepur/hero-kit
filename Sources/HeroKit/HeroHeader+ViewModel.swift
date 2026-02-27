@@ -28,9 +28,7 @@ extension HeroHeader {
             isInitialScrollComplete = true
         }
 
-        var headerViewConfiguration: HeaderViewConfiguration? {
-            style.headerViewConfiguration
-        }
+        private(set) var headerViewConfiguration: HeaderViewConfiguration?
 
         var titleConfiguration: TitleConfiguration? {
             style.titleConfiguration
@@ -63,10 +61,16 @@ extension HeroHeader {
                 }
         }
 
-        func setup(headerView: HeroHeaderView, layout: Layout) {
+        func setup(
+            headerView: HeroHeaderView,
+            layout: Layout,
+            configuration: HeaderViewConfiguration
+        ) {
             guard let controller else { return }
             self.headerView = headerView
             self.layout = layout
+            headerViewConfiguration = configuration
+            controller.navigationItem.title = nil
             applySmallTitleVisibility()
             delegate?.heroHeader(controller, didSetup: headerView)
         }
@@ -101,20 +105,41 @@ extension HeroHeader {
         }
 
         func reapplyState() {
-            guard let controller, let headerView else { return }
+            guard let controller else { return }
 
-            controller.configureTransparentNavigationBar()
-            applySmallTitleVisibility()
+            if let headerView {
+                // HeaderView-based (image, headerView, or iOS 26+ opaque with large titles)
+                controller.configureTransparentNavigationBar()
+                if case let .opaque(_, _, foregroundColor, _, _) = style, let foregroundColor {
+                    controller.setNavigationBarTintColor(foregroundColor)
+                }
+                applySmallTitleVisibility()
 
-            switch state {
-            case .collapsed:
-                delegate?.heroHeader(controller, didCollapse: headerView)
-            case .contentHidden:
-                delegate?.heroHeader(controller, didCollapseHeaderContent: headerView)
-            case .expanded, .fullyExpanded:
-                delegate?.heroHeader(controller, headerContentDidBecameVisible: headerView)
-            case .stretched:
-                delegate?.heroHeader(controller, didStretch: headerView)
+                switch state {
+                case .collapsed:
+                    delegate?.heroHeader(controller, didCollapse: headerView)
+                case .contentHidden:
+                    delegate?.heroHeader(controller, didCollapseHeaderContent: headerView)
+                case .expanded, .fullyExpanded:
+                    delegate?.heroHeader(controller, headerContentDidBecameVisible: headerView)
+                case .stretched:
+                    delegate?.heroHeader(controller, didStretch: headerView)
+                }
+            } else if case let .opaque(
+                titleConfig,
+                backgroundColor,
+                foregroundColor,
+                prefersLargeTitles,
+                lightModeOnly
+            ) = style {
+                // Simple opaque header (no headerView)
+                controller.applyOpaqueAppearance(
+                    titleConfig: titleConfig,
+                    backgroundColor: backgroundColor,
+                    foregroundColor: foregroundColor,
+                    prefersLargeTitles: prefersLargeTitles,
+                    lightModeOnly: lightModeOnly
+                )
             }
         }
 

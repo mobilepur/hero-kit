@@ -58,6 +58,12 @@ public extension UIViewController {
         // Clean up existing header if present
         cleanupExistingHeader()
 
+        // Always create ViewModel with original style first
+        let heroViewModel = HeroHeader.ViewModel(controller: self, style: style)
+        heroViewModel.delegate = heroHeaderDelegate
+        heroViewModel.storedTitle = navigationItem.title ?? title
+        viewModel = heroViewModel
+
         setupHeader(style: style, scrollView: targetScrollView)
         subscribeToScrollOffset(of: targetScrollView)
 
@@ -161,13 +167,13 @@ extension UIViewController {
                 prefersLargeTitles: prefersLargeTitles,
                 lightModeOnly: lightModeOnly
             )
-        case let .headerView(view, _, _):
+        case let .headerView(view, configuration, _):
             setupHeaderView(
                 view,
-                style: style,
+                configuration: configuration,
                 scrollView: scrollView
             )
-        case let .image(image: imageConfig, _, _):
+        case let .image(image: imageConfig, configuration, _):
             let imageView = AsyncHeaderImageView(
                 url: imageConfig.url,
                 contentMode: imageConfig.contentMode,
@@ -176,7 +182,7 @@ extension UIViewController {
             )
             setupHeaderView(
                 imageView,
-                style: style,
+                configuration: configuration,
                 scrollView: scrollView
             )
         }
@@ -184,28 +190,23 @@ extension UIViewController {
 
     private func setupHeaderView(
         _ contentView: UIView,
-        style: HeroHeader.Style,
+        configuration: HeroHeader.HeaderViewConfiguration,
         scrollView: UIScrollView,
         foregroundColor: UIColor? = nil
     ) {
-        guard let configuration = style.headerViewConfiguration else { return }
+        guard let viewModel else { return }
         configureTransparentNavigationBar()
 
         let (heroHeaderView, contentConstraint) = createHeroHeaderView(
             contentView: contentView,
             configuration: configuration,
-            title: style.largeTitle,
-            subtitle: style.largeSubtitle,
-            foregroundColor: foregroundColor ?? style.foregroundColor
+            title: viewModel.style.largeTitle,
+            subtitle: viewModel.style.largeSubtitle,
+            foregroundColor: foregroundColor ?? viewModel.style.foregroundColor
         )
 
         let constraints = layoutHeaderView(heroHeaderView)
         let totalHeight = heroHeaderView.frame.height
-
-        // Setup ViewModel with all state
-        let heroViewModel = HeroHeader.ViewModel(controller: self, style: style)
-        heroViewModel.delegate = heroHeaderDelegate
-        heroViewModel.storedTitle = navigationItem.title ?? title
 
         let layout = HeroHeader.Layout(
             headerTopConstraint: constraints.top,
@@ -213,8 +214,7 @@ extension UIViewController {
             contentHeightConstraint: contentConstraint,
             totalHeight: totalHeight
         )
-        heroViewModel.setup(headerView: heroHeaderView, layout: layout)
-        viewModel = heroViewModel
+        viewModel.setup(headerView: heroHeaderView, layout: layout, configuration: configuration)
         let navBarHeight = navigationController?.navbarHeight ?? 88
         configureScrollViewInsets(scrollView, headerHeight: totalHeight, navBarHeight: navBarHeight)
     }
@@ -349,7 +349,7 @@ extension UIViewController {
         }
     }
 
-    private func applyOpaqueAppearance(
+    func applyOpaqueAppearance(
         titleConfig: HeroHeader.TitleConfiguration,
         backgroundColor: UIColor,
         foregroundColor: UIColor?,
@@ -406,6 +406,19 @@ extension UIViewController {
             vc.scrollCancellable = nil
             vc.viewModel = nil
 
+            // Re-create ViewModel with original opaque style
+            let style = HeroHeader.Style.opaque(
+                title: titleConfig,
+                backgroundColor: backgroundColor,
+                foregroundColor: foregroundColor,
+                prefersLargeTitles: prefersLargeTitles,
+                lightModeOnly: true
+            )
+            let heroViewModel = HeroHeader.ViewModel(controller: vc, style: style)
+            heroViewModel.delegate = vc.heroHeaderDelegate
+            heroViewModel.storedTitle = vc.navigationItem.title ?? vc.title
+            vc.viewModel = heroViewModel
+
             vc.applyOpaqueAppearance(
                 titleConfig: titleConfig,
                 backgroundColor: backgroundColor,
@@ -415,7 +428,7 @@ extension UIViewController {
             )
 
             // Re-subscribe to scroll if headerView was created (iOS 26+ path)
-            if vc.viewModel != nil, let scrollView = vc.findScrollView() {
+            if vc.viewModel?.headerView != nil, let scrollView = vc.findScrollView() {
                 vc.subscribeToScrollOffset(of: scrollView)
             }
         }
@@ -460,23 +473,16 @@ extension UIViewController {
             largeTitleDisplayMode: .inline()
         )
 
-        let style = HeroHeader.Style.headerView(
-            view: headerView,
-            configuration: configuration,
-            title: titleConfig
-        )
-
         setupHeaderView(
             headerView,
-            style: style,
+            configuration: configuration,
             scrollView: scrollView,
             foregroundColor: foregroundColor
         )
 
         // Match nav bar small title color to header foreground
         if let foregroundColor {
-            setNavigationBarTitleColor(foregroundColor)
-            setNavigationBarSubtitleColor(foregroundColor.withAlphaComponent(0.75))
+            setNavigationBarTintColor(foregroundColor)
         }
     }
 
@@ -629,7 +635,7 @@ private extension UIViewController {
 
         let observer = AppearanceObserver()
         observer.onWillAppear = { [weak self] in
-            self?.viewModel?.reapplyState()
+            self?.reapplyHeaderStyle()
         }
         addChild(observer)
         view.addSubview(observer.view)

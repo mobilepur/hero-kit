@@ -54,6 +54,11 @@ extension UIViewController {
         )
     }
 
+    func setNavigationBarTintColor(_ color: UIColor) {
+        setNavigationBarTitleColor(color)
+        setNavigationBarSubtitleColor(color.withAlphaComponent(0.7))
+    }
+
     /// Sets the title text color on all navigation bar appearances
     func setNavigationBarTitleColor(_ color: UIColor) {
         navigationController?.setTitleColor(color)
