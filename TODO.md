@@ -1,95 +1,40 @@
-# Feature: reapplyHeaderStyle() API
+## Issues 
 
-## Problem
 
-Wenn ein UIViewController mit HeroKit-Header (z.B. `.image` oder `.opaque` mit Large Titles) einen anderen Controller pushed/presented und dieser einen anderen NavigationBar-Style setzt, bleibt beim Zurücknavigieren der falsche Style hängen.
+### Small Header wrong color when popping from nav stack
+1. Open Example
+2. open Opaque Header with white small header -> shows small header in white
+3. open Image Header -> shows small header in black
+4- go back -> collaps header -> shows small header in black
 
-**Beispiel-Flow:**
-1. `TourDetail.Controller` hat einen `.image`-Header → NavigationBar ist transparent (`.style(.image)`)
-2. User öffnet `SightDetail` (modal) → NavigationBar wird `.opaque`
-3. User dismisst `SightDetail` → `TourDetail` erscheint wieder, aber die NavigationBar hat noch den `.opaque` Style von SightDetail
+**Ursache:** `setupLargeTitleOpaqueHeaderCompatibleMode` erstellt einen `.headerView`-Style und speichert diesen im ViewModel statt des originalen `.opaque`-Styles. Dadurch greift der `.opaque`-Check in `reapplyState()` nicht und die foregroundColor wird beim Zurückkehren nicht wiederhergestellt.
 
-Das gleiche Problem tritt auf bei:
-- `TourList.Controller` (`.opaque` mit Large Titles) → Push zu `TourMap` → Zurück
-- `Discover.Container` (transparent/opaque je nach View-Mode) → Modal SightDetail → Zurück
+**Lösung — ViewModel immer mit Original-Style:**
+1. `setHeader()` erstellt immer zuerst den ViewModel mit dem Original-Style
+2. `setupHeaderView` erstellt keinen ViewModel mehr, sondern nutzt den bestehenden
+3. `setupHeaderView` bekommt Configuration als Parameter (statt aus dem Style zu lesen), weil `.opaque` kein `headerViewConfiguration` hat
+4. `setupLargeTitleOpaqueHeaderCompatibleMode` erstellt keinen neuen Style mehr, sondern ruft `setupHeaderView` direkt mit der berechneten Config auf
+5. `reapplyState()` hat immer den echten Style → `.opaque`-Check funktioniert
 
-## Gewünschte Lösung
+**Außerdem:**
+- Syntaxfehler in `UINavigationBarAppearance+Helper.swift:78`: `@available(iOS 26, *)x` → stray `x` entfernen
+- Debug-`print`-Statements entfernen
 
-Eine leichtgewichtige `reapplyHeaderStyle()` Methode auf `UIViewController`, die Controller in `viewWillAppear` oder `viewDidAppear` aufrufen können, um den korrekten NavigationBar-Style wiederherzustellen.
+### Breaking constraints in Image Header
+Unable to simultaneously satisfy constraints.
+    Probably at least one of the constraints in the following list is one you don't want. 
+    Try this: 
+        (1) look at each constraint and try to figure out which you don't expect; 
+        (2) find the code that added the unwanted constraint or constraints and fix it. 
+(
+    "<NSLayoutConstraint:0x600002148050 V:|-(0)-[UIImageView:0x105c42410]   (active, names: '|':UIView:0x105c1f850 )>",
+    "<NSLayoutConstraint:0x60000214aa30 UIImageView:0x105c42410.bottom == UIView:0x105c1f850.bottom   (active)>",
+    "<NSLayoutConstraint:0x6000021488c0 UIImageView:0x105c42410.height == 200   (active)>",
+    "<NSLayoutConstraint:0x600002158230 'UIView-Encapsulated-Layout-Height' UIView:0x105c1f850.height == 220   (active)>"
+)
 
-### Anforderungen
+Will attempt to recover by breaking constraint 
+<NSLayoutConstraint:0x6000021488c0 UIImageView:0x105c42410.height == 200   (active)>
 
-1. **Kein Header-Neuaufbau**: Die Methode darf `cleanupExistingHeader()` NICHT aufrufen. Der Header (HeaderView, ScrollView-Subscription, ViewModel) bleibt komplett intakt.
-2. **Kein Scroll-Position-Sprung**: ContentInsets und ContentOffset dürfen nicht verändert werden.
-3. **Delegate re-notifizieren**: Der `HeroHeaderDelegate` soll über den aktuellen `State` informiert werden, damit der Controller seinen NavigationBar-Style korrekt setzen kann.
-4. **Funktioniert für alle Header-Styles**: `.image`, `.headerView`, `.opaque` (mit und ohne Large Titles).
-
-### Vorgeschlagene Implementierung
-
-**`HeroKit+API.swift`** — Neue public API:
-```swift
-/// Re-notifies the delegate about the current header state.
-/// Use in viewWillAppear/viewDidAppear to restore navigation bar styling
-/// after returning from another controller.
-///
-/// This is lightweight — it does NOT rebuild the header or modify scroll position.
-/// It only re-fires the appropriate delegate callback based on the current state.
-func reapplyHeaderStyle() {
-    viewModel?.reapplyState()
-}
-```
-
-**`HeroHeader+ViewModel.swift`** — Neue interne Methode:
-```swift
-func reapplyState() {
-    guard let controller, let headerView else { return }
-    switch state {
-    case .collapsed:
-        delegate?.heroHeader(controller, didCollapse: headerView)
-    case .contentHidden:
-        delegate?.heroHeader(controller, didCollapseHeaderContent: headerView)
-    case .expanded, .fullyExpanded:
-        delegate?.heroHeader(controller, headerContentDidBecameVisible: headerView)
-    case .stretched:
-        delegate?.heroHeader(controller, didStretch: headerView)
-    }
-}
-```
-
-### Wie der Consumer es nutzt
-
-```swift
-// TourDetail.Controller
-extension TourDetail.Controller: HeroHeaderDelegate {
-    func heroHeader(_: UIViewController, didCollapseHeaderContent _: HeroHeaderView) {
-        navigationController?.style(.opaque)
-    }
-
-    func heroHeader(_: UIViewController, headerContentDidBecameVisible _: HeroHeaderView) {
-        navigationController?.style(.image)
-    }
-}
-
-// In viewWillAppear:
-override func viewWillAppear(_ animated: Bool) {
-    super.viewWillAppear(animated)
-    reapplyHeaderStyle() // re-fires didCollapseHeaderContent or headerContentDidBecameVisible
-}
-```
-
-### Edge Case: Kein HeroKit-Header vorhanden
-
-Wenn `viewModel` nil ist (Controller hat keinen HeroKit-Header, z.B. `.opaque` ohne Large Titles auf < iOS 26), ist `reapplyHeaderStyle()` ein No-Op. Das ist korrekt — solche Controller können stattdessen direkt `navigationController?.style(...)` in `viewWillAppear` aufrufen.
-
-## Betroffene Dateien
-
-| Datei | Änderung |
-|---|---|
-| `Sources/HeroKit/HeroKit+API.swift` | Neue `reapplyHeaderStyle()` public extension method |
-| `Sources/HeroKit/HeroHeader+ViewModel.swift` | Neue `reapplyState()` Methode |
-
-## Tests
-
-- Unit-Test: ViewModel im `.collapsed` State → `reapplyState()` → Delegate erhält `didCollapse`
-- Unit-Test: ViewModel im `.expanded` State → `reapplyState()` → Delegate erhält `headerContentDidBecameVisible`
-- Unit-Test: ViewModel ohne Header (nil) → `reapplyState()` → kein Crash, kein Delegate-Call
+Make a symbolic breakpoint at UIViewAlertForUnsatisfiableConstraints to catch this in the debugger.
+The methods in the UIConstraintBasedLayoutDebugging category on UIView listed in <UIKitCore/UIView.h> may also be helpful.
