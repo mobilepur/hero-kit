@@ -5,12 +5,12 @@ import UIKit
 
 private func heroWarning(_ message: String) {
     #if DEBUG
-    os_log(
-        .fault,
-        log: OSLog(subsystem: "com.apple.runtime-issues", category: "HeroKit"),
-        "%{public}s",
-        message
-    )
+        os_log(
+            .fault,
+            log: OSLog(subsystem: "com.apple.runtime-issues", category: "HeroKit"),
+            "%{public}s",
+            message
+        )
     #endif
 }
 
@@ -43,9 +43,15 @@ public extension UIViewController {
         }
     }
 
-    func setHeader(_ style: HeroHeader.Style, scrollView: UIScrollView? = nil) {
+    func setHeader(
+        _ style: HeroHeader.Style,
+        restoresOnAppear: Bool = true,
+        scrollView: UIScrollView? = nil
+    ) {
         guard let targetScrollView = scrollView ?? findScrollView() else {
-            heroWarning("No UIScrollView found. Pass a scrollView parameter or ensure one exists in the view hierarchy.")
+            heroWarning(
+                "No UIScrollView found. Pass a scrollView parameter or ensure one exists in the view hierarchy."
+            )
             return
         }
 
@@ -54,16 +60,22 @@ public extension UIViewController {
 
         setupHeader(style: style, scrollView: targetScrollView)
         subscribeToScrollOffset(of: targetScrollView)
+
+        if restoresOnAppear {
+            installAppearanceObserver()
+        }
     }
 
     func setHeader(
         view: UIView,
         configuration: HeroHeader.HeaderViewConfiguration = .init(),
         title: HeroHeader.TitleConfiguration? = nil,
+        restoresOnAppear: Bool = true,
         scrollView: UIScrollView? = nil
     ) {
         setHeader(
             .headerView(view: view, configuration: configuration, title: title),
+            restoresOnAppear: restoresOnAppear,
             scrollView: scrollView
         )
     }
@@ -75,6 +87,7 @@ public extension UIViewController {
         loadingType: HeroHeader.LoadingType = .spinner,
         configuration: HeroHeader.HeaderViewConfiguration = .init(),
         title: HeroHeader.TitleConfiguration? = nil,
+        restoresOnAppear: Bool = true,
         scrollView: UIScrollView? = nil
     ) {
         let imageConfig = HeroHeader.ImageConfiguration(
@@ -85,6 +98,7 @@ public extension UIViewController {
         )
         setHeader(
             .image(image: imageConfig, configuration: configuration, title: title),
+            restoresOnAppear: restoresOnAppear,
             scrollView: scrollView
         )
     }
@@ -94,7 +108,8 @@ public extension UIViewController {
         backgroundColor: UIColor,
         foregroundColor: UIColor? = nil,
         prefersLargeTitles: Bool = false,
-        lightModeOnly: Bool = false
+        lightModeOnly: Bool = false,
+        restoresOnAppear: Bool = true
     ) {
         setHeader(.opaque(
             title: title,
@@ -102,7 +117,7 @@ public extension UIViewController {
             foregroundColor: foregroundColor,
             prefersLargeTitles: prefersLargeTitles,
             lightModeOnly: lightModeOnly
-        ))
+        ), restoresOnAppear: restoresOnAppear)
     }
 
     /// Expands the header to fully visible state
@@ -118,6 +133,11 @@ public extension UIViewController {
     /// Collapses the header fully - only nav bar visible
     func collapseHeader(animated: Bool = true) {
         viewModel?.collapseHeader(animated: animated)
+    }
+
+    /// Re-notifies the delegate about the current header state to restore navigation bar styling.
+    func reapplyHeaderStyle() {
+        viewModel?.reapplyState()
     }
 }
 
@@ -207,9 +227,12 @@ extension UIViewController {
         foregroundColor: UIColor?
     ) -> (headerView: HeroHeaderView, contentConstraint: NSLayoutConstraint) {
         // contentView with height constraint (adjusted during stretch)
+        // Priority below required so it doesn't conflict with the stack view's
+        // UIView-Encapsulated-Layout-Height during layout passes.
         contentView.translatesAutoresizingMaskIntoConstraints = false
         let contentConstraint = contentView.heightAnchor
             .constraint(equalToConstant: configuration.height)
+        contentConstraint.priority = .defaultHigh
         contentConstraint.isActive = true
 
         // Optional: Create large title view
@@ -334,7 +357,9 @@ extension UIViewController {
         lightModeOnly: Bool
     ) {
         guard let navigationController else {
-            heroWarning("No UINavigationController found. Opaque headers require a navigation controller.")
+            heroWarning(
+                "No UINavigationController found. Opaque headers require a navigation controller."
+            )
             return
         }
 
@@ -405,11 +430,15 @@ extension UIViewController {
         foregroundColor: UIColor?
     ) {
         guard let resolvedTitle = resolveTitle(from: titleConfig) else {
-            heroWarning("No title found. Provide a title via TitleConfiguration or set navigationItem.title.")
+            heroWarning(
+                "No title found. Provide a title via TitleConfiguration or set navigationItem.title."
+            )
             return
         }
         guard let scrollView = findScrollView() else {
-            heroWarning("No UIScrollView found. Pass a scrollView parameter or ensure one exists in the view hierarchy.")
+            heroWarning(
+                "No UIScrollView found. Pass a scrollView parameter or ensure one exists in the view hierarchy."
+            )
             return
         }
         let headerView = createOpaqueHeaderView(
@@ -512,12 +541,31 @@ private final class WeakDelegateWrapper {
     }
 }
 
+private final class AppearanceObserver: UIViewController {
+    var onWillAppear: (() -> Void)?
+    private var hasAppeared = false
+
+    override func loadView() {
+        view = UIView()
+        view.isHidden = true
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if hasAppeared {
+            onWillAppear?()
+        }
+        hasAppeared = true
+    }
+}
+
 private extension UIViewController {
 
     enum AssociatedKeys {
         nonisolated(unsafe) static var scrollCancellable: Void?
         nonisolated(unsafe) static var heroHeaderDelegate: Void?
         nonisolated(unsafe) static var traitRegistration: Void?
+        nonisolated(unsafe) static var appearanceObserver: Void?
     }
 
     /// Stores delegate before setHeader() is called. Once ViewModel exists, delegate is stored
@@ -563,6 +611,32 @@ private extension UIViewController {
         ) }
     }
 
+    var appearanceObserver: AppearanceObserver? {
+        get {
+            objc_getAssociatedObject(self,
+                                     &AssociatedKeys.appearanceObserver) as? AppearanceObserver
+        }
+        set { objc_setAssociatedObject(
+            self,
+            &AssociatedKeys.appearanceObserver,
+            newValue,
+            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+        ) }
+    }
+
+    func installAppearanceObserver() {
+        guard viewModel != nil else { return }
+
+        let observer = AppearanceObserver()
+        observer.onWillAppear = { [weak self] in
+            self?.viewModel?.reapplyState()
+        }
+        addChild(observer)
+        view.addSubview(observer.view)
+        observer.didMove(toParent: self)
+        appearanceObserver = observer
+    }
+
     func subscribeToScrollOffset(of scrollView: UIScrollView) {
         scrollCancellable = scrollView.publisher(for: \.contentOffset)
             .sink { [weak self] offset in
@@ -584,6 +658,14 @@ private extension UIViewController {
         if let registration = traitRegistration {
             unregisterForTraitChanges(registration)
             traitRegistration = nil
+        }
+
+        // Remove appearance observer
+        if let observer = appearanceObserver {
+            observer.willMove(toParent: nil)
+            observer.view.removeFromSuperview()
+            observer.removeFromParent()
+            appearanceObserver = nil
         }
     }
 

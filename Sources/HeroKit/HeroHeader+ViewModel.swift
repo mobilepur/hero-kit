@@ -100,6 +100,24 @@ extension HeroHeader {
             scrollView?.setContentOffset(targetOffset, animated: animated)
         }
 
+        func reapplyState() {
+            guard let controller, let headerView else { return }
+
+            controller.configureTransparentNavigationBar()
+            applySmallTitleVisibility()
+
+            switch state {
+            case .collapsed:
+                delegate?.heroHeader(controller, didCollapse: headerView)
+            case .contentHidden:
+                delegate?.heroHeader(controller, didCollapseHeaderContent: headerView)
+            case .expanded, .fullyExpanded:
+                delegate?.heroHeader(controller, headerContentDidBecameVisible: headerView)
+            case .stretched:
+                delegate?.heroHeader(controller, didStretch: headerView)
+            }
+        }
+
         func didScroll(offset: CGFloat) {
             guard isInitialScrollComplete else { return }
             guard let layout, let headerView, let headerViewConfiguration else { return }
