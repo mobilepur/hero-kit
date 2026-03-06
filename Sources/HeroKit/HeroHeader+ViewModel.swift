@@ -23,6 +23,7 @@ extension HeroHeader {
         private var titleCancellable: AnyCancellable?
         private var isInitialScrollComplete = false
         private var isSmallTitleShowing = false
+        private var isReapplying = false
 
         func didCompleteSetup() {
             isInitialScrollComplete = true
@@ -105,6 +106,10 @@ extension HeroHeader {
         }
 
         func reapplyState() {
+            guard !isReapplying else { return }
+            isReapplying = true
+            defer { isReapplying = false }
+
             guard let controller else { return }
 
             if let headerView {
@@ -114,6 +119,11 @@ extension HeroHeader {
                     controller.setNavigationBarTintColor(foregroundColor)
                 }
                 applySmallTitleVisibility()
+
+                // Apply collapsed appearance if configured
+                if let config = headerViewConfiguration {
+                    applyCollapsedAppearanceIfNeeded(config.collapsedAppearance)
+                }
 
                 switch state {
                 case .collapsed:
@@ -277,6 +287,28 @@ extension HeroHeader {
             }
         }
 
+        private func applyCollapsedAppearanceIfNeeded(_ appearance: HeroHeader
+            .CollapsedAppearance)
+        {
+            guard let controller,
+                  case let .opaque(bgColor, fgColor, lightModeOnly) = appearance
+            else { return }
+
+            if lightModeOnly, controller.isDarkMode {
+                return
+            }
+
+            switch state {
+            case .contentHidden, .collapsed:
+                controller.navigationController?.configureOpaqueAppearance(
+                    backgroundColor: bgColor,
+                    foregroundColor: fgColor
+                )
+            case .expanded, .fullyExpanded, .stretched:
+                controller.configureTransparentNavigationBar()
+            }
+        }
+
         private func updateState(for offset: CGFloat) {
             guard let controller, let headerView, let headerViewConfiguration else { return }
 
@@ -298,6 +330,8 @@ extension HeroHeader {
 
             // Call delegate for state changes
             if state != previousState {
+                applyCollapsedAppearanceIfNeeded(headerViewConfiguration.collapsedAppearance)
+
                 if previousState == .stretched {
                     delegate?.heroHeader(controller, didUnstretch: headerView)
                 }

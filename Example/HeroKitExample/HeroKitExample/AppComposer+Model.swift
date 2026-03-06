@@ -73,10 +73,16 @@ extension AppComposer {
                     .none
                 }
 
+            let collapsedAppearance: HeroHeader.CollapsedAppearance =
+                settings.collapsedOpaque
+                    ? .opaque(backgroundColor: .systemBlue, foregroundColor: .white)
+                    : .none
+
             return HeroHeader.HeaderViewConfiguration(
                 height: height,
                 stretches: settings.stretch,
-                largeTitleDisplayMode: largeTitleDisplayMode
+                largeTitleDisplayMode: largeTitleDisplayMode,
+                collapsedAppearance: collapsedAppearance
             )
         }
 
@@ -108,6 +114,7 @@ struct AppSettings {
     var accessoryMode: AccessoryMode = .none
     var imageContentMode: ImageContentMode = .aspectFill
     var imageBackgroundColor: ImageBackgroundColor = .none
+    var collapsedOpaque: Bool = false
 }
 
 // MARK: - Setting Types
