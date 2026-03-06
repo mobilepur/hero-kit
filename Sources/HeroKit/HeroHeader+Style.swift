@@ -124,22 +124,34 @@ public enum HeroHeader {
         }
     }
 
+    public enum CollapsedAppearance {
+        case none
+        case opaque(
+            backgroundColor: UIColor,
+            foregroundColor: UIColor? = nil,
+            lightModeOnly: Bool = false
+        )
+    }
+
     public struct HeaderViewConfiguration {
         public let height: CGFloat
         public let stretches: Bool
         public let largeTitleDisplayMode: LargeTitleDisplayMode
         public let minHeight: CGFloat?
+        public let collapsedAppearance: CollapsedAppearance
 
         public init(
             height: CGFloat = 200,
             minHeight: CGFloat? = nil,
             stretches: Bool = true,
-            largeTitleDisplayMode: LargeTitleDisplayMode = .none
+            largeTitleDisplayMode: LargeTitleDisplayMode = .none,
+            collapsedAppearance: CollapsedAppearance = .none
         ) {
             self.height = height
             self.minHeight = minHeight
             self.stretches = stretches
             self.largeTitleDisplayMode = largeTitleDisplayMode
+            self.collapsedAppearance = collapsedAppearance
         }
     }
 

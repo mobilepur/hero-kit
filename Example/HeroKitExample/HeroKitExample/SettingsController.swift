@@ -58,6 +58,8 @@ class SettingsController: UIViewController {
                     toggle.isOn = settings.lineWrap
                 case .inline:
                     toggle.isOn = settings.inline
+                case .collapsedOpaque:
+                    toggle.isOn = settings.collapsedOpaque
                 case .titleLength, .smallTitleDisplayMode, .dimming, .accessoryMode,
                      .imageContentMode, .imageBackgroundColor:
                     return
@@ -391,6 +393,7 @@ class SettingsController: UIViewController {
                 .inline,
                 .dimming,
                 .accessoryMode,
+                .collapsedOpaque,
             ],
             toSection: .headerView
         )
@@ -420,6 +423,8 @@ class SettingsController: UIViewController {
             settings.lineWrap = sender.isOn
         case .inline:
             settings.inline = sender.isOn
+        case .collapsedOpaque:
+            settings.collapsedOpaque = sender.isOn
         case .titleLength, .smallTitleDisplayMode, .dimming, .accessoryMode,
              .imageContentMode, .imageBackgroundColor:
             break
@@ -458,6 +463,7 @@ nonisolated enum SettingsItem: Hashable, Sendable {
     case accessoryMode
     case imageContentMode
     case imageBackgroundColor
+    case collapsedOpaque
 
     var title: String {
         switch self {
@@ -472,6 +478,7 @@ nonisolated enum SettingsItem: Hashable, Sendable {
         case .accessoryMode: "Accessory"
         case .imageContentMode: "Content Mode"
         case .imageBackgroundColor: "Background Color"
+        case .collapsedOpaque: "Collapsed Opaque"
         }
     }
 
@@ -488,6 +495,7 @@ nonisolated enum SettingsItem: Hashable, Sendable {
         case .accessoryMode: 8
         case .imageContentMode: 9
         case .imageBackgroundColor: 10
+        case .collapsedOpaque: 11
         }
     }
 
@@ -504,6 +512,7 @@ nonisolated enum SettingsItem: Hashable, Sendable {
         case 8: self = .accessoryMode
         case 9: self = .imageContentMode
         case 10: self = .imageBackgroundColor
+        case 11: self = .collapsedOpaque
         default: return nil
         }
     }
