@@ -61,7 +61,7 @@ public extension UIViewController {
         // Always create ViewModel with original style first
         let heroViewModel = HeroHeader.ViewModel(controller: self, style: style)
         heroViewModel.delegate = heroHeaderDelegate
-        heroViewModel.storedTitle = navigationItem.title ?? title
+        heroViewModel.storedTitle = style.titleConfiguration?.title ?? navigationItem.title ?? title
         viewModel = heroViewModel
 
         setupHeader(style: style, scrollView: targetScrollView)
