@@ -145,6 +145,14 @@ public extension UIViewController {
     func reapplyHeaderStyle() {
         viewModel?.reapplyState()
     }
+
+    /// Removes the HeroKit-managed header, appearance observer, and resets the navigation bar to
+    /// its default appearance.
+    /// After calling this, the controller is free to style its navigation bar manually.
+    func removeHeader() {
+        cleanupExistingHeader()
+        configureDefaultNavigationBar()
+    }
 }
 
 // MARK: - helper
