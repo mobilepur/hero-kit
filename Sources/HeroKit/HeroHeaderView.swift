@@ -39,10 +39,7 @@ public class HeroHeaderView: UIStackView {
 
     override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         let hit = super.hitTest(point, with: event)
-        if hit is UIControl { return hit }
-        let pointInContent = convert(point, to: contentView)
-        if contentView.bounds.contains(pointInContent) { return hit }
-        return nil
+        return hit is UIControl ? hit : nil
     }
 
     private func setupStackView() {
