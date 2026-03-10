@@ -152,6 +152,13 @@ public class LargeTitleView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let hit = super.hitTest(point, with: event)
+        // Only intercept touches on interactive controls (buttons, etc.)
+        // Pass everything else through to allow scrolling
+        return hit is UIControl ? hit : nil
+    }
+
     override public func layoutSubviews() {
         super.layoutSubviews()
 

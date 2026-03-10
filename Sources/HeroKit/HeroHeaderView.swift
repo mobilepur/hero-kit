@@ -37,6 +37,11 @@ public class HeroHeaderView: UIStackView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let hit = super.hitTest(point, with: event)
+        return hit is UIControl ? hit : nil
+    }
+
     private func setupStackView() {
         axis = .vertical
         alignment = .fill
