@@ -233,6 +233,18 @@ extension UIViewController {
             )
             pageVC.didMove(toParent: self)
             pageVC.installSwipeGestures(on: scrollView, galleryArea: pageVC.view)
+
+            // Prevent navigation back gestures from intercepting gallery swipes
+            if let navController = navigationController {
+                for swipe in pageVC.swipeGestures {
+                    navController.interactivePopGestureRecognizer?.require(toFail: swipe)
+                    for gesture in navController.view.gestureRecognizers ?? []
+                        where gesture is UIPanGestureRecognizer
+                    {
+                        gesture.require(toFail: swipe)
+                    }
+                }
+            }
         }
     }
 
