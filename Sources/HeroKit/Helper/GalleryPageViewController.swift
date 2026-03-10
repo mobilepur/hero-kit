@@ -48,6 +48,46 @@ final class GalleryPageViewController: UIPageViewController,
         }
     }
 
+    // MARK: - Swipe Forwarding
+
+    /// Installs swipe gesture recognizers on a target view (e.g. the scroll view beneath
+    /// the header) so horizontal swipes in the gallery area trigger page transitions.
+    func installSwipeGestures(on targetView: UIView, galleryArea: UIView) {
+        galleryAreaView = galleryArea
+
+        for direction: UISwipeGestureRecognizer.Direction in [.left, .right] {
+            let swipe = UISwipeGestureRecognizer(
+                target: self,
+                action: #selector(handleSwipe(_:))
+            )
+            swipe.direction = direction
+            targetView.addGestureRecognizer(swipe)
+        }
+    }
+
+    @objc private func handleSwipe(_ swipe: UISwipeGestureRecognizer) {
+        guard let area = galleryAreaView else { return }
+        let location = swipe.location(in: area)
+        guard area.bounds.contains(location) else { return }
+
+        guard let current = viewControllers?.first else { return }
+
+        switch swipe.direction {
+        case .left:
+            guard let next = dataSource?.pageViewController(self, viewControllerAfter: current)
+            else { return }
+            setViewControllers([next], direction: .forward, animated: true)
+        case .right:
+            guard let prev = dataSource?.pageViewController(self, viewControllerBefore: current)
+            else { return }
+            setViewControllers([prev], direction: .reverse, animated: true)
+        default:
+            break
+        }
+    }
+
+    private weak var galleryAreaView: UIView?
+
     // MARK: - UIPageViewControllerDataSource
 
     func pageViewController(

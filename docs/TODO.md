@@ -1,6 +1,8 @@
 # TODO
 
-- Make SearchBars working with HeroKit
+## Gallery 
+- vertical swipes/gestures must be ignored and need to be progagated to the scroll view
+- horizontal gestures will scroll the gallery content
 
 
 ## Issues

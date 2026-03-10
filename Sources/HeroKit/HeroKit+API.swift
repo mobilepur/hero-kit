@@ -226,6 +226,7 @@ extension UIViewController {
                 scrollView: scrollView
             )
             pageVC.didMove(toParent: self)
+            pageVC.installSwipeGestures(on: scrollView, galleryArea: pageVC.view)
         }
     }
 
