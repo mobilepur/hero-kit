@@ -23,6 +23,12 @@ public enum HeroHeader {
             title: TitleConfiguration? = nil
         )
 
+        case gallery(
+            gallery: GalleryConfiguration,
+            configuration: HeaderViewConfiguration = .init(),
+            title: TitleConfiguration? = nil
+        )
+
         public var titleConfiguration: TitleConfiguration? {
             switch self {
             case let .opaque(title, _, _, _, _):
@@ -30,6 +36,8 @@ public enum HeroHeader {
             case let .headerView(_, _, title):
                 return title
             case let .image(_, _, title):
+                return title
+            case let .gallery(_, _, title):
                 return title
             }
         }
@@ -41,6 +49,8 @@ public enum HeroHeader {
             case let .headerView(_, configuration, _):
                 return configuration
             case let .image(_, configuration, _):
+                return configuration
+            case let .gallery(_, configuration, _):
                 return configuration
             }
         }
@@ -64,6 +74,8 @@ public enum HeroHeader {
             case let .headerView(_, _, titleConfiguration):
                 return titleConfiguration?.largeTitle ?? titleConfiguration?.title
             case let .image(_, _, titleConfiguration):
+                return titleConfiguration?.largeTitle ?? titleConfiguration?.title
+            case let .gallery(_, _, titleConfiguration):
                 return titleConfiguration?.largeTitle ?? titleConfiguration?.title
             }
         }
@@ -90,6 +102,8 @@ public enum HeroHeader {
                 return titleConfiguration?.largeSubtitle ?? titleConfiguration?.subtitle
             case let .image(_, _, titleConfiguration):
                 return titleConfiguration?.largeSubtitle ?? titleConfiguration?.subtitle
+            case let .gallery(_, _, titleConfiguration):
+                return titleConfiguration?.largeSubtitle ?? titleConfiguration?.subtitle
             }
         }
 
@@ -97,7 +111,7 @@ public enum HeroHeader {
             switch self {
             case let .opaque(_, _, foregroundColor, _, _):
                 return foregroundColor
-            case .headerView, .image:
+            case .headerView, .image, .gallery:
                 return nil
             }
         }
@@ -262,6 +276,19 @@ public enum HeroHeader {
         case system // default behaviour: small title only displayed when large titles are not
         /// visible
         case always
+    }
+
+    public struct GalleryConfiguration {
+        public let images: [UIImage]
+        public let contentMode: UIView.ContentMode
+
+        public init(
+            images: [UIImage],
+            contentMode: UIView.ContentMode = .scaleAspectFill
+        ) {
+            self.images = images
+            self.contentMode = contentMode
+        }
     }
 
     public struct ImageConfiguration {

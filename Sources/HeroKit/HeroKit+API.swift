@@ -109,6 +109,25 @@ public extension UIViewController {
         )
     }
 
+    func setGalleryHeader(
+        images: [UIImage],
+        contentMode: UIView.ContentMode = .scaleAspectFill,
+        configuration: HeroHeader.HeaderViewConfiguration = .init(),
+        title: HeroHeader.TitleConfiguration? = nil,
+        restoresOnAppear: Bool = true,
+        scrollView: UIScrollView? = nil
+    ) {
+        let galleryConfig = HeroHeader.GalleryConfiguration(
+            images: images,
+            contentMode: contentMode
+        )
+        setHeader(
+            .gallery(gallery: galleryConfig, configuration: configuration, title: title),
+            restoresOnAppear: restoresOnAppear,
+            scrollView: scrollView
+        )
+    }
+
     func setOpaqueHeader(
         title: HeroHeader.TitleConfiguration,
         backgroundColor: UIColor,
@@ -193,6 +212,19 @@ extension UIViewController {
                 configuration: configuration,
                 scrollView: scrollView
             )
+        case let .gallery(galleryConfig, configuration, _):
+            let pageVC = GalleryPageViewController(
+                images: galleryConfig.images,
+                contentMode: galleryConfig.contentMode
+            )
+            addChild(pageVC)
+            pageVC.view.clipsToBounds = true
+            setupHeaderView(
+                pageVC.view,
+                configuration: configuration,
+                scrollView: scrollView
+            )
+            pageVC.didMove(toParent: self)
         }
     }
 

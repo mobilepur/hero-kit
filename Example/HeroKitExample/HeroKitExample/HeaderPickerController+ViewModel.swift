@@ -22,6 +22,12 @@ enum HeaderContent {
         url: URL,
         height: CGFloat = 300
     )
+    case gallery(
+        title: String,
+        subtitle: String? = nil,
+        assetNames: [String],
+        height: CGFloat = 300
+    )
 }
 
 // MARK: - Display Helpers
@@ -33,6 +39,7 @@ extension HeaderContent {
         case let .color(title, _, _, _): title
         case let .localImage(title, _, _, _): title
         case let .remoteImage(title, _, _, _): title
+        case let .gallery(title, _, _, _): title
         }
     }
 
@@ -41,6 +48,7 @@ extension HeaderContent {
         case let .color(_, subtitle, _, _): subtitle
         case let .localImage(_, subtitle, _, _): subtitle
         case let .remoteImage(_, subtitle, _, _): subtitle
+        case let .gallery(_, subtitle, _, _): subtitle
         }
     }
 
@@ -52,13 +60,15 @@ extension HeaderContent {
             return UIImage(named: assetName)
         case .remoteImage:
             return UIImage(systemName: "photo")
+        case let .gallery(_, _, assetNames, _):
+            return UIImage(named: assetNames.first ?? "")
         }
     }
 
     var isVisualHeader: Bool {
         switch self {
         case .color: false
-        case .localImage, .remoteImage: true
+        case .localImage, .remoteImage, .gallery: true
         }
     }
 
@@ -99,6 +109,15 @@ extension HeaderContent {
         .localImage(title: "City Ride", assetName: "bikes"),
         .localImage(title: "Ancient Ruins", subtitle: "Lost in time", assetName: "temple"),
         .localImage(title: "Golden Fields", subtitle: "Bali, Indonesia", assetName: "ricefields"),
+    ]
+
+    static let customItems: [HeaderContent] = [
+        .gallery(
+            title: "Gallery",
+            subtitle: "PageViewController header",
+            assetNames: ["bikes", "temple"],
+            height: 400
+        ),
     ]
 
     static let remoteImageItems: [HeaderContent] = [
