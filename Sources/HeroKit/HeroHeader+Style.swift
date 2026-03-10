@@ -284,19 +284,22 @@ public enum HeroHeader {
         public let backgroundColor: UIColor?
         public let loadingType: LoadingType
         public let pageControl: PageControlConfiguration
+        public let interactionMode: GalleryInteractionMode
 
         public init(
             urls: [URL],
             contentMode: UIView.ContentMode = .scaleAspectFill,
             backgroundColor: UIColor? = nil,
             loadingType: LoadingType = .spinner,
-            pageControl: PageControlConfiguration = .display()
+            pageControl: PageControlConfiguration = .display(),
+            interactionMode: GalleryInteractionMode = .forwarded
         ) {
             self.urls = urls
             self.contentMode = contentMode
             self.backgroundColor = backgroundColor
             self.loadingType = loadingType
             self.pageControl = pageControl
+            self.interactionMode = interactionMode
         }
     }
 
@@ -306,6 +309,11 @@ public enum HeroHeader {
             currentPageColor: UIColor? = nil,
             pageIndicatorColor: UIColor? = nil
         )
+    }
+
+    public enum GalleryInteractionMode {
+        case forwarded
+        case native
     }
 
     public struct ImageConfiguration {

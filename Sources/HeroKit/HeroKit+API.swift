@@ -114,6 +114,7 @@ public extension UIViewController {
         contentMode: UIView.ContentMode = .scaleAspectFill,
         backgroundColor: UIColor? = nil,
         loadingType: HeroHeader.LoadingType = .spinner,
+        interactionMode: HeroHeader.GalleryInteractionMode = .forwarded,
         configuration: HeroHeader.HeaderViewConfiguration = .init(),
         title: HeroHeader.TitleConfiguration? = nil,
         restoresOnAppear: Bool = true,
@@ -123,7 +124,8 @@ public extension UIViewController {
             urls: urls,
             contentMode: contentMode,
             backgroundColor: backgroundColor,
-            loadingType: loadingType
+            loadingType: loadingType,
+            interactionMode: interactionMode
         )
         setHeader(
             .gallery(gallery: galleryConfig, configuration: configuration, title: title),
@@ -217,12 +219,13 @@ extension UIViewController {
                 scrollView: scrollView
             )
         case let .gallery(galleryConfig, configuration, _):
-            let pageVC = GalleryPageViewController(
+            let pageVC = GalleryPageController(
                 urls: galleryConfig.urls,
                 contentMode: galleryConfig.contentMode,
                 backgroundColor: galleryConfig.backgroundColor,
                 loadingType: galleryConfig.loadingType,
-                pageControl: galleryConfig.pageControl
+                pageControl: galleryConfig.pageControl,
+                interactionMode: galleryConfig.interactionMode
             )
             addChild(pageVC)
             pageVC.view.clipsToBounds = true
@@ -232,16 +235,17 @@ extension UIViewController {
                 scrollView: scrollView
             )
             pageVC.didMove(toParent: self)
-            pageVC.installSwipeGestures(on: scrollView, galleryArea: pageVC.view)
+            if galleryConfig.interactionMode == .forwarded {
+                pageVC.installGestureForwarding(on: scrollView, galleryArea: pageVC.view)
 
-            // Prevent navigation back gestures from intercepting gallery swipes
-            if let navController = navigationController {
-                for swipe in pageVC.swipeGestures {
-                    navController.interactivePopGestureRecognizer?.require(toFail: swipe)
+                if let navController = navigationController,
+                   let galleryPan = pageVC.galleryPanGesture
+                {
+                    navController.interactivePopGestureRecognizer?.require(toFail: galleryPan)
                     for gesture in navController.view.gestureRecognizers ?? []
                         where gesture is UIPanGestureRecognizer
                     {
-                        gesture.require(toFail: swipe)
+                        gesture.require(toFail: galleryPan)
                     }
                 }
             }
