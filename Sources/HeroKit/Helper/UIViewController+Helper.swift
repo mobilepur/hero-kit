@@ -18,6 +18,18 @@ extension UIViewController {
         return findScrollView(in: view)
     }
 
+    /// Walks up the parent chain to find the root parent that is the
+    /// topViewController of the navigation stack.
+    func findRootParent() -> UIViewController {
+        var current: UIViewController = self
+        while let parent = current.parent,
+              !(parent is UINavigationController)
+        {
+            current = parent
+        }
+        return current
+    }
+
     func findScrollView(in view: UIView) -> UIScrollView? {
         if let scrollView = view as? UIScrollView {
             return scrollView

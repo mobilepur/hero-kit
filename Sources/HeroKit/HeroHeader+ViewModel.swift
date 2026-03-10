@@ -52,10 +52,11 @@ extension HeroHeader {
 
                     // UIKit syncs viewController.title to navigationItem.title automatically,
                     // so we must explicitly control small title visibility
+                    let rootItem = controller.findRootParent().navigationItem
                     if headerView.isLargeTitleHidden {
-                        controller.navigationItem.title = newTitle
+                        rootItem.title = newTitle
                     } else {
-                        controller.navigationItem.title = nil
+                        rootItem.title = nil
                     }
 
                     delegate?.heroHeader(controller, didUpdateTitle: headerView, title: newTitle)
@@ -71,7 +72,7 @@ extension HeroHeader {
             self.headerView = headerView
             self.layout = layout
             headerViewConfiguration = configuration
-            controller.navigationItem.title = nil
+            controller.findRootParent().navigationItem.title = nil
             applySmallTitleVisibility()
             delegate?.heroHeader(controller, didSetup: headerView)
         }
@@ -268,13 +269,14 @@ extension HeroHeader {
 
             if shouldShow != isSmallTitleShowing {
                 isSmallTitleShowing = shouldShow
+                let rootItem = controller.findRootParent().navigationItem
                 let newTitle = shouldShow ? storedTitle : nil
-                controller.navigationItem.title = newTitle
+                rootItem.title = newTitle
                 controller.navigationController?.animateNavigationBarTransition()
 
                 // iOS 26+: Set subtitle when small title is shown
                 if #available(iOS 26, *) {
-                    controller.navigationItem.subtitle = shouldShow ? titleConfiguration?
+                    rootItem.subtitle = shouldShow ? titleConfiguration?
                         .subtitle : nil
                 }
 
