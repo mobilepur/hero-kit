@@ -215,7 +215,8 @@ extension UIViewController {
         case let .gallery(galleryConfig, configuration, _):
             let pageVC = GalleryPageViewController(
                 images: galleryConfig.images,
-                contentMode: galleryConfig.contentMode
+                contentMode: galleryConfig.contentMode,
+                pageControl: galleryConfig.pageControl
             )
             addChild(pageVC)
             pageVC.view.clipsToBounds = true

@@ -5,10 +5,16 @@ final class GalleryPageViewController: UIPageViewController,
 {
     private let images: [UIImage]
     private let imageContentMode: UIView.ContentMode
+    private let pageControlConfig: HeroHeader.PageControlConfiguration
 
-    init(images: [UIImage], contentMode: UIView.ContentMode = .scaleAspectFill) {
+    init(
+        images: [UIImage],
+        contentMode: UIView.ContentMode = .scaleAspectFill,
+        pageControl: HeroHeader.PageControlConfiguration = .display()
+    ) {
         self.images = images
         imageContentMode = contentMode
+        pageControlConfig = pageControl
         super.init(
             transitionStyle: .scroll,
             navigationOrientation: .horizontal
@@ -25,6 +31,20 @@ final class GalleryPageViewController: UIPageViewController,
         dataSource = self
         if let first = makeImageController(at: 0) {
             setViewControllers([first], direction: .forward, animated: false)
+        }
+        configurePageControl()
+    }
+
+    private func configurePageControl() {
+        guard case let .display(currentPageColor, pageIndicatorColor) = pageControlConfig else {
+            return
+        }
+        let appearance = UIPageControl.appearance(whenContainedInInstancesOf: [Self.self])
+        if let currentPageColor {
+            appearance.currentPageIndicatorTintColor = currentPageColor
+        }
+        if let pageIndicatorColor {
+            appearance.pageIndicatorTintColor = pageIndicatorColor
         }
     }
 
@@ -47,6 +67,17 @@ final class GalleryPageViewController: UIPageViewController,
         let index = viewController.view.tag + 1
         guard index < images.count else { return nil }
         return makeImageController(at: index)
+    }
+
+    func presentationCount(for _: UIPageViewController) -> Int {
+        if case .display = pageControlConfig {
+            return images.count
+        }
+        return 0
+    }
+
+    func presentationIndex(for _: UIPageViewController) -> Int {
+        viewControllers?.first?.view.tag ?? 0
     }
 
     private func makeImageController(at index: Int) -> UIViewController? {

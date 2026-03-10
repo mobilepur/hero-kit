@@ -440,7 +440,6 @@ nonisolated enum SettingsSection: Hashable, Sendable, CaseIterable {
     case opaque
     case headerView
     case image
-
     var title: String {
         switch self {
         case .global: "Global"

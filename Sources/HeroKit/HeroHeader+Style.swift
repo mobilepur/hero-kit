@@ -281,14 +281,25 @@ public enum HeroHeader {
     public struct GalleryConfiguration {
         public let images: [UIImage]
         public let contentMode: UIView.ContentMode
+        public let pageControl: PageControlConfiguration
 
         public init(
             images: [UIImage],
-            contentMode: UIView.ContentMode = .scaleAspectFill
+            contentMode: UIView.ContentMode = .scaleAspectFill,
+            pageControl: PageControlConfiguration = .display()
         ) {
             self.images = images
             self.contentMode = contentMode
+            self.pageControl = pageControl
         }
+    }
+
+    public enum PageControlConfiguration {
+        case none
+        case display(
+            currentPageColor: UIColor? = nil,
+            pageIndicatorColor: UIColor? = nil
+        )
     }
 
     public struct ImageConfiguration {
