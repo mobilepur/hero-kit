@@ -43,11 +43,10 @@ extension AppComposer {
                     title: applyTitleLength(to: titleConfig)
                 )
 
-            case let .gallery(title, subtitle, assetNames, height):
-                let images = assetNames.compactMap { UIImage(named: $0) }
+            case let .gallery(title, subtitle, urls, height):
                 let titleConfig = makeTitleConfig(title: title, subtitle: subtitle)
                 let galleryConfig = HeroHeader.GalleryConfiguration(
-                    images: images,
+                    urls: urls,
                     pageControl: .display(
                         currentPageColor: .darkGray,
                         pageIndicatorColor: .lightGray

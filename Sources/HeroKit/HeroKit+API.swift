@@ -110,16 +110,20 @@ public extension UIViewController {
     }
 
     func setGalleryHeader(
-        images: [UIImage],
+        urls: [URL],
         contentMode: UIView.ContentMode = .scaleAspectFill,
+        backgroundColor: UIColor? = nil,
+        loadingType: HeroHeader.LoadingType = .spinner,
         configuration: HeroHeader.HeaderViewConfiguration = .init(),
         title: HeroHeader.TitleConfiguration? = nil,
         restoresOnAppear: Bool = true,
         scrollView: UIScrollView? = nil
     ) {
         let galleryConfig = HeroHeader.GalleryConfiguration(
-            images: images,
-            contentMode: contentMode
+            urls: urls,
+            contentMode: contentMode,
+            backgroundColor: backgroundColor,
+            loadingType: loadingType
         )
         setHeader(
             .gallery(gallery: galleryConfig, configuration: configuration, title: title),
@@ -214,8 +218,10 @@ extension UIViewController {
             )
         case let .gallery(galleryConfig, configuration, _):
             let pageVC = GalleryPageViewController(
-                images: galleryConfig.images,
+                urls: galleryConfig.urls,
                 contentMode: galleryConfig.contentMode,
+                backgroundColor: galleryConfig.backgroundColor,
+                loadingType: galleryConfig.loadingType,
                 pageControl: galleryConfig.pageControl
             )
             addChild(pageVC)

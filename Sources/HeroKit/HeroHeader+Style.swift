@@ -279,17 +279,23 @@ public enum HeroHeader {
     }
 
     public struct GalleryConfiguration {
-        public let images: [UIImage]
+        public let urls: [URL]
         public let contentMode: UIView.ContentMode
+        public let backgroundColor: UIColor?
+        public let loadingType: LoadingType
         public let pageControl: PageControlConfiguration
 
         public init(
-            images: [UIImage],
+            urls: [URL],
             contentMode: UIView.ContentMode = .scaleAspectFill,
+            backgroundColor: UIColor? = nil,
+            loadingType: LoadingType = .spinner,
             pageControl: PageControlConfiguration = .display()
         ) {
-            self.images = images
+            self.urls = urls
             self.contentMode = contentMode
+            self.backgroundColor = backgroundColor
+            self.loadingType = loadingType
             self.pageControl = pageControl
         }
     }

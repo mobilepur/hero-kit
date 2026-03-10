@@ -3,17 +3,23 @@ import UIKit
 final class GalleryPageViewController: UIPageViewController,
     UIPageViewControllerDataSource
 {
-    private let images: [UIImage]
+    private let urls: [URL]
     private let imageContentMode: UIView.ContentMode
+    private let imageBackgroundColor: UIColor?
+    private let loadingType: HeroHeader.LoadingType
     private let pageControlConfig: HeroHeader.PageControlConfiguration
 
     init(
-        images: [UIImage],
+        urls: [URL],
         contentMode: UIView.ContentMode = .scaleAspectFill,
+        backgroundColor: UIColor? = nil,
+        loadingType: HeroHeader.LoadingType = .spinner,
         pageControl: HeroHeader.PageControlConfiguration = .display()
     ) {
-        self.images = images
+        self.urls = urls
         imageContentMode = contentMode
+        imageBackgroundColor = backgroundColor
+        self.loadingType = loadingType
         pageControlConfig = pageControl
         super.init(
             transitionStyle: .scroll,
@@ -105,13 +111,13 @@ final class GalleryPageViewController: UIPageViewController,
         viewControllerAfter viewController: UIViewController
     ) -> UIViewController? {
         let index = viewController.view.tag + 1
-        guard index < images.count else { return nil }
+        guard index < urls.count else { return nil }
         return makeImageController(at: index)
     }
 
     func presentationCount(for _: UIPageViewController) -> Int {
         if case .display = pageControlConfig {
-            return images.count
+            return urls.count
         }
         return 0
     }
@@ -121,19 +127,17 @@ final class GalleryPageViewController: UIPageViewController,
     }
 
     private func makeImageController(at index: Int) -> UIViewController? {
-        guard index >= 0, index < images.count else { return nil }
+        guard index >= 0, index < urls.count else { return nil }
         let vc = UIViewController()
-        let imageView = UIImageView(image: images[index])
-        imageView.contentMode = imageContentMode
-        imageView.clipsToBounds = true
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        vc.view.addSubview(imageView)
-        NSLayoutConstraint.activate([
-            imageView.topAnchor.constraint(equalTo: vc.view.topAnchor),
-            imageView.leadingAnchor.constraint(equalTo: vc.view.leadingAnchor),
-            imageView.trailingAnchor.constraint(equalTo: vc.view.trailingAnchor),
-            imageView.bottomAnchor.constraint(equalTo: vc.view.bottomAnchor),
-        ])
+        let asyncImageView = AsyncHeaderImageView(
+            url: urls[index],
+            contentMode: imageContentMode,
+            backgroundColor: imageBackgroundColor,
+            loadingType: loadingType
+        )
+        asyncImageView.translatesAutoresizingMaskIntoConstraints = false
+        vc.view.addSubview(asyncImageView)
+        asyncImageView.pinToEdges(of: vc.view)
         vc.view.tag = index
         return vc
     }

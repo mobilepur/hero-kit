@@ -25,7 +25,7 @@ enum HeaderContent {
     case gallery(
         title: String,
         subtitle: String? = nil,
-        assetNames: [String],
+        urls: [URL],
         height: CGFloat = 300
     )
 }
@@ -60,8 +60,8 @@ extension HeaderContent {
             return UIImage(named: assetName)
         case .remoteImage:
             return UIImage(systemName: "photo")
-        case let .gallery(_, _, assetNames, _):
-            return UIImage(named: assetNames.first ?? "")
+        case .gallery:
+            return UIImage(systemName: "photo.on.rectangle")
         }
     }
 
@@ -115,7 +115,11 @@ extension HeaderContent {
         .gallery(
             title: "Gallery",
             subtitle: "PageViewController header",
-            assetNames: ["bikes", "temple"],
+            urls: [
+                URL(string: "https://picsum.photos/id/10/800/600")!,
+                URL(string: "https://picsum.photos/id/29/800/600")!,
+                URL(string: "https://picsum.photos/id/65/800/600")!,
+            ],
             height: 400
         ),
     ]
