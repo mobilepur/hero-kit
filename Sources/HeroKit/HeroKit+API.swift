@@ -16,7 +16,7 @@ public extension UIViewController {
         completion: (() -> Void)? = nil
     ) {
         let transitionDelegate = HeroMatchedTransitionDelegate(source: source)
-        destination.heroTransitionDelegate = transitionDelegate
+        destination.heroMatchedTransitionDelegate = transitionDelegate
         destination.transitioningDelegate = transitionDelegate
         destination.modalPresentationStyle = .fullScreen
         present(destination, animated: animated, completion: completion)

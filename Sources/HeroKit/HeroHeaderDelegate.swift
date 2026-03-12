@@ -53,25 +53,6 @@ public protocol HeroHeaderDelegate: AnyObject {
         imageURL: URL
     )
 
-    // MARK: - Matched Transition
-
-    func heroHeader(
-        _ controller: UIViewController,
-        transitionWillPresent headerView: HeroHeaderView
-    )
-    func heroHeader(
-        _ controller: UIViewController,
-        transitionDidPresent headerView: HeroHeaderView
-    )
-    func heroHeader(
-        _ controller: UIViewController,
-        transitionWillDismiss headerView: HeroHeaderView
-    )
-    func heroHeader(
-        _ controller: UIViewController,
-        transitionDidDismiss headerView: HeroHeaderView
-    )
-
 }
 
 /// Default implementations (all optional)
@@ -112,8 +93,4 @@ public extension HeroHeaderDelegate {
         headerView _: HeroHeaderView,
         imageURL _: URL
     ) { }
-    func heroHeader(_: UIViewController, transitionWillPresent _: HeroHeaderView) { }
-    func heroHeader(_: UIViewController, transitionDidPresent _: HeroHeaderView) { }
-    func heroHeader(_: UIViewController, transitionWillDismiss _: HeroHeaderView) { }
-    func heroHeader(_: UIViewController, transitionDidDismiss _: HeroHeaderView) { }
 }

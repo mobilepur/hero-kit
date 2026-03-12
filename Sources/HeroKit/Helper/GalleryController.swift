@@ -97,7 +97,9 @@ public final class GalleryController: UIViewController, UIScrollViewDelegate {
     }
 
     private func setupPageControl() {
-        guard case let .display(currentPageColor, pageIndicatorColor) = pageControlConfig else {
+        guard urls.count > 1,
+              case let .display(currentPageColor, pageIndicatorColor) = pageControlConfig
+        else {
             return
         }
         let pc = UIPageControl()
