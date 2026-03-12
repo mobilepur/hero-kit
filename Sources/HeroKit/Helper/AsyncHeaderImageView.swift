@@ -9,6 +9,11 @@ final class AsyncHeaderImageView: UIView {
     private var loadingView: UIView?
     private var loadTask: Task<Void, Never>?
 
+    var onImageLoaded: ((UIImageView) -> Void)?
+    var displayedImageView: UIImageView {
+        imageView
+    }
+
     init(
         url: URL,
         contentMode: UIView.ContentMode,
@@ -78,6 +83,7 @@ final class AsyncHeaderImageView: UIView {
                 await MainActor.run {
                     self.imageView.image = image
                     self.hideLoadingIndicator()
+                    self.onImageLoaded?(self.imageView)
                 }
             } catch {
                 guard !Task.isCancelled else { return }

@@ -1,43 +1,22 @@
 # TODO
 
-## Gallery 
-- vertical swipes/gestures must be ignored and need to be progagated to the scroll view
-- horizontal gestures will scroll the gallery content
+## Gallery
 
+### Expose current image view via delegate
 
-## Issues
-- Tests are crashing when executed all at once
+Add a new `HeroHeaderDelegate` method that provides the currently displayed `UIImageView`:
 
+```swift
+func heroHeader(
+    _ controller: UIViewController,
+    galleryDidDisplayImageView imageView: UIImageView,
+    in gallery: GalleryController,
+    headerView: HeroHeaderView
+)
+```
 
-## Long List
-- Gradient in Headers
-- SVG in Headers
-- ImageURL (online and from bundle with different loading animation types)
+This should fire:
+- When the initial image is first displayed (first load)
+- On every page change
 
-
-## Page Controller
-
-  Neue Datei PageImageController.swift:
-  - PageImageView als UIControl-Subklasse (clever - wird von HeroHeaderView.hitTest
-   durchgelassen weil hit is UIControl)
-  - PageImageController nutzt PageImageView als Root-View via loadView()
-  - hitTestingEnabled Flag zum Ein-/Ausschalten
-
-  Neuer GalleryInteractionMode enum:
-  - .forwarded = bisheriges Verhalten (Swipe-Gestures auf ScrollView)
-  - .native = neuer Modus (UIPageViewController bekommt direkt Touches)
-
-  Was schon verdrahtet ist:
-  - GalleryPageController erstellt jetzt PageImageController statt
-  generische UIViewController
-  - interactionMode wird durchgereicht von API → Config → PageVC
-  - Bei .forwarded werden weiterhin die Swipe-Gestures installiert
-  - Bei .native wird view.isUserInteractionEnabled = true und hitTestingEnabled =
-  true gesetzt
-
-  Was noch fehlt:
-  Das Kernstück! Die dynamische Touch-Erkennung in PageImageView. Aktuell ist es
-  statisch - entweder alle Touches oder keine. Es fehlt die
-  touchesBegan/touchesMoved-Logik, die erkennt ob der User horizontal (→ Gallery
-  pagen) oder vertikal (→ ScrollView scrollen) wischt, und dann den HitTest
-  entsprechend umschaltet.
+This allows `HeroTransitionDestination` consumers to store a weak reference to the current image view and return it from `heroDestinationImageView()` for the matched dismiss animation. Without this, the dismiss transition falls back to a simple fade.

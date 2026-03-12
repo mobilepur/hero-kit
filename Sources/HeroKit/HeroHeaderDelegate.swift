@@ -52,6 +52,12 @@ public protocol HeroHeaderDelegate: AnyObject {
         headerView: HeroHeaderView,
         imageURL: URL
     )
+    func heroHeader(
+        _ controller: UIViewController,
+        galleryDidDisplayImageView imageView: UIImageView,
+        in gallery: GalleryController,
+        headerView: HeroHeaderView
+    )
 
 }
 
@@ -92,5 +98,11 @@ public extension HeroHeaderDelegate {
         galleryDidChangeImage _: GalleryController,
         headerView _: HeroHeaderView,
         imageURL _: URL
+    ) { }
+    func heroHeader(
+        _: UIViewController,
+        galleryDidDisplayImageView _: UIImageView,
+        in _: GalleryController,
+        headerView _: HeroHeaderView
     ) { }
 }
