@@ -43,7 +43,9 @@ public class HeroMatchedTransition: NSObject, UIViewControllerAnimatedTransition
     private func animatePresentation(
         using transitionContext: any UIViewControllerContextTransitioning
     ) {
-        guard let toVC = transitionContext.viewController(forKey: .to) else {
+        guard let toVC = transitionContext.viewController(forKey: .to),
+              let fromVC = transitionContext.viewController(forKey: .from)
+        else {
             transitionContext.completeTransition(false)
             return
         }
@@ -88,7 +90,9 @@ public class HeroMatchedTransition: NSObject, UIViewControllerAnimatedTransition
         destinationImageView?.isHidden = true
         containerView.addSubview(snapshot)
 
-        notifyDelegate(from: toVC) { $0.heroHeader($1, transitionWillPresent: $2) }
+        notifyTransitionDelegate(
+            presenter: fromVC, destination: toVC
+        ) { $0.heroTransition($1, willPresent: $2) }
 
         UIView.animate(
             withDuration: duration,
@@ -105,7 +109,9 @@ public class HeroMatchedTransition: NSObject, UIViewControllerAnimatedTransition
                 snapshot.removeFromSuperview()
                 destinationImageView?.isHidden = false
                 sourceImageView.isHidden = false
-                self?.notifyDelegate(from: toVC) { $0.heroHeader($1, transitionDidPresent: $2) }
+                self?.notifyTransitionDelegate(
+                    presenter: fromVC, destination: toVC
+                ) { $0.heroTransition($1, didPresent: $2) }
                 transitionContext.completeTransition(
                     !transitionContext.transitionWasCancelled
                 )
@@ -164,7 +170,9 @@ public class HeroMatchedTransition: NSObject, UIViewControllerAnimatedTransition
         destinationImageView.isHidden = true
         containerView.addSubview(snapshot)
 
-        notifyDelegate(from: fromVC) { $0.heroHeader($1, transitionWillDismiss: $2) }
+        notifyTransitionDelegate(
+            presenter: toVC, destination: fromVC
+        ) { $0.heroTransition($1, willDismiss: $2) }
 
         UIView.animate(
             withDuration: duration,
@@ -180,7 +188,9 @@ public class HeroMatchedTransition: NSObject, UIViewControllerAnimatedTransition
             completion: { [weak self] _ in
                 snapshot.removeFromSuperview()
                 sourceImageView.isHidden = false
-                self?.notifyDelegate(from: fromVC) { $0.heroHeader($1, transitionDidDismiss: $2) }
+                self?.notifyTransitionDelegate(
+                    presenter: toVC, destination: fromVC
+                ) { $0.heroTransition($1, didDismiss: $2) }
                 transitionContext.completeTransition(
                     !transitionContext.transitionWasCancelled
                 )
@@ -205,14 +215,25 @@ public class HeroMatchedTransition: NSObject, UIViewControllerAnimatedTransition
 
     // MARK: - Delegate
 
-    private func notifyDelegate(
-        from viewController: UIViewController,
-        action: (HeroHeaderDelegate, UIViewController, HeroHeaderView) -> Void
+    private func notifyTransitionDelegate(
+        presenter: UIViewController,
+        destination: UIViewController,
+        action: (HeroTransitionDelegate, UIViewController, UIViewController) -> Void
     ) {
-        guard let destVC = findDestination(from: viewController) as? UIViewController,
-              let headerView = destVC.viewModel?.headerView,
-              let delegate = destVC.headerDelegate
+        guard let (delegate, resolvedPresenter) = findTransitionDelegate(from: presenter)
         else { return }
-        action(delegate, destVC, headerView)
+        action(delegate, resolvedPresenter, destination)
+    }
+
+    private func findTransitionDelegate(
+        from viewController: UIViewController
+    ) -> (HeroTransitionDelegate, UIViewController)? {
+        if let delegate = viewController.heroTransitionDelegate {
+            return (delegate, viewController)
+        }
+        for child in viewController.children {
+            if let result = findTransitionDelegate(from: child) { return result }
+        }
+        return nil
     }
 }

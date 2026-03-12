@@ -62,6 +62,7 @@ extension AppComposer: HeaderPickerControllerDelegate {
 
         if let transitionSource {
             let nav = UINavigationController(rootViewController: nextController)
+            controller.heroTransitionDelegate = self
             controller.heroPresent(nav, source: transitionSource)
         } else {
             controller.navigationController?.pushViewController(nextController, animated: true)
@@ -70,6 +71,46 @@ extension AppComposer: HeaderPickerControllerDelegate {
 
     func headerPicker(_ controller: HeaderPickerController, showSettings _: Void) {
         presentSettings(from: controller)
+    }
+}
+
+// MARK: - HeroTransitionDelegate
+
+extension AppComposer: HeroTransitionDelegate {
+    func heroTransition(
+        _ presenter: UIViewController,
+        willPresent destination: UIViewController
+    ) {
+        print(
+            "[HeroTransition] willPresent – presenter: \(type(of: presenter)), destination: \(type(of: destination))"
+        )
+    }
+
+    func heroTransition(
+        _ presenter: UIViewController,
+        didPresent destination: UIViewController
+    ) {
+        print(
+            "[HeroTransition] didPresent – presenter: \(type(of: presenter)), destination: \(type(of: destination))"
+        )
+    }
+
+    func heroTransition(
+        _ presenter: UIViewController,
+        willDismiss destination: UIViewController
+    ) {
+        print(
+            "[HeroTransition] willDismiss – presenter: \(type(of: presenter)), destination: \(type(of: destination))"
+        )
+    }
+
+    func heroTransition(
+        _ presenter: UIViewController,
+        didDismiss destination: UIViewController
+    ) {
+        print(
+            "[HeroTransition] didDismiss – presenter: \(type(of: presenter)), destination: \(type(of: destination))"
+        )
     }
 }
 
