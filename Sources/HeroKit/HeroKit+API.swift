@@ -278,12 +278,13 @@ extension UIViewController {
         foregroundColor: UIColor?
     ) -> (headerView: HeroHeaderView, contentConstraint: NSLayoutConstraint) {
         // contentView with height constraint (adjusted during stretch)
-        // Priority below required so it doesn't conflict with the stack view's
-        // UIView-Encapsulated-Layout-Height during layout passes.
+        // Priority just below required so the stack view's UIView-Encapsulated-Layout-Height
+        // (at 1000) can win in edge cases, but high enough to resist .fill stretching
+        // when child view controllers trigger re-layout passes.
         contentView.translatesAutoresizingMaskIntoConstraints = false
         let contentConstraint = contentView.heightAnchor
             .constraint(equalToConstant: configuration.height)
-        contentConstraint.priority = .defaultHigh
+        contentConstraint.priority = UILayoutPriority(999)
         contentConstraint.isActive = true
 
         // Optional: Create large title view
