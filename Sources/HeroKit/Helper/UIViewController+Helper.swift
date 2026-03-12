@@ -46,7 +46,7 @@ extension UIViewController {
 
 // MARK: - Navigation Bar Appearance (delegate to UINavigationController)
 
-extension UIViewController {
+public extension UIViewController {
 
     /// Configures navigation bar with transparent background
     func configureTransparentNavigationBar() {
