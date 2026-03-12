@@ -10,7 +10,7 @@ private final class WeakTransitionDelegateWrapper {
     }
 }
 
-extension UIViewController {
+public extension UIViewController {
 
     private enum HeroTransitionKeys {
         nonisolated(unsafe) static var matchedTransitionDelegate: Void?
@@ -35,7 +35,7 @@ extension UIViewController {
     }
 
     /// Delegate that receives transition lifecycle callbacks on the presenter side.
-    public var heroTransitionDelegate: HeroTransitionDelegate? {
+    var heroTransitionDelegate: HeroTransitionDelegate? {
         get {
             (objc_getAssociatedObject(
                 self,
