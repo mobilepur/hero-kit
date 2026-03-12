@@ -59,7 +59,14 @@ extension UIViewController {
     }
 
     /// Configures navigation bar with opaque colored background
-    func configureOpaqueNavigationBar(backgroundColor: UIColor, foregroundColor: UIColor?) {
+    func configureOpaqueNavigationBar(
+        title: String? = nil,
+        backgroundColor: UIColor,
+        foregroundColor: UIColor?
+    ) {
+        if let title {
+            self.title = title
+        }
         navigationController?.configureOpaqueAppearance(
             backgroundColor: backgroundColor,
             foregroundColor: foregroundColor

@@ -435,6 +435,7 @@ extension UIViewController {
         } else {
             navigationController.navigationBar.prefersLargeTitles = prefersLargeTitles
             configureOpaqueNavigationBar(
+                title: resolveTitle(from: titleConfig),
                 backgroundColor: backgroundColor,
                 foregroundColor: foregroundColor
             )
