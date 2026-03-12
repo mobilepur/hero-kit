@@ -219,7 +219,7 @@ extension UIViewController {
                 scrollView: scrollView
             )
         case let .gallery(galleryConfig, configuration, _):
-            let pageVC = GalleryPageController(
+            let gallery = Gallery(
                 urls: galleryConfig.urls,
                 contentMode: galleryConfig.contentMode,
                 backgroundColor: galleryConfig.backgroundColor,
@@ -227,19 +227,19 @@ extension UIViewController {
                 pageControl: galleryConfig.pageControl,
                 interactionMode: galleryConfig.interactionMode
             )
-            addChild(pageVC)
-            pageVC.view.clipsToBounds = true
+            addChild(gallery)
+            gallery.view.clipsToBounds = true
             setupHeaderView(
-                pageVC.view,
+                gallery.view,
                 configuration: configuration,
                 scrollView: scrollView
             )
-            pageVC.didMove(toParent: self)
+            gallery.didMove(toParent: self)
             if galleryConfig.interactionMode == .forwarded {
-                pageVC.installGestureForwarding(on: scrollView, galleryArea: pageVC.view)
+                gallery.installGestureForwarding(on: scrollView, galleryArea: gallery.view)
 
                 if let navController = navigationController,
-                   let galleryPan = pageVC.galleryPanGesture
+                   let galleryPan = gallery.galleryPanGesture
                 {
                     navController.interactivePopGestureRecognizer?.require(toFail: galleryPan)
                     for gesture in navController.view.gestureRecognizers ?? []

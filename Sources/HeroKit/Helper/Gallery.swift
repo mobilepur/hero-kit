@@ -1,6 +1,28 @@
 import UIKit
 
-final class GalleryPageController: UIViewController, UIScrollViewDelegate {
+@MainActor
+public protocol GalleryDelegate: AnyObject {
+    func gallery(_ gallery: Gallery, swipeBeganTo direction: Gallery.SwipeDirection)
+    func gallery(_ gallery: Gallery, swipeOffset offset: CGFloat)
+    func gallery(_ gallery: Gallery, swipeEndedTo direction: Gallery.SwipeDirection)
+    func gallery(_ gallery: Gallery, didChangeImageTo url: URL)
+}
+
+public extension GalleryDelegate {
+    func gallery(_: Gallery, swipeBeganTo _: Gallery.SwipeDirection) { }
+    func gallery(_: Gallery, swipeOffset _: CGFloat) { }
+    func gallery(_: Gallery, swipeEndedTo _: Gallery.SwipeDirection) { }
+    func gallery(_: Gallery, didChangeImageTo _: URL) { }
+}
+
+public final class Gallery: UIViewController, UIScrollViewDelegate {
+
+    public enum SwipeDirection {
+        case forward
+        case backward
+    }
+
+    public weak var delegate: GalleryDelegate?
 
     private let urls: [URL]
     private let imageContentMode: UIView.ContentMode
@@ -11,6 +33,7 @@ final class GalleryPageController: UIViewController, UIScrollViewDelegate {
 
     private let scrollView = UIScrollView()
     private var pageControl: UIPageControl?
+    private var currentPage: Int = 0
 
     init(
         urls: [URL],
@@ -34,7 +57,7 @@ final class GalleryPageController: UIViewController, UIScrollViewDelegate {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func viewDidLoad() {
+    override public func viewDidLoad() {
         super.viewDidLoad()
         setupScrollView()
         setupPages()
@@ -122,6 +145,7 @@ final class GalleryPageController: UIViewController, UIScrollViewDelegate {
 
     private(set) var galleryPanGesture: GalleryPanGestureRecognizer?
     private var panStartOffset: CGPoint = .zero
+    private var panStartPage: Int = 0
 
     func installGestureForwarding(on parentScrollView: UIScrollView, galleryArea: UIView) {
         let pan = GalleryPanGestureRecognizer(target: self, action: #selector(handleGalleryPan(_:)))
@@ -136,12 +160,15 @@ final class GalleryPageController: UIViewController, UIScrollViewDelegate {
         switch pan.state {
         case .began:
             panStartOffset = scrollView.contentOffset
+            panStartPage = currentPage
+            delegate?.gallery(self, swipeBeganTo: swipeDirection(for: pan))
 
         case .changed:
             let tx = pan.translation(in: pan.view).x
             let maxX = scrollView.contentSize.width - scrollView.bounds.width
             let newX = min(max(panStartOffset.x - tx, 0), maxX)
             scrollView.contentOffset = CGPoint(x: newX, y: 0)
+            delegate?.gallery(self, swipeOffset: tx)
 
         case .ended, .cancelled:
             let pageWidth = scrollView.bounds.width
@@ -149,19 +176,21 @@ final class GalleryPageController: UIViewController, UIScrollViewDelegate {
 
             let velocity = pan.velocity(in: pan.view).x
             let currentX = scrollView.contentOffset.x
-            let currentPage = currentX / pageWidth
+            let fractionalPage = currentX / pageWidth
 
             let targetPage: Int = if abs(velocity) > 500 {
                 velocity < 0
-                    ? Int(ceil(currentPage))
-                    : Int(floor(currentPage))
+                    ? Int(ceil(fractionalPage))
+                    : Int(floor(fractionalPage))
             } else {
-                Int(round(currentPage))
+                Int(round(fractionalPage))
             }
 
             let maxPage = urls.count - 1
             let clampedPage = max(0, min(targetPage, maxPage))
             let targetX = CGFloat(clampedPage) * pageWidth
+
+            delegate?.gallery(self, swipeEndedTo: swipeDirection(for: pan))
 
             UIView.animate(
                 withDuration: 0.25,
@@ -171,7 +200,7 @@ final class GalleryPageController: UIViewController, UIScrollViewDelegate {
                     self.scrollView.contentOffset = CGPoint(x: targetX, y: 0)
                 },
                 completion: { _ in
-                    self.pageControl?.currentPage = clampedPage
+                    self.didMoveTo(page: clampedPage)
                 }
             )
 
@@ -182,17 +211,47 @@ final class GalleryPageController: UIViewController, UIScrollViewDelegate {
 
     // MARK: - UIScrollViewDelegate
 
-    func scrollViewDidEndDecelerating(_: UIScrollView) {
-        updatePageControl()
+    public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        panStartPage = currentPage
+        let velocity = scrollView.panGestureRecognizer.velocity(in: scrollView)
+        let direction: SwipeDirection = velocity.x < 0 ? .forward : .backward
+        delegate?.gallery(self, swipeBeganTo: direction)
     }
 
-    func scrollViewDidEndScrollingAnimation(_: UIScrollView) {
-        updatePageControl()
+    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard scrollView.isDragging else { return }
+        let tx = scrollView.contentOffset.x - CGFloat(panStartPage) * scrollView.bounds.width
+        delegate?.gallery(self, swipeOffset: tx)
     }
 
-    private func updatePageControl() {
+    public func scrollViewDidEndDecelerating(_: UIScrollView) {
+        let page = resolvedPage()
+        let direction: SwipeDirection = page >= panStartPage ? .forward : .backward
+        delegate?.gallery(self, swipeEndedTo: direction)
+        didMoveTo(page: page)
+    }
+
+    public func scrollViewDidEndScrollingAnimation(_: UIScrollView) {
+        didMoveTo(page: resolvedPage())
+    }
+
+    // MARK: - Page Tracking
+
+    private func resolvedPage() -> Int {
         let pageWidth = scrollView.bounds.width
-        guard pageWidth > 0 else { return }
-        pageControl?.currentPage = Int(round(scrollView.contentOffset.x / pageWidth))
+        guard pageWidth > 0 else { return 0 }
+        return Int(round(scrollView.contentOffset.x / pageWidth))
+    }
+
+    private func didMoveTo(page: Int) {
+        pageControl?.currentPage = page
+        guard page != currentPage, page >= 0, page < urls.count else { return }
+        currentPage = page
+        delegate?.gallery(self, didChangeImageTo: urls[page])
+    }
+
+    private func swipeDirection(for pan: UIPanGestureRecognizer) -> SwipeDirection {
+        let tx = pan.translation(in: pan.view).x
+        return tx < 0 ? .forward : .backward
     }
 }
