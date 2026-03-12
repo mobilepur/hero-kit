@@ -74,7 +74,6 @@ public class LargeTitleView: UIView {
 
     private lazy var gradientLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
-        layer.colors = [fogColor.cgColor, fogColor.withAlphaComponent(0).cgColor]
         layer.startPoint = CGPoint(x: 0.5, y: 0)
         layer.endPoint = CGPoint(x: 0.5, y: 1)
         return layer
@@ -176,6 +175,7 @@ public class LargeTitleView: UIView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         gradientLayer.frame = fogView.bounds
+        gradientLayer.colors = [fogColor.cgColor, fogColor.withAlphaComponent(0).cgColor]
         CATransaction.commit()
     }
 
