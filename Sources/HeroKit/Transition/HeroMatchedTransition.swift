@@ -20,13 +20,13 @@ public class HeroMatchedTransition: NSObject, UIViewControllerAnimatedTransition
 
     // MARK: - UIViewControllerAnimatedTransitioning
 
-    nonisolated public func transitionDuration(
-        using transitionContext: (any UIViewControllerContextTransitioning)?
+    public nonisolated func transitionDuration(
+        using _: (any UIViewControllerContextTransitioning)?
     ) -> TimeInterval {
         duration
     }
 
-    nonisolated public func animateTransition(
+    public nonisolated func animateTransition(
         using transitionContext: any UIViewControllerContextTransitioning
     ) {
         MainActor.assumeIsolated {
@@ -88,6 +88,8 @@ public class HeroMatchedTransition: NSObject, UIViewControllerAnimatedTransition
         destinationImageView?.isHidden = true
         containerView.addSubview(snapshot)
 
+        notifyDelegate(from: toVC) { $0.heroHeader($1, transitionWillPresent: $2) }
+
         UIView.animate(
             withDuration: duration,
             delay: 0,
@@ -99,10 +101,11 @@ public class HeroMatchedTransition: NSObject, UIViewControllerAnimatedTransition
                 snapshot.layer.cornerRadius = destinationRadius
                 toVC.view.alpha = 1
             },
-            completion: { _ in
+            completion: { [weak self] _ in
                 snapshot.removeFromSuperview()
                 destinationImageView?.isHidden = false
                 sourceImageView.isHidden = false
+                self?.notifyDelegate(from: toVC) { $0.heroHeader($1, transitionDidPresent: $2) }
                 transitionContext.completeTransition(
                     !transitionContext.transitionWasCancelled
                 )
@@ -161,6 +164,8 @@ public class HeroMatchedTransition: NSObject, UIViewControllerAnimatedTransition
         destinationImageView.isHidden = true
         containerView.addSubview(snapshot)
 
+        notifyDelegate(from: fromVC) { $0.heroHeader($1, transitionWillDismiss: $2) }
+
         UIView.animate(
             withDuration: duration,
             delay: 0,
@@ -172,9 +177,10 @@ public class HeroMatchedTransition: NSObject, UIViewControllerAnimatedTransition
                 snapshot.layer.cornerRadius = sourceRadius
                 fromVC.view.alpha = 0
             },
-            completion: { _ in
+            completion: { [weak self] _ in
                 snapshot.removeFromSuperview()
                 sourceImageView.isHidden = false
+                self?.notifyDelegate(from: fromVC) { $0.heroHeader($1, transitionDidDismiss: $2) }
                 transitionContext.completeTransition(
                     !transitionContext.transitionWasCancelled
                 )
@@ -195,5 +201,18 @@ public class HeroMatchedTransition: NSObject, UIViewControllerAnimatedTransition
             if let dest = findDestination(from: child) { return dest }
         }
         return nil
+    }
+
+    // MARK: - Delegate
+
+    private func notifyDelegate(
+        from viewController: UIViewController,
+        action: (HeroHeaderDelegate, UIViewController, HeroHeaderView) -> Void
+    ) {
+        guard let destVC = findDestination(from: viewController) as? UIViewController,
+              let headerView = destVC.viewModel?.headerView,
+              let delegate = destVC.headerDelegate
+        else { return }
+        action(delegate, destVC, headerView)
     }
 }
