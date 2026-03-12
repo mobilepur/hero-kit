@@ -1,14 +1,16 @@
 import UIKit
 
-final class GalleryPageController: UIPageViewController,
-    UIPageViewControllerDataSource
-{
+final class GalleryPageController: UIViewController, UIScrollViewDelegate {
+
     private let urls: [URL]
     private let imageContentMode: UIView.ContentMode
     private let imageBackgroundColor: UIColor?
     private let loadingType: HeroHeader.LoadingType
     private let pageControlConfig: HeroHeader.PageControlConfiguration
     private let interactionMode: HeroHeader.GalleryInteractionMode
+
+    private let scrollView = UIScrollView()
+    private var pageControl: UIPageControl?
 
     init(
         urls: [URL],
@@ -24,10 +26,7 @@ final class GalleryPageController: UIPageViewController,
         self.loadingType = loadingType
         pageControlConfig = pageControl
         self.interactionMode = interactionMode
-        super.init(
-            transitionStyle: .scroll,
-            navigationOrientation: .horizontal
-        )
+        super.init(nibName: nil, bundle: nil)
     }
 
     @available(*, unavailable)
@@ -37,36 +36,86 @@ final class GalleryPageController: UIPageViewController,
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        dataSource = self
-        updateInteractionMode()
-        if let first = makeImageController(at: 0) {
-            setViewControllers([first], direction: .forward, animated: false)
-        }
-        configurePageControl()
+        setupScrollView()
+        setupPages()
+        setupPageControl()
     }
 
-    private func updateInteractionMode() {
-        switch interactionMode {
-        case .native:
-            view.isUserInteractionEnabled = true
-            setHeaderHitTestingEnabled(true)
-        case .forwarded:
-            view.isUserInteractionEnabled = false
-            setHeaderHitTestingEnabled(false)
-        }
+    // MARK: - Setup
+
+    private func setupScrollView() {
+        scrollView.isPagingEnabled = true
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.bounces = false
+        scrollView.delegate = self
+        scrollView.isScrollEnabled = interactionMode == .native
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+        scrollView.pinToEdges(of: view)
     }
 
-    private func configurePageControl() {
+    private func setupPages() {
+        var previousView: UIView?
+
+        for url in urls {
+            let pageView = PageImageView()
+            pageView.hitTestingEnabled = interactionMode == .native
+
+            let imageView = AsyncHeaderImageView(
+                url: url,
+                contentMode: imageContentMode,
+                backgroundColor: imageBackgroundColor,
+                loadingType: loadingType
+            )
+            imageView.isUserInteractionEnabled = false
+            imageView.translatesAutoresizingMaskIntoConstraints = false
+            pageView.addSubview(imageView)
+            imageView.pinToEdges(of: pageView)
+
+            pageView.translatesAutoresizingMaskIntoConstraints = false
+            scrollView.addSubview(pageView)
+
+            NSLayoutConstraint.activate([
+                pageView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+                pageView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+                pageView.heightAnchor.constraint(equalTo: scrollView.heightAnchor),
+                pageView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
+            ])
+
+            if let previous = previousView {
+                pageView.leadingAnchor.constraint(equalTo: previous.trailingAnchor).isActive = true
+            } else {
+                pageView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor).isActive = true
+            }
+
+            previousView = pageView
+        }
+
+        previousView?.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor).isActive = true
+    }
+
+    private func setupPageControl() {
         guard case let .display(currentPageColor, pageIndicatorColor) = pageControlConfig else {
             return
         }
-        let appearance = UIPageControl.appearance(whenContainedInInstancesOf: [Self.self])
+        let pc = UIPageControl()
+        pc.numberOfPages = urls.count
+        pc.currentPage = 0
         if let currentPageColor {
-            appearance.currentPageIndicatorTintColor = currentPageColor
+            pc.currentPageIndicatorTintColor = currentPageColor
         }
         if let pageIndicatorColor {
-            appearance.pageIndicatorTintColor = pageIndicatorColor
+            pc.pageIndicatorTintColor = pageIndicatorColor
         }
+        pc.isUserInteractionEnabled = false
+        pc.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(pc)
+        NSLayoutConstraint.activate([
+            pc.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            pc.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8),
+        ])
+        pageControl = pc
     }
 
     // MARK: - Gesture Forwarding
@@ -74,13 +123,6 @@ final class GalleryPageController: UIPageViewController,
     private(set) var galleryPanGesture: GalleryPanGestureRecognizer?
     private var panStartOffset: CGPoint = .zero
 
-    private var internalScrollView: UIScrollView? {
-        view.subviews.first(where: { $0 is UIScrollView }) as? UIScrollView
-    }
-
-    /// Installs a ``GalleryPanGestureRecognizer`` on the parent scroll view that
-    /// classifies direction and drives the UIPageViewController's internal scroll view
-    /// for horizontal paging.
     func installGestureForwarding(on parentScrollView: UIScrollView, galleryArea: UIView) {
         let pan = GalleryPanGestureRecognizer(target: self, action: #selector(handleGalleryPan(_:)))
         pan.galleryAreaView = galleryArea
@@ -91,8 +133,6 @@ final class GalleryPageController: UIPageViewController,
     }
 
     @objc private func handleGalleryPan(_ pan: GalleryPanGestureRecognizer) {
-        guard let scrollView = internalScrollView else { return }
-
         switch pan.state {
         case .began:
             panStartOffset = scrollView.contentOffset
@@ -119,73 +159,40 @@ final class GalleryPageController: UIPageViewController,
                 Int(round(currentPage))
             }
 
-            let maxPage = Int(scrollView.contentSize.width / pageWidth) - 1
+            let maxPage = urls.count - 1
             let clampedPage = max(0, min(targetPage, maxPage))
             let targetX = CGFloat(clampedPage) * pageWidth
 
             UIView.animate(
                 withDuration: 0.25,
                 delay: 0,
-                options: [.curveEaseOut, .allowUserInteraction]
-            ) {
-                scrollView.contentOffset = CGPoint(x: targetX, y: 0)
-            }
+                options: [.curveEaseOut, .allowUserInteraction],
+                animations: {
+                    self.scrollView.contentOffset = CGPoint(x: targetX, y: 0)
+                },
+                completion: { _ in
+                    self.pageControl?.currentPage = clampedPage
+                }
+            )
 
         default:
             break
         }
     }
 
-    // MARK: - UIPageViewControllerDataSource
+    // MARK: - UIScrollViewDelegate
 
-    func pageViewController(
-        _: UIPageViewController,
-        viewControllerBefore viewController: UIViewController
-    ) -> UIViewController? {
-        guard let index = viewController.view.tag > 0 ? viewController.view.tag - 1 : nil else {
-            return nil
-        }
-        return makeImageController(at: index)
+    func scrollViewDidEndDecelerating(_: UIScrollView) {
+        updatePageControl()
     }
 
-    func pageViewController(
-        _: UIPageViewController,
-        viewControllerAfter viewController: UIViewController
-    ) -> UIViewController? {
-        let index = viewController.view.tag + 1
-        guard index < urls.count else { return nil }
-        return makeImageController(at: index)
+    func scrollViewDidEndScrollingAnimation(_: UIScrollView) {
+        updatePageControl()
     }
 
-    func presentationCount(for _: UIPageViewController) -> Int {
-        if case .display = pageControlConfig {
-            return urls.count
-        }
-        return 0
-    }
-
-    func presentationIndex(for _: UIPageViewController) -> Int {
-        viewControllers?.first?.view.tag ?? 0
-    }
-
-    private func makeImageController(at index: Int) -> UIViewController? {
-        guard index >= 0, index < urls.count else { return nil }
-        let vc = PageImageController(
-            url: urls[index],
-            contentMode: imageContentMode,
-            backgroundColor: imageBackgroundColor,
-            loadingType: loadingType
-        )
-        if let pageView = vc.view as? PageImageView {
-            pageView.hitTestingEnabled = interactionMode == .native
-        }
-        vc.view.tag = index
-        return vc
-    }
-
-    private func setHeaderHitTestingEnabled(_ enabled: Bool) {
-        for controller in viewControllers ?? [] {
-            (controller.view as? PageImageView)?.hitTestingEnabled = enabled
-        }
+    private func updatePageControl() {
+        let pageWidth = scrollView.bounds.width
+        guard pageWidth > 0 else { return }
+        pageControl?.currentPage = Int(round(scrollView.contentOffset.x / pageWidth))
     }
 }
