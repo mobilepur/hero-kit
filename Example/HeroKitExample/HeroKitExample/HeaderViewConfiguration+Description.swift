@@ -37,7 +37,7 @@ extension HeroHeader.HeaderViewConfiguration {
             case .system:
                 break // default, don't show
             }
-        case let .inline(config):
+        case .inline:
             parts.append("inline title")
         }
         return parts.joined(separator: ", ")

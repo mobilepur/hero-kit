@@ -1,18 +1,5 @@
 import Combine
-import ObjectiveC
-import os
 import UIKit
-
-private func heroWarning(_ message: String) {
-    #if DEBUG
-        os_log(
-            .fault,
-            log: OSLog(subsystem: "com.apple.runtime-issues", category: "HeroKit"),
-            "%{public}s",
-            message
-        )
-    #endif
-}
 
 // MARK: - UIViewController Extension
 
@@ -109,6 +96,31 @@ public extension UIViewController {
         )
     }
 
+    func setGalleryHeader(
+        urls: [URL],
+        contentMode: UIView.ContentMode = .scaleAspectFill,
+        backgroundColor: UIColor? = nil,
+        loadingType: HeroHeader.LoadingType = .spinner,
+        interactionMode: HeroHeader.GalleryInteractionMode = .forwarded,
+        configuration: HeroHeader.HeaderViewConfiguration = .init(),
+        title: HeroHeader.TitleConfiguration? = nil,
+        restoresOnAppear: Bool = true,
+        scrollView: UIScrollView? = nil
+    ) {
+        let galleryConfig = HeroHeader.GalleryConfiguration(
+            urls: urls,
+            contentMode: contentMode,
+            backgroundColor: backgroundColor,
+            loadingType: loadingType,
+            interactionMode: interactionMode
+        )
+        setHeader(
+            .gallery(gallery: galleryConfig, configuration: configuration, title: title),
+            restoresOnAppear: restoresOnAppear,
+            scrollView: scrollView
+        )
+    }
+
     func setOpaqueHeader(
         title: HeroHeader.TitleConfiguration,
         backgroundColor: UIColor,
@@ -193,6 +205,37 @@ extension UIViewController {
                 configuration: configuration,
                 scrollView: scrollView
             )
+        case let .gallery(galleryConfig, configuration, _):
+            let gallery = GalleryController(
+                urls: galleryConfig.urls,
+                contentMode: galleryConfig.contentMode,
+                backgroundColor: galleryConfig.backgroundColor,
+                loadingType: galleryConfig.loadingType,
+                pageControl: galleryConfig.pageControl,
+                interactionMode: galleryConfig.interactionMode
+            )
+            addChild(gallery)
+            gallery.view.clipsToBounds = true
+            setupHeaderView(
+                gallery.view,
+                configuration: configuration,
+                scrollView: scrollView
+            )
+            gallery.didMove(toParent: self)
+            if galleryConfig.interactionMode == .forwarded {
+                gallery.installGestureForwarding(on: scrollView, galleryArea: gallery.view)
+
+                if let navController = navigationController,
+                   let galleryPan = gallery.galleryPanGesture
+                {
+                    navController.interactivePopGestureRecognizer?.require(toFail: galleryPan)
+                    for gesture in navController.view.gestureRecognizers ?? []
+                        where gesture is UIPanGestureRecognizer
+                    {
+                        gesture.require(toFail: galleryPan)
+                    }
+                }
+            }
         }
     }
 
@@ -235,12 +278,13 @@ extension UIViewController {
         foregroundColor: UIColor?
     ) -> (headerView: HeroHeaderView, contentConstraint: NSLayoutConstraint) {
         // contentView with height constraint (adjusted during stretch)
-        // Priority below required so it doesn't conflict with the stack view's
-        // UIView-Encapsulated-Layout-Height during layout passes.
+        // Priority just below required so the stack view's UIView-Encapsulated-Layout-Height
+        // (at 1000) can win in edge cases, but high enough to resist .fill stretching
+        // when child view controllers trigger re-layout passes.
         contentView.translatesAutoresizingMaskIntoConstraints = false
         let contentConstraint = contentView.heightAnchor
             .constraint(equalToConstant: configuration.height)
-        contentConstraint.priority = .defaultHigh
+        contentConstraint.priority = UILayoutPriority(999)
         contentConstraint.isActive = true
 
         // Optional: Create large title view

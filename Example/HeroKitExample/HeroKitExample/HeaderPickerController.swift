@@ -48,7 +48,10 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                     widthDimension: .fractionalWidth(1.0),
                     heightDimension: .estimated(220)
                 )
-                let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize, subitems: [item])
+                let group = NSCollectionLayoutGroup.vertical(
+                    layoutSize: groupSize,
+                    subitems: [item]
+                )
 
                 let section = NSCollectionLayoutSection(group: group)
                 section.interGroupSpacing = 12
@@ -173,6 +176,13 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
                     for: indexPath,
                     item: content
                 )
+            case let .customItem(index):
+                let content = HeaderContent.customItems[index]
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: contentCellRegistration,
+                    for: indexPath,
+                    item: content
+                )
             }
         }
 
@@ -265,6 +275,8 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
 
         let selectedContent = switch item {
+        case let .customItem(index):
+            HeaderContent.customItems[index]
         case let .colorItem(index):
             HeaderContent.colorItems[index]
         case let .localImageItem(index):
@@ -286,7 +298,11 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 
     private func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
-        snapshot.appendSections([.colors, .localImages, .remoteImages, .transitions])
+        snapshot.appendSections([.custom, .colors, .localImages, .remoteImages, .transitions])
+        snapshot.appendItems(
+            HeaderContent.customItems.indices.map { Item.customItem($0) },
+            toSection: .custom
+        )
         snapshot.appendItems(
             HeaderContent.colorItems.indices.map { Item.colorItem($0) },
             toSection: .colors
@@ -310,6 +326,7 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
 // MARK: - Section
 
 nonisolated enum Section: Hashable, Sendable {
+    case custom
     case colors
     case localImages
     case remoteImages
@@ -317,6 +334,7 @@ nonisolated enum Section: Hashable, Sendable {
 
     var title: String {
         switch self {
+        case .custom: "Custom"
         case .colors: "Colors"
         case .localImages: "Views"
         case .remoteImages: "Image URLs"
@@ -328,6 +346,7 @@ nonisolated enum Section: Hashable, Sendable {
 // MARK: - Item
 
 nonisolated enum Item: Hashable, Sendable {
+    case customItem(Int)
     case colorItem(Int)
     case localImageItem(Int)
     case remoteImageItem(Int)

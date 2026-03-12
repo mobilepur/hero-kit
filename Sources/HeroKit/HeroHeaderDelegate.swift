@@ -28,6 +28,30 @@ public protocol HeroHeaderDelegate: AnyObject {
         didUpdateTitle headerView: HeroHeaderView,
         title: String
     )
+    func heroHeader(
+        _ controller: UIViewController,
+        gallerySwipeBegan gallery: GalleryController,
+        headerView: HeroHeaderView,
+        direction: HeroHeader.GallerySwipeDirection
+    )
+    func heroHeader(
+        _ controller: UIViewController,
+        gallerySwipeOffset gallery: GalleryController,
+        headerView: HeroHeaderView,
+        offset: CGFloat
+    )
+    func heroHeader(
+        _ controller: UIViewController,
+        gallerySwipeEnded gallery: GalleryController,
+        headerView: HeroHeaderView,
+        direction: HeroHeader.GallerySwipeDirection
+    )
+    func heroHeader(
+        _ controller: UIViewController,
+        galleryDidChangeImage gallery: GalleryController,
+        headerView: HeroHeaderView,
+        imageURL: URL
+    )
 
 }
 
@@ -45,4 +69,28 @@ public extension HeroHeaderDelegate {
     func heroHeader(_: UIViewController, didShowLargeTitle _: HeroHeaderView) { }
     func heroHeader(_: UIViewController, didShowSmallTitle _: HeroHeaderView) { }
     func heroHeader(_: UIViewController, didUpdateTitle _: HeroHeaderView, title _: String) { }
+    func heroHeader(
+        _: UIViewController,
+        gallerySwipeBegan _: GalleryController,
+        headerView _: HeroHeaderView,
+        direction _: HeroHeader.GallerySwipeDirection
+    ) { }
+    func heroHeader(
+        _: UIViewController,
+        gallerySwipeOffset _: GalleryController,
+        headerView _: HeroHeaderView,
+        offset _: CGFloat
+    ) { }
+    func heroHeader(
+        _: UIViewController,
+        gallerySwipeEnded _: GalleryController,
+        headerView _: HeroHeaderView,
+        direction _: HeroHeader.GallerySwipeDirection
+    ) { }
+    func heroHeader(
+        _: UIViewController,
+        galleryDidChangeImage _: GalleryController,
+        headerView _: HeroHeaderView,
+        imageURL _: URL
+    ) { }
 }

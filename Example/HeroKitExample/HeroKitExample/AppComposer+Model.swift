@@ -42,6 +42,21 @@ extension AppComposer {
                     configuration: makeHeaderViewConfiguration(height: height),
                     title: applyTitleLength(to: titleConfig)
                 )
+
+            case let .gallery(title, subtitle, urls, height):
+                let titleConfig = makeTitleConfig(title: title, subtitle: subtitle)
+                let galleryConfig = HeroHeader.GalleryConfiguration(
+                    urls: urls,
+                    pageControl: .display(
+                        currentPageColor: .darkGray,
+                        pageIndicatorColor: .lightGray
+                    )
+                )
+                return .gallery(
+                    gallery: galleryConfig,
+                    configuration: makeHeaderViewConfiguration(height: height),
+                    title: applyTitleLength(to: titleConfig)
+                )
             }
         }
 
