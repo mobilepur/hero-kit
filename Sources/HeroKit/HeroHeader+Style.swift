@@ -316,6 +316,11 @@ public enum HeroHeader {
         case native
     }
 
+    public enum GallerySwipeDirection {
+        case forward
+        case backward
+    }
+
     public struct ImageConfiguration {
         public let url: URL
         public let contentMode: UIView.ContentMode

@@ -219,7 +219,7 @@ extension UIViewController {
                 scrollView: scrollView
             )
         case let .gallery(galleryConfig, configuration, _):
-            let gallery = Gallery(
+            let gallery = GalleryController(
                 urls: galleryConfig.urls,
                 contentMode: galleryConfig.contentMode,
                 backgroundColor: galleryConfig.backgroundColor,

@@ -1,28 +1,6 @@
 import UIKit
 
-@MainActor
-public protocol GalleryDelegate: AnyObject {
-    func gallery(_ gallery: Gallery, swipeBeganTo direction: Gallery.SwipeDirection)
-    func gallery(_ gallery: Gallery, swipeOffset offset: CGFloat)
-    func gallery(_ gallery: Gallery, swipeEndedTo direction: Gallery.SwipeDirection)
-    func gallery(_ gallery: Gallery, didChangeImageTo url: URL)
-}
-
-public extension GalleryDelegate {
-    func gallery(_: Gallery, swipeBeganTo _: Gallery.SwipeDirection) { }
-    func gallery(_: Gallery, swipeOffset _: CGFloat) { }
-    func gallery(_: Gallery, swipeEndedTo _: Gallery.SwipeDirection) { }
-    func gallery(_: Gallery, didChangeImageTo _: URL) { }
-}
-
-public final class Gallery: UIViewController, UIScrollViewDelegate {
-
-    public enum SwipeDirection {
-        case forward
-        case backward
-    }
-
-    public weak var delegate: GalleryDelegate?
+public final class GalleryController: UIViewController, UIScrollViewDelegate {
 
     private let urls: [URL]
     private let imageContentMode: UIView.ContentMode
@@ -161,14 +139,19 @@ public final class Gallery: UIViewController, UIScrollViewDelegate {
         case .began:
             panStartOffset = scrollView.contentOffset
             panStartPage = currentPage
-            delegate?.gallery(self, swipeBeganTo: swipeDirection(for: pan))
+            notifyDelegate { $0.heroHeader(
+                $1,
+                gallerySwipeBegan: $2,
+                headerView: $3,
+                direction: swipeDirection(for: pan)
+            ) }
 
         case .changed:
             let tx = pan.translation(in: pan.view).x
             let maxX = scrollView.contentSize.width - scrollView.bounds.width
             let newX = min(max(panStartOffset.x - tx, 0), maxX)
             scrollView.contentOffset = CGPoint(x: newX, y: 0)
-            delegate?.gallery(self, swipeOffset: tx)
+            notifyDelegate { $0.heroHeader($1, gallerySwipeOffset: $2, headerView: $3, offset: tx) }
 
         case .ended, .cancelled:
             let pageWidth = scrollView.bounds.width
@@ -190,7 +173,12 @@ public final class Gallery: UIViewController, UIScrollViewDelegate {
             let clampedPage = max(0, min(targetPage, maxPage))
             let targetX = CGFloat(clampedPage) * pageWidth
 
-            delegate?.gallery(self, swipeEndedTo: swipeDirection(for: pan))
+            notifyDelegate { $0.heroHeader(
+                $1,
+                gallerySwipeEnded: $2,
+                headerView: $3,
+                direction: swipeDirection(for: pan)
+            ) }
 
             UIView.animate(
                 withDuration: 0.25,
@@ -214,20 +202,31 @@ public final class Gallery: UIViewController, UIScrollViewDelegate {
     public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         panStartPage = currentPage
         let velocity = scrollView.panGestureRecognizer.velocity(in: scrollView)
-        let direction: SwipeDirection = velocity.x < 0 ? .forward : .backward
-        delegate?.gallery(self, swipeBeganTo: direction)
+        let direction: HeroHeader.GallerySwipeDirection = velocity.x < 0 ? .forward : .backward
+        notifyDelegate { $0.heroHeader(
+            $1,
+            gallerySwipeBegan: $2,
+            headerView: $3,
+            direction: direction
+        ) }
     }
 
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
         guard scrollView.isDragging else { return }
         let tx = scrollView.contentOffset.x - CGFloat(panStartPage) * scrollView.bounds.width
-        delegate?.gallery(self, swipeOffset: tx)
+        notifyDelegate { $0.heroHeader($1, gallerySwipeOffset: $2, headerView: $3, offset: tx) }
     }
 
     public func scrollViewDidEndDecelerating(_: UIScrollView) {
         let page = resolvedPage()
-        let direction: SwipeDirection = page >= panStartPage ? .forward : .backward
-        delegate?.gallery(self, swipeEndedTo: direction)
+        let direction: HeroHeader
+            .GallerySwipeDirection = page >= panStartPage ? .forward : .backward
+        notifyDelegate { $0.heroHeader(
+            $1,
+            gallerySwipeEnded: $2,
+            headerView: $3,
+            direction: direction
+        ) }
         didMoveTo(page: page)
     }
 
@@ -247,11 +246,28 @@ public final class Gallery: UIViewController, UIScrollViewDelegate {
         pageControl?.currentPage = page
         guard page != currentPage, page >= 0, page < urls.count else { return }
         currentPage = page
-        delegate?.gallery(self, didChangeImageTo: urls[page])
+        notifyDelegate { $0.heroHeader(
+            $1,
+            galleryDidChangeImage: $2,
+            headerView: $3,
+            imageURL: urls[page]
+        ) }
     }
 
-    private func swipeDirection(for pan: UIPanGestureRecognizer) -> SwipeDirection {
+    private func swipeDirection(for pan: UIPanGestureRecognizer) -> HeroHeader
+    .GallerySwipeDirection {
         let tx = pan.translation(in: pan.view).x
         return tx < 0 ? .forward : .backward
+    }
+
+    private func notifyDelegate(
+        _ action: (HeroHeaderDelegate, UIViewController, GalleryController, HeroHeaderView) -> Void
+    ) {
+        guard let parent,
+              let viewModel = parent.viewModel,
+              let delegate = viewModel.delegate,
+              let headerView = viewModel.headerView
+        else { return }
+        action(delegate, parent, self, headerView)
     }
 }
