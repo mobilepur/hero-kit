@@ -13,6 +13,7 @@ protocol HeaderPickerControllerDelegate: AnyObject {
 class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHeaderDelegate {
 
     weak var delegate: HeaderPickerControllerDelegate?
+    private weak var currentGalleryImageView: UIImageView?
 
     /// The content descriptor used by AppComposer to rebuild the style when settings change.
     var content: HeaderContent?
@@ -321,6 +322,17 @@ class HeaderPickerController: UIViewController, UICollectionViewDelegate, HeroHe
         )
         dataSource.apply(snapshot, animatingDifferences: false)
     }
+
+    // MARK: - HeroHeaderDelegate
+
+    func heroHeader(
+        _: UIViewController,
+        galleryDidDisplayImageView imageView: UIImageView,
+        in _: GalleryController,
+        headerView _: HeroHeaderView
+    ) {
+        currentGalleryImageView = imageView
+    }
 }
 
 // MARK: - Section
@@ -434,7 +446,10 @@ extension TransitionImageCell: HeroTransitionSource {
 extension HeaderPickerController: HeroTransitionDestination {
 
     func heroDestinationImageView() -> UIImageView? {
-        findHeroHeaderView(in: view)?.contentView as? UIImageView
+        if let currentGalleryImageView {
+            return currentGalleryImageView
+        }
+        return findHeroHeaderView(in: view)?.contentView as? UIImageView
     }
 
     func heroDestinationFrame(in window: UIWindow) -> CGRect {

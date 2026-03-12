@@ -59,7 +59,7 @@ public final class GalleryController: UIViewController, UIScrollViewDelegate {
     private func setupPages() {
         var previousView: UIView?
 
-        for url in urls {
+        for (index, url) in urls.enumerated() {
             let pageView = PageImageView()
             pageView.hitTestingEnabled = interactionMode == .native
 
@@ -69,6 +69,19 @@ public final class GalleryController: UIViewController, UIScrollViewDelegate {
                 backgroundColor: imageBackgroundColor,
                 loadingType: loadingType
             )
+
+            if index == 0 {
+                imageView.onImageLoaded = { [weak self] loadedImageView in
+                    guard let self else { return }
+                    notifyDelegate { $0.heroHeader(
+                        $1,
+                        galleryDidDisplayImageView: loadedImageView,
+                        in: $2,
+                        headerView: $3
+                    ) }
+                }
+            }
+
             imageView.isUserInteractionEnabled = false
             imageView.translatesAutoresizingMaskIntoConstraints = false
             pageView.addSubview(imageView)
@@ -254,6 +267,22 @@ public final class GalleryController: UIViewController, UIScrollViewDelegate {
             headerView: $3,
             imageURL: urls[page]
         ) }
+        if let imageView = asyncHeaderImageView(forPage: page)?.displayedImageView {
+            notifyDelegate { $0.heroHeader(
+                $1,
+                galleryDidDisplayImageView: imageView,
+                in: $2,
+                headerView: $3
+            ) }
+        }
+    }
+
+    private func asyncHeaderImageView(forPage page: Int) -> AsyncHeaderImageView? {
+        let pageViews = scrollView.subviews.compactMap { $0 as? PageImageView }
+        guard page >= 0, page < pageViews.count else { return nil }
+        let sorted = pageViews.sorted { $0.frame.origin.x < $1.frame.origin.x }
+        return sorted[page].subviews
+            .first(where: { $0 is AsyncHeaderImageView }) as? AsyncHeaderImageView
     }
 
     private func swipeDirection(for pan: UIPanGestureRecognizer) -> HeroHeader
