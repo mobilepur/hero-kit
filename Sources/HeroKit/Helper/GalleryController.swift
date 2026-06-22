@@ -3,6 +3,8 @@ import UIKit
 public final class GalleryController: UIViewController, UIScrollViewDelegate {
 
     private let urls: [URL]
+    private let localImages: [URL: UIImage]
+    private let placeholderSymbol: String?
     private let imageContentMode: UIView.ContentMode
     private let imageBackgroundColor: UIColor?
     private let loadingType: HeroHeader.LoadingType
@@ -19,9 +21,13 @@ public final class GalleryController: UIViewController, UIScrollViewDelegate {
         backgroundColor: UIColor? = nil,
         loadingType: HeroHeader.LoadingType = .spinner,
         pageControl: HeroHeader.PageControlConfiguration = .display(),
-        interactionMode: HeroHeader.GalleryInteractionMode = .forwarded
+        interactionMode: HeroHeader.GalleryInteractionMode = .forwarded,
+        localImages: [URL: UIImage] = [:],
+        placeholderSymbol: String? = nil
     ) {
         self.urls = urls
+        self.localImages = localImages
+        self.placeholderSymbol = placeholderSymbol
         imageContentMode = contentMode
         imageBackgroundColor = backgroundColor
         self.loadingType = loadingType
@@ -67,7 +73,9 @@ public final class GalleryController: UIViewController, UIScrollViewDelegate {
                 url: url,
                 contentMode: imageContentMode,
                 backgroundColor: imageBackgroundColor,
-                loadingType: loadingType
+                loadingType: loadingType,
+                image: localImages[url],
+                placeholderSymbol: placeholderSymbol
             )
 
             if index == 0 {

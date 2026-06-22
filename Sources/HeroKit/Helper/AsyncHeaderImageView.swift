@@ -3,10 +3,13 @@ import UIKit
 final class AsyncHeaderImageView: UIView {
 
     private let url: URL
+    private let preloadedImage: UIImage?
+    private let placeholderSymbol: String?
     private let imageContentMode: UIView.ContentMode
     private let loadingType: HeroHeader.LoadingType
     private let imageView = UIImageView()
     private var loadingView: UIView?
+    private var placeholderView: UIView?
     private var loadTask: Task<Void, Never>?
 
     var onImageLoaded: ((UIImageView) -> Void)?
@@ -18,15 +21,19 @@ final class AsyncHeaderImageView: UIView {
         url: URL,
         contentMode: UIView.ContentMode,
         backgroundColor: UIColor?,
-        loadingType: HeroHeader.LoadingType
+        loadingType: HeroHeader.LoadingType,
+        image: UIImage? = nil,
+        placeholderSymbol: String? = nil
     ) {
         self.url = url
+        preloadedImage = image
+        self.placeholderSymbol = placeholderSymbol
         imageContentMode = contentMode
         self.loadingType = loadingType
         super.init(frame: .zero)
         self.backgroundColor = backgroundColor
         setupImageView()
-        showLoadingIndicator()
+        if preloadedImage == nil { showLoadingIndicator() }
         startLoading()
     }
 
@@ -74,12 +81,27 @@ final class AsyncHeaderImageView: UIView {
     // MARK: - Loading
 
     private func startLoading() {
+        if let preloadedImage {
+            loadTask = Task { [weak self] in
+                guard let self, !Task.isCancelled else { return }
+                await MainActor.run {
+                    self.imageView.image = preloadedImage
+                    self.hideLoadingIndicator()
+                    self.onImageLoaded?(self.imageView)
+                }
+            }
+            return
+        }
+
         loadTask = Task { [weak self] in
             guard let self else { return }
             do {
                 let (data, _) = try await URLSession.shared.data(from: url)
                 guard !Task.isCancelled else { return }
-                guard let image = UIImage(data: data) else { return }
+                guard let image = UIImage(data: data) else {
+                    await MainActor.run { self.showPlaceholder() }
+                    return
+                }
                 await MainActor.run {
                     self.imageView.image = image
                     self.hideLoadingIndicator()
@@ -87,10 +109,30 @@ final class AsyncHeaderImageView: UIView {
                 }
             } catch {
                 guard !Task.isCancelled else { return }
-                await MainActor.run {
-                    self.hideLoadingIndicator()
-                }
+                await MainActor.run { self.showPlaceholder() }
             }
         }
+    }
+
+    private func showPlaceholder() {
+        hideLoadingIndicator()
+        guard placeholderView == nil,
+              let placeholderSymbol,
+              let symbol = UIImage(systemName: placeholderSymbol)
+        else { return }
+
+        let symbolView = UIImageView(
+            image: symbol.withTintColor(.systemGray5, renderingMode: .alwaysOriginal)
+        )
+        symbolView.contentMode = .scaleAspectFit
+        symbolView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(symbolView)
+        NSLayoutConstraint.activate([
+            symbolView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            symbolView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            symbolView.heightAnchor.constraint(equalTo: heightAnchor, multiplier: 0.35),
+            symbolView.widthAnchor.constraint(equalTo: symbolView.heightAnchor),
+        ])
+        placeholderView = symbolView
     }
 }

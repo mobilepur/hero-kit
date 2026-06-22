@@ -280,6 +280,8 @@ public enum HeroHeader {
 
     public struct GalleryConfiguration {
         public let urls: [URL]
+        public let localImages: [URL: UIImage]
+        public let placeholderSymbol: String?
         public let contentMode: UIView.ContentMode
         public let backgroundColor: UIColor?
         public let loadingType: LoadingType
@@ -288,6 +290,8 @@ public enum HeroHeader {
 
         public init(
             urls: [URL],
+            localImages: [URL: UIImage] = [:],
+            placeholderSymbol: String? = nil,
             contentMode: UIView.ContentMode = .scaleAspectFill,
             backgroundColor: UIColor? = nil,
             loadingType: LoadingType = .spinner,
@@ -295,6 +299,8 @@ public enum HeroHeader {
             interactionMode: GalleryInteractionMode = .forwarded
         ) {
             self.urls = urls
+            self.localImages = localImages
+            self.placeholderSymbol = placeholderSymbol
             self.contentMode = contentMode
             self.backgroundColor = backgroundColor
             self.loadingType = loadingType

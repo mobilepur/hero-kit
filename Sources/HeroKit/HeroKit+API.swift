@@ -212,7 +212,9 @@ extension UIViewController {
                 backgroundColor: galleryConfig.backgroundColor,
                 loadingType: galleryConfig.loadingType,
                 pageControl: galleryConfig.pageControl,
-                interactionMode: galleryConfig.interactionMode
+                interactionMode: galleryConfig.interactionMode,
+                localImages: galleryConfig.localImages,
+                placeholderSymbol: galleryConfig.placeholderSymbol
             )
             addChild(gallery)
             gallery.view.clipsToBounds = true
